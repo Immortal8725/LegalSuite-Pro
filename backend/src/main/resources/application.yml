@@ -1,0 +1,36 @@
+server:
+  port: ${PORT:18081}
+
+spring:
+  application:
+    name: legalsuite-api
+  datasource:
+    url: jdbc:h2:mem:legalsuite;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+legalsuite:
+  jwt:
+    secret: "legalsuite-pro-dev-secret-change-in-production-must-be-64-chars-longXX"
+    access-ms: 86400000
+    refresh-ms: 604800000
+  upload-dir: ${user.dir}/uploads
+
+logging:
+  level:
+    com.legalsuite: INFO
