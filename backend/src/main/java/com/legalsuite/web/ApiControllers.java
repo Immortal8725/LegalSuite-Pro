@@ -105,7 +105,7 @@ public class ApiControllers {
     public ApiResponse<?> cases() { return ApiResponse.ok(practice.listCases()); }
 
     @GetMapping("/api/v1/cases/{id}")
-    public ApiResponse<?> oneCase(@PathVariable UUID id) { return ApiResponse.ok(practice.getCase(id)); }
+    public ApiResponse<?> oneCase(@PathVariable String id) { return ApiResponse.ok(practice.getCase(id)); }
 
     @PostMapping("/api/v1/cases")
     public ApiResponse<?> createCase(@RequestBody Map<String, Object> body) { return ApiResponse.ok(practice.saveCase(null, body)); }

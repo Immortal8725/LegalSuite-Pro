@@ -107,11 +107,11 @@ public class PracticeService {
         return cases.findByTenantIdOrderByUpdatedAtDesc(tid()).stream().map(this::caseView).toList();
     }
 
-    public Map<String, Object> getCase(UUID id) {
-        LegalCase c = requireCase(id);
+    public Map<String, Object> getCase(String ref) {
+        LegalCase c = resolveCase(ref);
         Map<String, Object> view = caseView(c);
-        view.put("notes", notes.findByTenantIdAndCaseIdOrderByCreatedAtDesc(tid(), id).stream().map(this::noteView).toList());
-        view.put("documents", documents.findByTenantIdAndCaseId(tid(), id).stream().map(this::docView).toList());
+        view.put("notes", notes.findByTenantIdAndCaseIdOrderByCreatedAtDesc(tid(), c.getId()).stream().map(this::noteView).toList());
+        view.put("documents", documents.findByTenantIdAndCaseId(tid(), c.getId()).stream().map(this::docView).toList());
         return view;
     }
 
@@ -385,6 +385,18 @@ public class PracticeService {
         m.put("type", n.getType());
         m.put("createdAt", n.getCreatedAt());
         return m;
+    }
+
+    private LegalCase resolveCase(String ref) {
+        if (ref == null || ref.isBlank()) {
+            throw ApiException.badRequest("Missing matter id");
+        }
+        try {
+            return requireCase(UUID.fromString(ref.trim()));
+        } catch (IllegalArgumentException ignored) {
+            return cases.findByTenantIdAndCaseNumberIgnoreCase(tid(), ref.trim())
+                    .orElseThrow(() -> ApiException.notFound("Matter not found"));
+        }
     }
 
     private LegalCase requireCase(UUID id) {

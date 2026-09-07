@@ -6,23 +6,42 @@ import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input, Select, Textarea } from "@/components/ui/input";
+import { ErrorBanner } from "@/components/ui/dialog";
+import { Select, Textarea } from "@/components/ui/input";
 import type { Matter } from "@/lib/types";
+import Link from "next/link";
 
 export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
   const [c, setC] = useState<Matter | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const load = () => apiGet<Matter>(`/api/v1/cases/${params.id}`).then((row) => {
-    setC(row);
-    setStatus(row.status);
-  });
+  const load = () =>
+    apiGet<Matter>(`/api/v1/cases/${params.id}`).then((row) => {
+      setC(row);
+      setStatus(row.status);
+      setError(null);
+    }).catch((e) => {
+      setC(null);
+      setError(e instanceof Error ? e.message : "Could not load this matter");
+    });
 
   useEffect(() => {
     load();
   }, [params.id]);
+
+  if (error && !c) {
+    return (
+      <div>
+        <ErrorBanner error={error} />
+        <Link href="/cases" className="mt-4 inline-block text-sm font-semibold text-navy">
+          Back to matters
+        </Link>
+      </div>
+    );
+  }
 
   if (!c) return <p className="text-sm text-slate-500">Loading matter…</p>;
 
