@@ -135,6 +135,9 @@ public class PracticeService {
         c.setBillingType(str(body, "billingType", c.getBillingType() == null ? "hourly" : c.getBillingType()));
         if (body.get("billingRate") != null) c.setBillingRate(new BigDecimal(String.valueOf(body.get("billingRate"))));
         if (body.get("leadAttorneyId") != null) c.setLeadAttorneyId(UUID.fromString(String.valueOf(body.get("leadAttorneyId"))));
+        if (body.get("statuteOfLimitations") != null && !String.valueOf(body.get("statuteOfLimitations")).isBlank()) {
+            c.setStatuteOfLimitations(LocalDate.parse(String.valueOf(body.get("statuteOfLimitations"))));
+        }
         if (c.getCaseNumber() == null) {
             c.setCaseNumber("C-" + (1000 + cases.countByTenantId(tid()) + 1));
         }

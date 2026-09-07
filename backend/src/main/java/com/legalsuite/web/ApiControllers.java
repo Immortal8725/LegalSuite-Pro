@@ -254,6 +254,14 @@ public class ApiControllers {
     @GetMapping("/api/v1/voice/ice-servers")
     public ApiResponse<?> ice() { return ApiResponse.ok(voice.iceServers()); }
 
+    @GetMapping("/api/v1/voice/ethics")
+    public ApiResponse<?> voiceEthics() { return ApiResponse.ok(voice.ethics()); }
+
+    @GetMapping("/api/v1/docket")
+    public ApiResponse<?> docket() {
+        return ApiResponse.ok(dashboard.docket(com.legalsuite.common.TenantContext.requireTenant()));
+    }
+
     @GetMapping("/api/v1/conversations")
     public ApiResponse<?> convos() { return ApiResponse.ok(comms.conversations()); }
 

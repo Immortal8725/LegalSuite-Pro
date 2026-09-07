@@ -39,6 +39,8 @@ public class CallRecord {
     private boolean recordingEnabled;
     private boolean recordingConsentGiven;
     private String recordingUrl;
+    @Column(length = 8000)
+    private String transcript;
     @Column(length = 4000)
     private String notes;
     private boolean billable = true;

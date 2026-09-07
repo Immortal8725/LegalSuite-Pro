@@ -1,5 +1,16 @@
 export type Id = string;
 
+export type DocketItem = {
+  kind: string;
+  label?: string;
+  date: string;
+  daysLeft: number;
+  urgency: string;
+  caseId?: Id;
+  caseNumber?: string;
+  title?: string;
+};
+
 export type Dashboard = {
   activeCases: number;
   totalClients: number;
@@ -9,6 +20,8 @@ export type Dashboard = {
   outstanding: number;
   unreadNotifications: number;
   callCount: number;
+  newLeads?: number;
+  docket?: DocketItem[];
   recentCases: Matter[];
   upcomingEvents: CalEvent[];
 };

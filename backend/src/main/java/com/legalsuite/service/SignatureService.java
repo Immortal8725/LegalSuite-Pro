@@ -2,7 +2,9 @@ package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
+import com.legalsuite.domain.Note;
 import com.legalsuite.domain.SignatureRequest;
+import com.legalsuite.repo.NoteRepository;
 import com.legalsuite.repo.SignatureRequestRepository;
 import java.time.Instant;
 import java.util.HashMap;
@@ -15,10 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SignatureService {
     private final SignatureRequestRepository signatures;
+    private final NoteRepository notes;
     private final AuditService audit;
 
-    public SignatureService(SignatureRequestRepository signatures, AuditService audit) {
+    public SignatureService(SignatureRequestRepository signatures, NoteRepository notes, AuditService audit) {
         this.signatures = signatures;
+        this.notes = notes;
         this.audit = audit;
     }
 
@@ -64,6 +68,16 @@ public class SignatureService {
         s.setSignedAt(Instant.now());
         if (body.get("signerName") != null) s.setSignerName(String.valueOf(body.get("signerName")));
         signatures.save(s);
+        if (s.getCaseId() != null) {
+            Note n = new Note();
+            n.setTenantId(s.getTenantId());
+            n.setCaseId(s.getCaseId());
+            n.setClientId(s.getClientId());
+            n.setTitle("Engagement signed");
+            n.setBody(s.getSignerName() + " signed “" + s.getTitle() + "”. The wet ink lives on this tenant.");
+            n.setType("esign");
+            notes.save(n);
+        }
         return publicMap(s);
     }
 

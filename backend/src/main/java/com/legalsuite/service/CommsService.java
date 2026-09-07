@@ -186,6 +186,19 @@ public class CommsService {
         lead.setDescription(body.get("description") == null ? null : String.valueOf(body.get("description")));
         lead.setStatus("new");
         leads.save(lead);
+        users.findByTenantIdOrderByLastNameAsc(tenant.getId()).stream()
+                .filter(u -> List.of("owner", "partner", "attorney").contains(u.getRole()))
+                .limit(3)
+                .forEach(u -> {
+                    AppNotification n = new AppNotification();
+                    n.setTenantId(tenant.getId());
+                    n.setUserId(u.getId());
+                    n.setTitle("New consult from the website");
+                    n.setBody(lead.getName() + " asked about " + (lead.getCaseType() == null ? "a matter" : lead.getCaseType()) + ".");
+                    n.setType("intake");
+                    n.setLink("/leads");
+                    notifications.save(n);
+                });
         return Map.of("id", lead.getId(), "status", "received",
                 "message", "Thank you. A member of " + tenant.getFirmName() + " will reach out shortly.");
     }

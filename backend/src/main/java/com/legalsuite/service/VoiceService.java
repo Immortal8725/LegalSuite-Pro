@@ -4,9 +4,13 @@ import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
 import com.legalsuite.domain.CallRecord;
+import com.legalsuite.domain.Note;
+import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.CallRecordRepository;
+import com.legalsuite.repo.NoteRepository;
+import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.TimeEntryRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,12 +31,21 @@ public class VoiceService {
     private final CallRecordRepository calls;
     private final TimeEntryRepository timeEntries;
     private final AppUserRepository users;
+    private final TenantRepository tenants;
+    private final NoteRepository notes;
     private final Map<String, List<Map<String, Object>>> inbox = new ConcurrentHashMap<>();
 
-    public VoiceService(CallRecordRepository calls, TimeEntryRepository timeEntries, AppUserRepository users) {
+    public VoiceService(
+            CallRecordRepository calls,
+            TimeEntryRepository timeEntries,
+            AppUserRepository users,
+            TenantRepository tenants,
+            NoteRepository notes) {
         this.calls = calls;
         this.timeEntries = timeEntries;
         this.users = users;
+        this.tenants = tenants;
+        this.notes = notes;
     }
 
     public List<Map<String, Object>> history() {
@@ -48,7 +61,11 @@ public class VoiceService {
         rec.setDirection(String.valueOf(body.getOrDefault("direction", "internal")));
         rec.setStatus("ringing");
         rec.setRecordingEnabled(Boolean.parseBoolean(String.valueOf(body.getOrDefault("recordingEnabled", "false"))));
-        rec.setRecordingConsentGiven(rec.isRecordingEnabled());
+        rec.setRecordingConsentGiven(rec.isRecordingEnabled()
+                && Boolean.parseBoolean(String.valueOf(body.getOrDefault("recordingConsentGiven", rec.isRecordingEnabled() ? "true" : "false"))));
+        if (rec.isRecordingEnabled() && !rec.isRecordingConsentGiven()) {
+            throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
+        }
         if (body.get("calleeUserId") != null) rec.setCalleeUserId(UUID.fromString(String.valueOf(body.get("calleeUserId"))));
         if (body.get("caseId") != null) rec.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
         if (body.get("clientId") != null) rec.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
@@ -77,7 +94,26 @@ public class VoiceService {
         BigDecimal minutes = BigDecimal.valueOf(seconds).divide(BigDecimal.valueOf(60), 4, RoundingMode.HALF_UP);
         rec.setTotalCost(rec.getCostPerMinute().multiply(minutes).setScale(4, RoundingMode.HALF_UP));
         if (body != null && body.get("notes") != null) rec.setNotes(String.valueOf(body.get("notes")));
+        if (body != null && body.get("transcript") != null) rec.setTranscript(String.valueOf(body.get("transcript")));
         if (body != null && body.get("recordingUrl") != null) rec.setRecordingUrl(String.valueOf(body.get("recordingUrl")));
+
+        if (rec.getCaseId() != null && (rec.getNotes() != null || rec.getTranscript() != null)) {
+            Note n = new Note();
+            n.setTenantId(tid());
+            n.setCaseId(rec.getCaseId());
+            n.setUserId(rec.getCallerUserId());
+            n.setTitle(rec.isRecordingEnabled() ? "Call recording (opt-in)" : "Call on the matter");
+            StringBuilder bodyText = new StringBuilder();
+            bodyText.append("Duration ").append(seconds).append("s. WebRTC is free; PSTN invoices at month end.");
+            if (rec.isRecordingEnabled()) {
+                bodyText.append(" Recording: opt-in, consent logged.");
+            }
+            if (rec.getNotes() != null) bodyText.append("\n").append(rec.getNotes());
+            if (rec.getTranscript() != null) bodyText.append("\n\nTranscript (stays on this tenant):\n").append(rec.getTranscript());
+            n.setBody(bodyText.toString());
+            n.setType("call");
+            notes.save(n);
+        }
 
         if (rec.isBillable() && rec.getCallerUserId() != null) {
             AppUser user = users.findById(rec.getCallerUserId()).orElse(null);
@@ -128,6 +164,14 @@ public class VoiceService {
                 "note", "In-app WebRTC calls are free. PSTN minutes invoice at month end.");
     }
 
+    public Map<String, Object> ethics() {
+        Tenant tenant = tenants.findById(tid()).orElseThrow(() -> ApiException.notFound("Firm not found"));
+        Map<String, Object> rules = new HashMap<>(CallEthics.forState(tenant.getState()));
+        rules.put("recordingOptIn", true);
+        rules.put("inAppFree", true);
+        return rules;
+    }
+
     public Map<String, Object> iceServers() {
         return Map.of("iceServers", List.of(
                 Map.of("urls", "stun:stun.l.google.com:19302"),
@@ -171,7 +215,9 @@ public class VoiceService {
         m.put("durationSeconds", c.getDurationSeconds());
         m.put("totalCost", c.getTotalCost());
         m.put("recordingEnabled", c.isRecordingEnabled());
+        m.put("recordingConsentGiven", c.isRecordingConsentGiven());
         m.put("recordingUrl", c.getRecordingUrl());
+        m.put("transcript", c.getTranscript());
         m.put("callerUserId", c.getCallerUserId());
         m.put("calleeUserId", c.getCalleeUserId());
         m.put("caseId", c.getCaseId());

@@ -43,7 +43,7 @@ import { Input } from "@/components/ui/input";
 import type { Notice, Matter, Party } from "@/lib/types";
 
 const NAV = [
-  { section: "Main", items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
+  { section: "Main", items: [{ href: "/dashboard", label: "Docket", icon: LayoutDashboard }] },
   {
     section: "Practice",
     items: [
@@ -61,7 +61,8 @@ const NAV = [
     section: "Finance",
     items: [
       { href: "/time", label: "Time Tracking", icon: Timer, module: "timetracking" },
-      { href: "/billing", label: "Billing", icon: Receipt, module: "billing" },
+      { href: "/billing", label: "Client invoices", icon: Receipt, module: "billing" },
+      { href: "/usage", label: "Month-end usage", icon: Receipt },
       { href: "/trust", label: "Trust Accounting", icon: Landmark, module: "trust" },
       { href: "/expenses", label: "Expenses", icon: Wallet, module: "expenses" },
     ],
@@ -71,7 +72,7 @@ const NAV = [
     items: [
       { href: "/messages", label: "Messages", icon: MessageSquare, module: "messages" },
       { href: "/voice", label: "Voice Calls", icon: Phone, module: "voice" },
-      { href: "/leads", label: "Intake Leads", icon: Globe, module: "clientportal" },
+      { href: "/leads", label: "Hire pipeline", icon: Globe, module: "clientportal" },
       { href: "/ai", label: "AI Assistant", icon: Sparkles, module: "ai" },
     ],
   },

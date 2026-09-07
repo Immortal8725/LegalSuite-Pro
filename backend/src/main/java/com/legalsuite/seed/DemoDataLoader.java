@@ -227,10 +227,16 @@ public class DemoDataLoader implements CommandLineRunner {
         Client taylor = client(firm.getId(), "company", null, null, "Taylor Holdings", "ops@taylorhold.com", "website", alex);
 
         LegalCase c1 = matter(firm.getId(), sarah, john, "C-1042", "Johnson v. Corp Inc.", "Litigation", "discovery", "350");
+        c1.setStatuteOfLimitations(LocalDate.now().plusDays(16));
+        cases.save(c1);
         LegalCase c2 = matter(firm.getId(), davis, maria, "C-1045", "Davis v. Metro Transit", "Personal Injury", "open", "325");
+        c2.setStatuteOfLimitations(LocalDate.now().plusDays(5));
+        cases.save(c2);
         LegalCase c3 = matter(firm.getId(), martinez, john, "C-1038", "Martinez Estate", "Estate Planning", "pending", "350");
         LegalCase c4 = matter(firm.getId(), abc, alex, "C-1050", "ABC Corp Formation", "Corporate", "open", "225");
         LegalCase c5 = matter(firm.getId(), taylor, maria, "C-1048", "Taylor Contract Dispute", "Contract", "mediation", "325");
+        c5.setStatuteOfLimitations(LocalDate.now().plusDays(28));
+        cases.save(c5);
 
         contact(firm.getId(), "opposing_counsel", "Renee", "Hale", "Hale & Whit", "rhale@halewhit.com");
         contact(firm.getId(), "judge", "Harold", "Nguyen", "Travis County District Court", null);
@@ -294,6 +300,21 @@ public class DemoDataLoader implements CommandLineRunner {
         call.setDurationSeconds(754);
         call.setTotalCost(BigDecimal.ZERO);
         calls.save(call);
+
+        CallRecord pstn = new CallRecord();
+        pstn.setTenantId(firm.getId());
+        pstn.setCaseId(c2.getId());
+        pstn.setCallerUserId(maria.getId());
+        pstn.setCallType("pstn_outbound");
+        pstn.setDirection("outbound");
+        pstn.setStatus("completed");
+        pstn.setStartedAt(Instant.now().minus(26, ChronoUnit.HOURS));
+        pstn.setEndedAt(Instant.now().minus(26, ChronoUnit.HOURS).plusSeconds(480));
+        pstn.setDurationSeconds(480);
+        pstn.setCostPerMinute(new BigDecimal("0.02"));
+        pstn.setTotalCost(new BigDecimal("0.16"));
+        pstn.setRecordingEnabled(false);
+        calls.save(pstn);
 
         Conversation conv = new Conversation();
         conv.setTenantId(firm.getId());

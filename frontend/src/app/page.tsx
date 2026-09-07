@@ -2,14 +2,12 @@ import Link from "next/link";
 import { Scale, Check } from "lucide-react";
 
 const FEATURES = [
-  ["Cases & matters", "Statuses, court info, opposing counsel, notes, and a full timeline."],
-  ["Client CRM + intake", "Leads from your public site land in the same workspace as retained clients."],
-  ["Documents", "Upload, categorize, and keep privileged files with the matter."],
-  ["Calendar & tasks", "Hearings, filing deadlines, and a kanban for the week."],
-  ["Time, invoices, trust", "6-minute increments, draft invoices, IOLTA ledgers that cannot overdraw."],
-  ["In-app voice (WebRTC)", "Attorney-to-attorney and attorney-to-client portal calls are free. PSTN bills at month-end."],
-  ["AI on the docket", "Summaries, intake screening, and drafts stay inside the firm. No API key."],
-  ["Templates & e-sign", "Merge letters from matter fields, then send a public signature link."],
+  ["Hire in one motion", "Website consult, conflict check, merged engagement, e-sign, trust retainer — same tenant."],
+  ["The clock is the home screen", "Statutes of limitations and filings sit on the docket, not a buried calendar tab."],
+  ["The phone is on the file", "In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in with a two-party warning."],
+  ["Metered, not seated", "Core stays on. Add-ons and PSTN minutes invoice at month end for what you actually used."],
+  ["Privilege-shaped AI", "Summaries and drafts never leave this tenant. No vendor, no training corpus."],
+  ["IOLTA that cannot overdraw", "Trust ledgers refuse a negative balance. Costs and retainers stay honest."],
 ];
 
 const PLANS = [
@@ -43,12 +41,12 @@ export default function MarketingPage() {
       </nav>
 
       <section className="mx-auto max-w-4xl px-6 pb-16 pt-10 text-center">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">For every size of firm</p>
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">The public page is how work enters</p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight text-navy sm:text-5xl">
-          Register once. Get a live website, a practice desk, and only the modules you click on.
+          Register once. The website takes the consult. The docket watches the clock. The month-end bill is what you used.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-500">
-          Solo shops and 50-attorney teams share the same platform. Every firm receives a public landing page and intake form on day one. Turn on trust accounting, voice minutes, or a client portal when you need them — billed at month end for what you used.
+          Landing → intake → conflict → engagement → IOLTA retainer, in one tenant. In-app calls are free and write time on hangup. Client text never leaves the firm. Add-on modules and PSTN minutes invoice when the month closes — no prepaid buckets, no $99/seat tax on a two-lawyer shop.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/register" className="rounded-xl bg-gold px-6 py-3 font-bold text-navy-dark shadow-lift">

@@ -4,8 +4,10 @@ import com.legalsuite.common.ApiResponse;
 import com.legalsuite.service.AiService;
 import com.legalsuite.service.AuditService;
 import com.legalsuite.service.IntegrationService;
+import com.legalsuite.service.RetainService;
 import com.legalsuite.service.SignatureService;
 import com.legalsuite.service.TemplateService;
+import com.legalsuite.service.UsageService;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,18 +24,24 @@ public class AdvancedControllers {
     private final AiService ai;
     private final IntegrationService integrations;
     private final AuditService audit;
+    private final RetainService retain;
+    private final UsageService usage;
 
     public AdvancedControllers(
             TemplateService templates,
             SignatureService signatures,
             AiService ai,
             IntegrationService integrations,
-            AuditService audit) {
+            AuditService audit,
+            RetainService retain,
+            UsageService usage) {
         this.templates = templates;
         this.signatures = signatures;
         this.ai = ai;
         this.integrations = integrations;
         this.audit = audit;
+        this.retain = retain;
+        this.usage = usage;
     }
 
     @GetMapping("/api/v1/templates")
@@ -124,5 +132,30 @@ public class AdvancedControllers {
     @GetMapping("/api/v1/audit")
     public ApiResponse<?> auditLog() {
         return ApiResponse.ok(audit.list());
+    }
+
+    @PostMapping("/api/v1/retain/{leadId}")
+    public ApiResponse<?> retainLead(@PathVariable UUID leadId, @RequestBody(required = false) Map<String, Object> body) {
+        return ApiResponse.ok(retain.retain(leadId, body == null ? Map.of() : body));
+    }
+
+    @GetMapping("/api/v1/usage")
+    public ApiResponse<?> usagePreview() {
+        return ApiResponse.ok(usage.preview());
+    }
+
+    @GetMapping("/api/v1/usage/history")
+    public ApiResponse<?> usageHistory() {
+        return ApiResponse.ok(usage.history());
+    }
+
+    @PostMapping("/api/v1/usage/issue")
+    public ApiResponse<?> issueUsage() {
+        return ApiResponse.ok(usage.issue());
+    }
+
+    @PostMapping("/api/v1/usage/{id}/pay")
+    public ApiResponse<?> payUsage(@PathVariable UUID id) {
+        return ApiResponse.ok(usage.pay(id));
     }
 }

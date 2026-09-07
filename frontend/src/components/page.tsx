@@ -49,7 +49,7 @@ export function StatusBadge({ status }: { status: string }) {
     consultation: "bg-violet-50 text-violet-700",
     retained: "bg-emerald-50 text-emerald-700",
     declined: "bg-slate-100 text-slate-600",
-    new: "bg-sky-50 text-sky-700",
+    issued: "bg-sky-50 text-sky-700",
     signed: "bg-emerald-50 text-emerald-700",
     void: "bg-slate-100 text-slate-600",
     connected: "bg-emerald-50 text-emerald-700",

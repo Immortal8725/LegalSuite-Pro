@@ -156,6 +156,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         caseId: extras?.caseId,
         clientId: extras?.clientId,
         recordingEnabled: extras?.record ?? false,
+        recordingConsentGiven: extras?.record ?? false,
       });
       const pc = await ensurePc();
       (pc as RTCPeerConnection & { _peerId?: string })._peerId = peer.id;

@@ -6,6 +6,7 @@ import { Button, PageHeader } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Label, Select, Textarea } from "@/components/ui/input";
+import { PrivilegeStrip } from "@/components/privilege-strip";
 import type { Lead, Matter } from "@/lib/types";
 
 type ChatTurn = { role: "you" | "assistant"; text: string };
@@ -43,6 +44,7 @@ export default function AiPage() {
         title="AI assistant"
         subtitle="Runs on this firm’s data only. No OpenAI key, no outbound client text."
       />
+      <PrivilegeStrip />
       <ErrorBanner error={error} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

@@ -10,6 +10,8 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import type { CallRow, TeamMember } from "@/lib/types";
 import { formatDateTime, moneyExact } from "@/lib/utils";
 
+type Ethics = { state: string; allPartyConsent: boolean; notice: string };
+
 type Registry = {
   totalCalls: number;
   webrtcCalls: number;
@@ -28,6 +30,7 @@ export default function VoicePage() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [peerId, setPeerId] = useState("");
   const [record, setRecord] = useState(false);
+  const [ethics, setEthics] = useState<Ethics | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = () =>
@@ -35,11 +38,13 @@ export default function VoicePage() {
       apiGet<CallRow[]>("/api/v1/calls"),
       apiGet<Registry>("/api/v1/calls/registry"),
       apiGet<TeamMember[]>("/api/v1/users"),
+      apiGet<Ethics>("/api/v1/voice/ethics"),
     ])
-      .then(([c, u, t]) => {
+      .then(([c, u, t, e]) => {
         setRows(c);
         setUsage(u);
         setTeam(t.filter((x) => x.id !== user?.id));
+        setEthics(e);
       })
       .catch((e) => setError(e.message));
 
@@ -53,7 +58,7 @@ export default function VoicePage() {
     <div>
       <PageHeader
         title="Voice registry"
-        subtitle="In-app WebRTC is free. PSTN minutes invoice at month end. Recording is opt-in."
+        subtitle="In-app WebRTC is free. PSTN invoices at month end. Recording is opt-in and parked on the matter."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <select
@@ -74,13 +79,23 @@ export default function VoicePage() {
             </label>
             <Button
               disabled={!peer}
-              onClick={() => peer && startCall(peer, { record }).then(load)}
+              onClick={async () => {
+                if (!peer) return;
+                if (record && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
+                await startCall(peer, { record });
+                load();
+              }}
             >
               Call
             </Button>
           </div>
         }
       />
+      {ethics && (
+        <p className={`mb-4 rounded-lg border px-3 py-2 text-xs ${ethics.allPartyConsent ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+          {ethics.state}: {ethics.notice}
+        </p>
+      )}
       <ErrorBanner error={error} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[

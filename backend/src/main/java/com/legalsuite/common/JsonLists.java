@@ -30,6 +30,17 @@ public final class JsonLists {
         }
     }
 
+    public static List<Map<String, Object>> objects(String json) {
+        if (json == null || json.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            return MAPPER.readValue(json, new TypeReference<>() {});
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
     public static Map<String, Object> map(String json) {
         if (json == null || json.isBlank()) {
             return Map.of();

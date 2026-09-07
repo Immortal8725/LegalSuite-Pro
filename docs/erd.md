@@ -118,3 +118,4 @@ erDiagram
 - `RefreshToken` is omitted from the diagram; it is an auth satellite of `APP_USER`.
 - Seed documents may use a `seed://` storage key and are not downloadable until a real file is uploaded.
 - Landing pages are 1:1 with tenant (`LANDING_PAGE.tenant_id` unique in practice).
+- `USAGE_INVOICE` is the month-end bill to LegalSuite (modules + PSTN), separate from client `INVOICE` rows.
