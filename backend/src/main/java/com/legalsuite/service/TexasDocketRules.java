@@ -170,11 +170,11 @@ public final class TexasDocketRules {
         String blob = blob(f);
         if (contains(blob, "malprac", "med mal", "medical malpractice", "health care liability")) return "medical_malpractice";
         if (contains(blob, "estate", "probate", "will contest", "heir", "letters testamentary")) return "estate";
-        if (contains(blob, "contract", "breach", "commercial", "agreement", "debt", "invoice")) return "contract";
         if (contains(blob, "injur", "accident", "collision", "crash", "negligence", "tort", "vehicle", "slip",
                 "transit", "auto", "wrongful death", "personal injury")) {
             return "personal_injury";
         }
+        if (contains(blob, "contract", "breach", "agreement", "debt", "invoice")) return "contract";
         if (contains(blob, "litigation")) return "personal_injury";
         return "other";
     }

@@ -84,6 +84,17 @@ class TexasDocketRulesTest {
     }
 
     @Test
+    void injuryBeatsCommercialWording() {
+        TexasDocketRules.Facts f = new TexasDocketRules.Facts();
+        f.practiceArea = "Litigation";
+        f.description = "Personal injury suit after a commercial vehicle collision.";
+        f.accrualDate = LocalDate.of(2024, 9, 24);
+        TexasDocketRules.Result r = TexasDocketRules.compute(f);
+        assertEquals("personal_injury", r.track());
+        assertEquals(LocalDate.of(2026, 9, 24), r.solDate());
+    }
+
+    @Test
     void yesterdayInNarrativeIsAccrual() {
         assertEquals(LocalDate.now().minusDays(1), TexasDocketRules.inferAccrual("Crash yesterday on I-35", LocalDate.now()));
     }

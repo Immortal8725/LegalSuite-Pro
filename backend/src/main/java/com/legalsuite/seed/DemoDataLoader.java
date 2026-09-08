@@ -228,7 +228,7 @@ public class DemoDataLoader implements CommandLineRunner {
         Client taylor = client(firm.getId(), "company", null, null, "Taylor Holdings", "ops@taylorhold.com", "website", alex);
 
         LegalCase c1 = matter(firm.getId(), sarah, john, "C-1042", "Johnson v. Corp Inc.", "Litigation", "discovery", "350");
-        c1.setDescription("Personal injury suit against Corp Inc. after a commercial vehicle collision.");
+        c1.setDescription("Personal injury suit against Corp Inc. after a vehicle collision.");
         c1.setOpposingParty("Corp Inc.");
         c1.setAccrualDate(LocalDate.now().plusDays(16).minusYears(2));
         stampDocket(c1);
