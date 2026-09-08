@@ -61,7 +61,10 @@ public class RetainService {
         UUID tid = TenantContext.requireTenant();
         Lead lead = leads.findByIdAndTenantId(leadId, tid).orElseThrow(() -> ApiException.notFound("Lead not found"));
         boolean force = Boolean.parseBoolean(String.valueOf(body.getOrDefault("force", "false")));
-        Map<String, Object> conflict = comms.conflictCheck(lead.getName());
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("opposingParty", lead.getOpposingParty());
+        extra.put("email", lead.getEmail());
+        Map<String, Object> conflict = comms.conflictCheck(lead.getName(), extra);
         int matches = ((Number) conflict.getOrDefault("matchCount", 0)).intValue();
         if (matches > 0 && !force && !"cleared".equals(conflict.get("status"))) {
             Map<String, Object> blocked = new HashMap<>();
@@ -94,6 +97,12 @@ public class RetainService {
         }
 
         String area = lead.getCaseType() == null || lead.getCaseType().isBlank() ? "General" : lead.getCaseType();
+        TexasDocketRules.Facts facts = factsFromLead(lead);
+        if (body.get("accrualDate") != null) facts.accrualDate = TexasDocketRules.parseDate(body.get("accrualDate"));
+        if (body.get("dateOfBirth") != null) facts.dateOfBirth = TexasDocketRules.parseDate(body.get("dateOfBirth"));
+        if (body.get("governmentalDefendant") != null) facts.governmentalDefendant = TexasDocketRules.bool(body.get("governmentalDefendant"));
+        if (body.get("opposingParty") != null) facts.opposingParty = String.valueOf(body.get("opposingParty"));
+        TexasDocketRules.Result docket = TexasDocketRules.compute(facts);
         Map<String, Object> caseBody = new HashMap<>();
         caseBody.put("clientId", client.getId());
         caseBody.put("title", area + " — " + client.displayName());
@@ -101,7 +110,12 @@ public class RetainService {
         caseBody.put("caseType", area);
         caseBody.put("description", lead.getDescription());
         caseBody.put("status", "intake");
-        caseBody.put("statuteOfLimitations", defaultSol(area).toString());
+        caseBody.put("opposingParty", facts.opposingParty);
+        if (facts.accrualDate != null) caseBody.put("accrualDate", facts.accrualDate.toString());
+        if (facts.dateOfBirth != null) caseBody.put("dateOfBirth", facts.dateOfBirth.toString());
+        if (facts.discoveryDate != null) caseBody.put("discoveryDate", facts.discoveryDate.toString());
+        if (facts.probateOpened != null) caseBody.put("probateOpened", facts.probateOpened.toString());
+        caseBody.put("governmentalDefendant", facts.governmentalDefendant || TexasDocketRules.looksGovernmental(facts.opposingParty));
         Map<String, Object> matter = practice.saveCase(null, caseBody);
         UUID caseId = (UUID) matter.get("id");
 
@@ -155,8 +169,21 @@ public class RetainService {
         out.put("signature", sig);
         out.put("signUrl", sig.get("signUrl"));
         out.put("trust", trust);
-        out.put("message", "Conflict ran. Matter opened. Engagement is out for signature. Retainer posted to trust when an IOLTA exists.");
+        out.put("docket", docket.asMap());
+        out.put("message", "Conflict ran. Texas clocks stamped. Matter opened. Engagement is out for signature. Retainer posted to trust when an IOLTA exists.");
         return out;
+    }
+
+    static TexasDocketRules.Facts factsFromLead(Lead lead) {
+        TexasDocketRules.Facts f = new TexasDocketRules.Facts();
+        f.practiceArea = lead.getCaseType();
+        f.caseType = lead.getCaseType();
+        f.description = lead.getDescription();
+        f.opposingParty = lead.getOpposingParty();
+        f.accrualDate = lead.getAccrualDate();
+        f.dateOfBirth = lead.getDateOfBirth();
+        f.governmentalDefendant = lead.isGovernmentalDefendant();
+        return f;
     }
 
     private String fallbackLetter(Client client, Map<String, Object> matter) {
@@ -170,13 +197,9 @@ public class RetainService {
     }
 
     static LocalDate defaultSol(String area) {
-        String a = area == null ? "" : area.toLowerCase(Locale.ROOT);
-        if (a.contains("injur") || a.contains("accident") || a.contains("malpractice")) {
-            return LocalDate.now().plusYears(2);
-        }
-        if (a.contains("estate") || a.contains("probate")) {
-            return LocalDate.now().plusYears(4);
-        }
-        return LocalDate.now().plusYears(2);
+        TexasDocketRules.Facts f = new TexasDocketRules.Facts();
+        f.practiceArea = area;
+        f.accrualDate = LocalDate.now();
+        return TexasDocketRules.compute(f).solDate();
     }
 }

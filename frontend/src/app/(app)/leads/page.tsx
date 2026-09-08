@@ -7,7 +7,8 @@ import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { PrivilegeStrip } from "@/components/privilege-strip";
-import type { ConflictHit, Lead } from "@/lib/types";
+import type { ConflictHit, DocketPreview, Lead } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 const STAGES = ["new", "contacted", "consultation", "retained", "declined"];
 
@@ -18,7 +19,8 @@ type RetainResult = {
   signUrl?: string;
   message?: string;
   leadId?: string;
-  matter?: { id: string; caseNumber?: string; title?: string };
+  matter?: { id: string; caseNumber?: string; title?: string; solCitation?: string; statuteOfLimitations?: string };
+  docket?: DocketPreview;
 };
 
 export default function LeadsPage() {
@@ -50,7 +52,7 @@ export default function LeadsPage() {
     <div>
       <PageHeader
         title="Hire pipeline"
-        subtitle="Website consult → conflict → engagement → IOLTA retainer. One motion. Ten minutes."
+        subtitle="Website consult → party conflict → Texas clocks → engagement → IOLTA. One motion."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
@@ -58,6 +60,14 @@ export default function LeadsPage() {
         <div className="my-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm">
           <p className="font-semibold text-red-800">{result.reason}</p>
           <p className="mt-1 text-red-700">{result.conflict?.matchCount} hit(s) on “{result.conflict?.searchName}”.</p>
+          <ul className="mt-2 list-disc pl-5 text-red-800">
+            {(result.conflict?.matches || []).map((m, i) => (
+              <li key={i}>
+                <span className="font-semibold uppercase">{m.role || m.type}</span>: {m.name}
+                {m.detail ? ` — ${m.detail}` : ""}
+              </li>
+            ))}
+          </ul>
           <Button className="mt-3" variant="danger" onClick={() => result.leadId && retain(result.leadId, true)}>
             Written waiver on file — retain anyway
           </Button>
@@ -72,6 +82,12 @@ export default function LeadsPage() {
               <Link className="font-semibold underline" href={`/cases/${result.matter.id}`}>
                 {result.matter.caseNumber}
               </Link>
+            </p>
+          )}
+          {result.docket?.solDate && (
+            <p className="mt-1">
+              Texas clock: {result.docket.controllingCitation || "SOL"} · {formatDate(result.docket.solDate)}
+              {result.docket.controllingKind === "notice" ? " — governmental notice controls" : ""}
             </p>
           )}
           {result.signUrl && (
@@ -95,7 +111,14 @@ export default function LeadsPage() {
                     <div className="font-semibold">{l.name}</div>
                     <div className="text-xs text-slate-500">{l.email}</div>
                     <p className="mt-1 text-xs">{l.caseType}</p>
+                    {l.opposingParty && <p className="mt-1 text-xs font-medium text-red-800">v. {l.opposingParty}</p>}
                     <p className="mt-1 text-xs text-slate-500">{l.description}</p>
+                    {l.docket?.solDate && (
+                      <p className="mt-1 text-[11px] text-navy">
+                        {l.docket.controllingKind === "notice" ? "TTCA notice" : "SOL"} {formatDate(l.docket.controllingDate || l.docket.solDate)}
+                        {l.docket.controllingCitation ? ` · ${l.docket.controllingCitation}` : ""}
+                      </p>
+                    )}
                     <StatusBadge status={l.status} />
                     <select
                       className="mt-2 h-8 w-full rounded border text-xs"

@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,10 @@ public class Lead {
     private String caseType;
     @Column(length = 4000)
     private String description;
+    private String opposingParty;
+    private LocalDate accrualDate;
+    private LocalDate dateOfBirth;
+    private boolean governmentalDefendant;
     private String status = "new";
     private Instant createdAt = Instant.now();
 }

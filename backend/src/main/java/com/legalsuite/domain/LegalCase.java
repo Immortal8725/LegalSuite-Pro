@@ -45,6 +45,20 @@ public class LegalCase {
     private LocalDate dateOpened = LocalDate.now();
     private LocalDate dateClosed;
     private LocalDate statuteOfLimitations;
+    private LocalDate accrualDate;
+    private LocalDate discoveryDate;
+    private LocalDate plaintiffDob;
+    private LocalDate probateOpened;
+    private boolean governmentalDefendant;
+    private String docketTrack;
+    private String controllingKind;
+    private String solRuleId;
+    @Column(length = 500)
+    private String solCitation;
+    @Column(length = 2000)
+    private String solReason;
+    @Column(length = 4000)
+    private String docketClocksJson;
     @Column(length = 2000)
     private String tagsJson;
     private boolean conflictChecked;

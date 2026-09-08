@@ -107,12 +107,27 @@ public class DashboardService {
         List<Map<String, Object>> items = new ArrayList<>();
         LocalDate today = LocalDate.now();
         for (LegalCase c : cases.findByTenantIdOrderByUpdatedAtDesc(tid)) {
-            if (c.getStatuteOfLimitations() == null) continue;
             if (List.of("closed", "settled", "archived").contains(c.getStatus())) continue;
-            long days = ChronoUnit.DAYS.between(today, c.getStatuteOfLimitations());
-            if (days > 45) continue;
-            items.add(docketItem("sol", c, c.getStatuteOfLimitations().toString(), days,
-                    "Statute of limitations"));
+            List<Map<String, Object>> clocks = com.legalsuite.common.JsonLists.objects(c.getDocketClocksJson());
+            if (clocks.isEmpty() && c.getStatuteOfLimitations() != null) {
+                long days = ChronoUnit.DAYS.between(today, c.getStatuteOfLimitations());
+                if (days <= 45) {
+                    items.add(docketItem("sol", c, c.getStatuteOfLimitations().toString(), days,
+                            "Statute of limitations", c.getSolCitation(), c.getSolReason()));
+                }
+            } else {
+                for (Map<String, Object> clock : clocks) {
+                    LocalDate date = TexasDocketRules.parseDate(clock.get("date"));
+                    if (date == null) continue;
+                    long days = ChronoUnit.DAYS.between(today, date);
+                    if (days > 45 && days >= 0) continue;
+                    String kind = String.valueOf(clock.getOrDefault("kind", "sol"));
+                    items.add(docketItem(kind, c, date.toString(), days,
+                            String.valueOf(clock.getOrDefault("title", kind)),
+                            clock.get("citation") == null ? null : String.valueOf(clock.get("citation")),
+                            clock.get("reason") == null ? null : String.valueOf(clock.get("reason"))));
+                }
+            }
         }
         Instant horizon = Instant.now().plus(45, ChronoUnit.DAYS);
         for (CalendarEvent e : events.findByTenantIdAndStartTimeGreaterThanEqualOrderByStartTimeAsc(tid, Instant.now().minus(2, ChronoUnit.DAYS))) {
@@ -134,10 +149,11 @@ public class DashboardService {
             items.add(item);
         }
         items.sort(Comparator.comparingLong(m -> ((Number) m.get("daysLeft")).longValue()));
-        return items.stream().limit(12).toList();
+        return items.stream().limit(16).toList();
     }
 
-    private Map<String, Object> docketItem(String kind, LegalCase c, String date, long days, String label) {
+    private Map<String, Object> docketItem(
+            String kind, LegalCase c, String date, long days, String label, String citation, String reason) {
         Map<String, Object> item = new HashMap<>();
         item.put("kind", kind);
         item.put("label", label);
@@ -147,6 +163,8 @@ public class DashboardService {
         item.put("caseId", c.getId());
         item.put("caseNumber", c.getCaseNumber());
         item.put("title", c.getTitle());
+        item.put("citation", citation);
+        item.put("reason", reason);
         return item;
     }
 

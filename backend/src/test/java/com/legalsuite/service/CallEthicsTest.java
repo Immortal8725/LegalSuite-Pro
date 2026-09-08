@@ -29,4 +29,9 @@ class RetainSolTest {
     void injuryGetsTwoYears() {
         assertEquals(LocalDate.now().plusYears(2), RetainService.defaultSol("Personal Injury"));
     }
+
+    @Test
+    void contractGetsFourYears() {
+        assertEquals(LocalDate.now().plusYears(4), RetainService.defaultSol("Contract"));
+    }
 }

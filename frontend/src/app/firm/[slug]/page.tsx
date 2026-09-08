@@ -17,7 +17,16 @@ export default function FirmLandingPage() {
   const [page, setPage] = useState<Landing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", caseType: "General", description: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    caseType: "General",
+    description: "",
+    opposingParty: "",
+    accrualDate: "",
+    governmentalDefendant: false,
+  });
 
   useEffect(() => {
     apiGet<Landing>(`/api/v1/landing/${slug}`)
@@ -31,7 +40,16 @@ export default function FirmLandingPage() {
     try {
       const res = await apiPost<{ message: string }>(`/api/v1/intake/${slug}`, form);
       setSent(res.message);
-      setForm({ name: "", email: "", phone: "", caseType: "General", description: "" });
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        caseType: "General",
+        description: "",
+        opposingParty: "",
+        accrualDate: "",
+        governmentalDefendant: false,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send.");
     }
@@ -150,6 +168,22 @@ export default function FirmLandingPage() {
                 ))}
               </Select>
             </div>
+            <div>
+              <Label>Who is on the other side?</Label>
+              <Input value={form.opposingParty} onChange={(e) => setForm({ ...form, opposingParty: e.target.value })} placeholder="Person, company, or agency" />
+            </div>
+            <div>
+              <Label>When did it happen?</Label>
+              <Input type="date" value={form.accrualDate} onChange={(e) => setForm({ ...form, accrualDate: e.target.value })} />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.governmentalDefendant}
+                onChange={(e) => setForm({ ...form, governmentalDefendant: e.target.checked })}
+              />
+              The other side is a city, county, school, or transit agency
+            </label>
             <div>
               <Label>What happened?</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />

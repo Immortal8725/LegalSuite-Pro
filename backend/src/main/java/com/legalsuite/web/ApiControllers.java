@@ -6,6 +6,7 @@ import com.legalsuite.service.DashboardService;
 import com.legalsuite.service.FinanceService;
 import com.legalsuite.service.PracticeService;
 import com.legalsuite.service.TenantService;
+import com.legalsuite.service.TexasDocketRules;
 import com.legalsuite.service.VoiceService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -262,6 +263,11 @@ public class ApiControllers {
         return ApiResponse.ok(dashboard.docket(com.legalsuite.common.TenantContext.requireTenant()));
     }
 
+    @PostMapping("/api/v1/docket/preview")
+    public ApiResponse<?> docketPreview(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(TexasDocketRules.compute(TexasDocketRules.Facts.from(body)).asMap());
+    }
+
     @GetMapping("/api/v1/conversations")
     public ApiResponse<?> convos() { return ApiResponse.ok(comms.conversations()); }
 
@@ -302,8 +308,9 @@ public class ApiControllers {
     }
 
     @PostMapping("/api/v1/conflicts/check")
-    public ApiResponse<?> conflict(@RequestBody Map<String, String> body) {
-        return ApiResponse.ok(comms.conflictCheck(body.get("name")));
+    public ApiResponse<?> conflict(@RequestBody Map<String, Object> body) {
+        Object name = body.get("name");
+        return ApiResponse.ok(comms.conflictCheck(name == null ? "" : String.valueOf(name), body));
     }
 
     @GetMapping("/api/v1/conflicts")

@@ -13,7 +13,15 @@ export default function CasesPage() {
   const [clients, setClients] = useState<Party[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", clientId: "", practiceArea: "Litigation", description: "" });
+  const [form, setForm] = useState({
+    title: "",
+    clientId: "",
+    practiceArea: "Litigation",
+    description: "",
+    opposingParty: "",
+    accrualDate: "",
+    governmentalDefendant: false,
+  });
 
   const load = () =>
     Promise.all([apiGet<Matter[]>("/api/v1/cases"), apiGet<Party[]>("/api/v1/clients")])
@@ -105,6 +113,22 @@ export default function CasesPage() {
             <Label>Practice area</Label>
             <Input value={form.practiceArea} onChange={(e) => setForm({ ...form, practiceArea: e.target.value })} />
           </div>
+          <div>
+            <Label>Opposing party</Label>
+            <Input value={form.opposingParty} onChange={(e) => setForm({ ...form, opposingParty: e.target.value })} />
+          </div>
+          <div>
+            <Label>Incident / accrual date</Label>
+            <Input type="date" value={form.accrualDate} onChange={(e) => setForm({ ...form, accrualDate: e.target.value })} />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.governmentalDefendant}
+              onChange={(e) => setForm({ ...form, governmentalDefendant: e.target.checked })}
+            />
+            Governmental defendant (TTCA notice)
+          </label>
           <div>
             <Label>Facts / assignment</Label>
             <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />

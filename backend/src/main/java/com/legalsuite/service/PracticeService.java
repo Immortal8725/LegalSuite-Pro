@@ -135,6 +135,19 @@ public class PracticeService {
         c.setBillingType(str(body, "billingType", c.getBillingType() == null ? "hourly" : c.getBillingType()));
         if (body.get("billingRate") != null) c.setBillingRate(new BigDecimal(String.valueOf(body.get("billingRate"))));
         if (body.get("leadAttorneyId") != null) c.setLeadAttorneyId(UUID.fromString(String.valueOf(body.get("leadAttorneyId"))));
+        LocalDate accrual = TexasDocketRules.parseDate(body.get("accrualDate"));
+        if (accrual != null) c.setAccrualDate(accrual);
+        LocalDate discovery = TexasDocketRules.parseDate(body.get("discoveryDate"));
+        if (discovery != null) c.setDiscoveryDate(discovery);
+        LocalDate dob = TexasDocketRules.parseDate(body.get("dateOfBirth") != null ? body.get("dateOfBirth") : body.get("plaintiffDob"));
+        if (dob != null) c.setPlaintiffDob(dob);
+        LocalDate probate = TexasDocketRules.parseDate(body.get("probateOpened"));
+        if (probate != null) c.setProbateOpened(probate);
+        if (body.get("governmentalDefendant") != null) {
+            c.setGovernmentalDefendant(TexasDocketRules.bool(body.get("governmentalDefendant")));
+        }
+        TexasDocketRules.Result docket = TexasDocketRules.compute(TexasDocketRules.factsFromCase(c));
+        TexasDocketRules.stamp(c, docket);
         if (body.get("statuteOfLimitations") != null && !String.valueOf(body.get("statuteOfLimitations")).isBlank()) {
             c.setStatuteOfLimitations(LocalDate.parse(String.valueOf(body.get("statuteOfLimitations"))));
         }
@@ -322,6 +335,17 @@ public class PracticeService {
         m.put("billingRate", c.getBillingRate());
         m.put("dateOpened", c.getDateOpened());
         m.put("statuteOfLimitations", c.getStatuteOfLimitations());
+        m.put("accrualDate", c.getAccrualDate());
+        m.put("discoveryDate", c.getDiscoveryDate());
+        m.put("plaintiffDob", c.getPlaintiffDob());
+        m.put("probateOpened", c.getProbateOpened());
+        m.put("governmentalDefendant", c.isGovernmentalDefendant());
+        m.put("docketTrack", c.getDocketTrack());
+        m.put("controllingKind", c.getControllingKind());
+        m.put("solRuleId", c.getSolRuleId());
+        m.put("solCitation", c.getSolCitation());
+        m.put("solReason", c.getSolReason());
+        m.put("docketClocks", JsonLists.objects(c.getDocketClocksJson()));
         clients.findById(c.getClientId()).ifPresent(cl -> m.put("clientName", cl.displayName()));
         return m;
     }

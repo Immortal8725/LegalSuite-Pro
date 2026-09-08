@@ -184,6 +184,10 @@ public class CommsService {
         lead.setPhone(body.get("phone") == null ? null : String.valueOf(body.get("phone")));
         lead.setCaseType(body.get("caseType") == null ? null : String.valueOf(body.get("caseType")));
         lead.setDescription(body.get("description") == null ? null : String.valueOf(body.get("description")));
+        lead.setOpposingParty(body.get("opposingParty") == null ? null : String.valueOf(body.get("opposingParty")));
+        lead.setAccrualDate(TexasDocketRules.parseDate(body.get("accrualDate")));
+        lead.setDateOfBirth(TexasDocketRules.parseDate(body.get("dateOfBirth")));
+        lead.setGovernmentalDefendant(TexasDocketRules.bool(body.get("governmentalDefendant")));
         lead.setStatus("new");
         leads.save(lead);
         users.findByTenantIdOrderByLastNameAsc(tenant.getId()).stream()
@@ -217,44 +221,76 @@ public class CommsService {
     }
 
     public List<Map<String, Object>> leads() {
-        return leads.findByTenantIdOrderByCreatedAtDesc(TenantContext.requireTenant()).stream().map(l -> {
-            Map<String, Object> m = new HashMap<>();
-            m.put("id", l.getId());
-            m.put("name", l.getName());
-            m.put("email", l.getEmail());
-            m.put("phone", l.getPhone());
-            m.put("caseType", l.getCaseType());
-            m.put("description", l.getDescription());
-            m.put("status", l.getStatus());
-            m.put("createdAt", l.getCreatedAt());
-            return m;
-        }).toList();
+        return leads.findByTenantIdOrderByCreatedAtDesc(TenantContext.requireTenant()).stream().map(this::leadView).toList();
+    }
+
+    public Map<String, Object> leadView(Lead l) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", l.getId());
+        m.put("name", l.getName());
+        m.put("email", l.getEmail());
+        m.put("phone", l.getPhone());
+        m.put("caseType", l.getCaseType());
+        m.put("description", l.getDescription());
+        m.put("opposingParty", l.getOpposingParty());
+        m.put("accrualDate", l.getAccrualDate());
+        m.put("dateOfBirth", l.getDateOfBirth());
+        m.put("governmentalDefendant", l.isGovernmentalDefendant());
+        m.put("status", l.getStatus());
+        m.put("createdAt", l.getCreatedAt());
+        m.put("docket", TexasDocketRules.compute(RetainService.factsFromLead(l)).asMap());
+        return m;
     }
 
     @Transactional
     public Map<String, Object> conflictCheck(String name) {
-        String q = name.toLowerCase(Locale.ROOT);
-        List<Map<String, Object>> matches = new ArrayList<>();
-        for (Client c : clients.findByTenantIdOrderByLastNameAsc(TenantContext.requireTenant())) {
-            if (c.displayName().toLowerCase(Locale.ROOT).contains(q) || (c.getEmail() != null && c.getEmail().toLowerCase(Locale.ROOT).contains(q))) {
-                matches.add(Map.of("type", "client", "name", c.displayName(), "detail", c.getEmail() == null ? "" : c.getEmail(), "confidence", 0.92));
+        return conflictCheck(name, Map.of());
+    }
+
+    @Transactional
+    public Map<String, Object> conflictCheck(String name, Map<String, ?> extra) {
+        UUID tid = TenantContext.requireTenant();
+        List<String> queries = new ArrayList<>();
+        if (name != null && !name.isBlank()) queries.add(name);
+        if (extra != null) {
+            Object opp = extra.get("opposingParty");
+            if (opp != null && !String.valueOf(opp).isBlank() && !"null".equals(String.valueOf(opp))) {
+                queries.add(String.valueOf(opp));
+            }
+            Object email = extra.get("email");
+            if (email != null && String.valueOf(email).contains("@")) {
+                queries.add(String.valueOf(email));
             }
         }
-        for (Contact c : contacts.findByTenantIdOrderByLastNameAsc(TenantContext.requireTenant())) {
-            String n = ((c.getFirstName() == null ? "" : c.getFirstName()) + " " + (c.getLastName() == null ? "" : c.getLastName())).trim();
-            if (n.toLowerCase(Locale.ROOT).contains(q) || (c.getCompany() != null && c.getCompany().toLowerCase(Locale.ROOT).contains(q))) {
-                matches.add(Map.of("type", c.getType(), "name", n, "detail", c.getCompany() == null ? "" : c.getCompany(), "confidence", 0.8));
+        List<ConflictEngine.Party> index = new ArrayList<>();
+        for (Client c : clients.findByTenantIdOrderByLastNameAsc(tid)) {
+            index.add(new ConflictEngine.Party(
+                    "client", c.displayName(), c.getEmail(), c.getLastName(), c.getFirstName(),
+                    c.getCompanyName(), null, null));
+        }
+        for (Contact c : contacts.findByTenantIdOrderByLastNameAsc(tid)) {
+            String display = ((c.getFirstName() == null ? "" : c.getFirstName()) + " " + (c.getLastName() == null ? "" : c.getLastName())).trim();
+            if (display.isBlank()) display = c.getCompany() == null ? "" : c.getCompany();
+            String role = "opposing_counsel".equals(c.getType()) ? "counsel" : ("opposing_party".equals(c.getType()) ? "adverse" : "contact");
+            index.add(new ConflictEngine.Party(role, display, c.getEmail(), c.getLastName(), c.getFirstName(), c.getCompany(), null, null));
+        }
+        for (LegalCase c : cases.findByTenantIdOrderByUpdatedAtDesc(tid)) {
+            if (c.getOpposingParty() != null && !c.getOpposingParty().isBlank()) {
+                index.add(new ConflictEngine.Party(
+                        "adverse", c.getOpposingParty(), null, null, null, c.getOpposingParty(),
+                        c.getCaseNumber(), c.getTitle()));
+            }
+            if (c.getOpposingCounsel() != null && !c.getOpposingCounsel().isBlank()) {
+                index.add(new ConflictEngine.Party(
+                        "counsel", c.getOpposingCounsel(), null, lastToken(c.getOpposingCounsel()), null, null,
+                        c.getCaseNumber(), c.getTitle()));
             }
         }
-        for (LegalCase c : cases.findByTenantIdOrderByUpdatedAtDesc(TenantContext.requireTenant())) {
-            if ((c.getOpposingParty() != null && c.getOpposingParty().toLowerCase(Locale.ROOT).contains(q))
-                    || (c.getTitle() != null && c.getTitle().toLowerCase(Locale.ROOT).contains(q))) {
-                matches.add(Map.of("type", "case", "name", c.getTitle(), "detail", c.getCaseNumber(), "confidence", 0.7));
-            }
-        }
+        List<Map<String, Object>> matches = ConflictEngine.search(queries, index);
+        String searchLabel = String.join(" · ", queries);
         ConflictCheck rec = new ConflictCheck();
-        rec.setTenantId(TenantContext.requireTenant());
-        rec.setSearchName(name);
+        rec.setTenantId(tid);
+        rec.setSearchName(searchLabel.isBlank() ? (name == null ? "" : name) : searchLabel);
         rec.setMatchCount(matches.size());
         rec.setStatus(matches.isEmpty() ? "clear" : "potential_conflict");
         rec.setResultsJson(JsonLists.toJson(matches));
@@ -262,11 +298,17 @@ public class CommsService {
         conflicts.save(rec);
         Map<String, Object> out = new HashMap<>();
         out.put("id", rec.getId());
-        out.put("searchName", name);
+        out.put("searchName", rec.getSearchName());
         out.put("status", rec.getStatus());
         out.put("matchCount", matches.size());
         out.put("matches", matches);
         return out;
+    }
+
+    private static String lastToken(String name) {
+        if (name == null || name.isBlank()) return null;
+        String[] parts = name.trim().split("\\s+");
+        return parts[parts.length - 1];
     }
 
     @Transactional

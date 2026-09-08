@@ -1,5 +1,27 @@
 export type Id = string;
 
+export type DocketClock = {
+  kind: string;
+  ruleId?: string;
+  citation?: string;
+  title?: string;
+  date: string;
+  reason?: string;
+  assumption?: string;
+};
+
+export type DocketPreview = {
+  jurisdiction?: string;
+  track?: string;
+  solDate?: string;
+  controllingDate?: string;
+  controllingKind?: string;
+  controllingCitation?: string;
+  clocks?: DocketClock[];
+  caveats?: string[];
+  disclaimer?: string;
+};
+
 export type DocketItem = {
   kind: string;
   label?: string;
@@ -9,6 +31,8 @@ export type DocketItem = {
   caseId?: Id;
   caseNumber?: string;
   title?: string;
+  citation?: string;
+  reason?: string;
 };
 
 export type Dashboard = {
@@ -44,6 +68,13 @@ export type Matter = {
   billingType?: string;
   billingRate?: number;
   dateOpened?: string;
+  statuteOfLimitations?: string;
+  accrualDate?: string;
+  governmentalDefendant?: boolean;
+  docketTrack?: string;
+  solCitation?: string;
+  solReason?: string;
+  docketClocks?: DocketClock[];
   notes?: Note[];
   documents?: Doc[];
 };
@@ -232,8 +263,12 @@ export type Lead = {
   phone?: string;
   caseType?: string;
   description?: string;
+  opposingParty?: string;
+  accrualDate?: string;
+  governmentalDefendant?: boolean;
   status: string;
   createdAt: string;
+  docket?: DocketPreview;
 };
 
 export type ConflictHit = {
@@ -242,7 +277,7 @@ export type ConflictHit = {
   status: string;
   matchCount: number;
   createdAt: string;
-  matches?: { type: string; name: string; detail: string; confidence: number }[];
+  matches?: { type: string; role?: string; name: string; detail: string; confidence: number; how?: string; caseNumber?: string }[];
 };
 
 export type AuditRow = {

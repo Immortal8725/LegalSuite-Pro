@@ -97,11 +97,37 @@ export default function CaseDetailPage() {
               <br />
               {c.opposingCounsel || "—"}
             </p>
+            <p>
+              <span className="text-slate-400">Limitations</span>
+              <br />
+              {c.solCitation || "Texas docket"}
+              {c.statuteOfLimitations ? ` · ${c.statuteOfLimitations}` : ""}
+            </p>
             <p className="sm:col-span-2">
               <span className="text-slate-400">Assignment</span>
               <br />
               {c.description || "No narrative on file."}
             </p>
+          </CardBody>
+        </Card>
+        <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Texas docket clocks</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-3 text-sm">
+            {(c.docketClocks || []).length === 0 && (
+              <p className="text-slate-500">No computed clocks. Add an incident date and practice area, then save.</p>
+            )}
+            {(c.docketClocks || []).map((clock, i) => (
+              <div key={i} className="rounded-lg border p-3">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{clock.title || clock.kind}</p>
+                <p className="font-semibold text-navy">{clock.date}</p>
+                <p className="text-xs text-slate-500">{clock.citation}</p>
+                <p className="mt-1 text-xs">{clock.reason}</p>
+              </div>
+            ))}
+            {c.solReason && (c.docketClocks || []).length === 0 && <p className="text-xs text-slate-500">{c.solReason}</p>}
           </CardBody>
         </Card>
         <Card>
@@ -122,6 +148,7 @@ export default function CaseDetailPage() {
             </Button>
           </CardBody>
         </Card>
+        </div>
       </div>
       <Card className="mt-6">
         <CardHeader>

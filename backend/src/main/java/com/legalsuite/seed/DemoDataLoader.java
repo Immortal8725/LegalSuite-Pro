@@ -28,6 +28,7 @@ import com.legalsuite.domain.TenantModule;
 import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.domain.TrustTransaction;
+import com.legalsuite.service.TexasDocketRules;
 import com.legalsuite.repo.AppModuleRepository;
 import com.legalsuite.repo.AppNotificationRepository;
 import com.legalsuite.repo.AppUserRepository;
@@ -227,16 +228,26 @@ public class DemoDataLoader implements CommandLineRunner {
         Client taylor = client(firm.getId(), "company", null, null, "Taylor Holdings", "ops@taylorhold.com", "website", alex);
 
         LegalCase c1 = matter(firm.getId(), sarah, john, "C-1042", "Johnson v. Corp Inc.", "Litigation", "discovery", "350");
-        c1.setStatuteOfLimitations(LocalDate.now().plusDays(16));
-        cases.save(c1);
+        c1.setDescription("Personal injury suit against Corp Inc. after a commercial vehicle collision.");
+        c1.setOpposingParty("Corp Inc.");
+        c1.setAccrualDate(LocalDate.now().plusDays(16).minusYears(2));
+        stampDocket(c1);
         LegalCase c2 = matter(firm.getId(), davis, maria, "C-1045", "Davis v. Metro Transit", "Personal Injury", "open", "325");
-        c2.setStatuteOfLimitations(LocalDate.now().plusDays(5));
-        cases.save(c2);
+        c2.setDescription("Bus collision. Claim against the transit authority.");
+        c2.setOpposingParty("Austin Metro Transit Authority");
+        c2.setGovernmentalDefendant(true);
+        c2.setAccrualDate(LocalDate.now().plusDays(5).minusYears(2));
+        stampDocket(c2);
         LegalCase c3 = matter(firm.getId(), martinez, john, "C-1038", "Martinez Estate", "Estate Planning", "pending", "350");
+        c3.setDescription("Probate of the Martinez estate — inventory and creditor window.");
+        c3.setProbateOpened(LocalDate.now().plusDays(12).minusMonths(4));
+        stampDocket(c3);
         LegalCase c4 = matter(firm.getId(), abc, alex, "C-1050", "ABC Corp Formation", "Corporate", "open", "225");
         LegalCase c5 = matter(firm.getId(), taylor, maria, "C-1048", "Taylor Contract Dispute", "Contract", "mediation", "325");
-        c5.setStatuteOfLimitations(LocalDate.now().plusDays(28));
-        cases.save(c5);
+        c5.setDescription("Breach of written supply agreement.");
+        c5.setOpposingParty("Westlake Supply LLC");
+        c5.setAccrualDate(LocalDate.now().plusDays(28).minusYears(4));
+        stampDocket(c5);
 
         contact(firm.getId(), "opposing_counsel", "Renee", "Hale", "Hale & Whit", "rhale@halewhit.com");
         contact(firm.getId(), "judge", "Harold", "Nguyen", "Travis County District Court", null);
@@ -485,8 +496,22 @@ public class DemoDataLoader implements CommandLineRunner {
         hot.setPhone("(555) 010-8822");
         hot.setCaseType("Personal Injury");
         hot.setDescription("Rear-end crash on I-35 yesterday. Urgent — opposing insurer already called.");
+        hot.setAccrualDate(LocalDate.now().minusDays(1));
         hot.setStatus("new");
         leads.save(hot);
+
+        Lead conflictLead = new Lead();
+        conflictLead.setTenantId(firm.getId());
+        conflictLead.setName("Aisha Rahman");
+        conflictLead.setEmail("aisha.rahman@example.com");
+        conflictLead.setPhone("(555) 010-2290");
+        conflictLead.setCaseType("Personal Injury");
+        conflictLead.setOpposingParty("Austin Metro Transit Authority");
+        conflictLead.setGovernmentalDefendant(true);
+        conflictLead.setAccrualDate(LocalDate.now().minusDays(10));
+        conflictLead.setDescription("City bus hit her at the stop ten days ago. Metro already called.");
+        conflictLead.setStatus("consultation");
+        leads.save(conflictLead);
 
         // unused vars to keep compiler happy if modules referenced
         if (free.getSlug() == null || ess.getSlug() == null || mCases == null || mTrust == null || mVoice == null || c2 == null || c4 == null) {
@@ -571,6 +596,11 @@ public class DemoDataLoader implements CommandLineRunner {
         c.setConflictChecked(true);
         c.setCourtName("Travis County District Court");
         return cases.save(c);
+    }
+
+    private void stampDocket(LegalCase c) {
+        TexasDocketRules.stamp(c, TexasDocketRules.compute(TexasDocketRules.factsFromCase(c)));
+        cases.save(c);
     }
 
     private void contact(java.util.UUID tenant, String type, String first, String last, String company, String email) {

@@ -38,7 +38,7 @@ export default function DashboardPage() {
     <div>
       <PageHeader
         title="Docket"
-        subtitle={`${user?.firstName}, the clock is the product. SOL, hearings, and consults that have not been retained yet.`}
+        subtitle={`${user?.firstName}, Texas clocks first. SOL, TTCA notice, and consults that have not been retained yet.`}
         actions={
           <div className="flex gap-2">
             <Link href="/leads" className="rounded-lg border px-4 py-2 text-sm font-bold text-navy">
@@ -86,7 +86,15 @@ export default function DashboardPage() {
               className={`block rounded-xl border p-4 ${URGENCY[item.urgency] || URGENCY.ok}`}
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-[11px] font-bold uppercase tracking-wide">{item.kind === "sol" ? "Statute of limitations" : item.label}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide">
+                  {item.kind === "sol"
+                    ? "Statute of limitations"
+                    : item.kind === "notice"
+                      ? "Governmental notice"
+                      : item.kind === "repose"
+                        ? "Statute of repose"
+                        : item.label}
+                </p>
                 <p className="font-mono text-sm font-bold">
                   {item.daysLeft < 0 ? `${Math.abs(item.daysLeft)} days overdue` : `${item.daysLeft} days`}
                 </p>
@@ -95,7 +103,9 @@ export default function DashboardPage() {
                 {item.caseNumber ? `${item.caseNumber} · ` : ""}
                 {item.title}
               </p>
-              <p className="text-xs opacity-80">{item.kind === "sol" ? formatDate(item.date) : formatDateTime(item.date)}</p>
+              {item.citation && <p className="mt-1 text-[11px] font-semibold opacity-90">{item.citation}</p>}
+              {item.reason && <p className="mt-1 text-xs opacity-80">{item.reason}</p>}
+              <p className="text-xs opacity-80">{item.kind === "sol" || item.kind === "notice" || item.kind === "repose" ? formatDate(item.date) : formatDateTime(item.date)}</p>
             </Link>
           ))}
         </CardBody>

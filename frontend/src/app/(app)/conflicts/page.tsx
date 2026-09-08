@@ -10,6 +10,7 @@ import { formatDateTime } from "@/lib/utils";
 
 export default function ConflictsPage() {
   const [name, setName] = useState("");
+  const [opposing, setOpposing] = useState("");
   const [rows, setRows] = useState<ConflictHit[]>([]);
   const [last, setLast] = useState<ConflictHit | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +24,10 @@ export default function ConflictsPage() {
     e.preventDefault();
     setError(null);
     try {
-      const hit = await apiPost<ConflictHit>("/api/v1/conflicts/check", { name });
+      const hit = await apiPost<ConflictHit>("/api/v1/conflicts/check", { name, opposingParty: opposing });
       setLast(hit);
       setName("");
+      setOpposing("");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check failed.");
@@ -34,21 +36,22 @@ export default function ConflictsPage() {
 
   return (
     <div>
-      <PageHeader title="Conflict check" subtitle="Search clients, opposing parties, and contacts before you take the matter." />
+      <PageHeader title="Conflict check" subtitle="Clients, related last names, adverse entities, and opposing counsel — not a substring on the file title." />
       <ErrorBanner error={error} />
-      <form onSubmit={run} className="mb-6 flex gap-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name or company" required />
+      <form onSubmit={run} className="mb-6 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Prospective client" required />
+        <Input value={opposing} onChange={(e) => setOpposing(e.target.value)} placeholder="Adverse party (optional)" />
         <Button type="submit">Run check</Button>
       </form>
       {last && (
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm">
+        <div className={`mb-6 rounded-xl border p-4 text-sm ${last.matchCount ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}`}>
           <p className="font-semibold">
             Latest: {last.searchName ?? name} — {last.matchCount} hit(s) · {last.status}
           </p>
           <ul className="mt-2 list-disc pl-5">
             {(last.matches || []).map((m, i) => (
               <li key={i}>
-                {m.type}: {m.name} {m.detail ? `· ${m.detail}` : ""} ({Math.round(m.confidence * 100)}%)
+                <span className="font-semibold uppercase">{m.role || m.type}</span>: {m.name} {m.detail ? `· ${m.detail}` : ""} ({Math.round(m.confidence * 100)}%)
               </li>
             ))}
           </ul>

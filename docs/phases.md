@@ -10,6 +10,6 @@
 | 6 Mobile | Shipped | Responsive web + PWA; Flutter in `mobile/` |
 | 7 AI & integrations | Shipped | `/ai`, `/templates`, `/esign`, `/sign/[id]`, `/integrations`, `/audit` |
 | 8 Polish | Shipped | README, ERD, class diagrams, tests, PWA |
-| Unique loop | Shipped | Hire motion, SOL docket home, month-end usage, call ethics |
+| Unique loop | Shipped | Hire motion, Texas docket rules, party conflicts, month-end usage, call ethics |
 
 Phase 6's native binary is not produced in this environment (Flutter SDK is not installed). `mobile/` is a real Dart client; run `flutter create .` then `flutter run`. The installable web app is the supported preview.
