@@ -59,6 +59,14 @@ public class LegalCase {
     private String solReason;
     @Column(length = 4000)
     private String docketClocksJson;
+    private String engagementStatus = "not_required";
+    private UUID engagementSignatureId;
+    private boolean appearanceAuthorized = true;
+    private BigDecimal pendingRetainerAmount;
+    private UUID pendingTrustAccountId;
+    private UUID conflictWaiverSignatureId;
+    @Column(length = 128)
+    private String conflictWaiverHash;
     @Column(length = 2000)
     private String tagsJson;
     private boolean conflictChecked;

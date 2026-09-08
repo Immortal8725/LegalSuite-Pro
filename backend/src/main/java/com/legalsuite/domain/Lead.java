@@ -34,5 +34,6 @@ public class Lead {
     private LocalDate dateOfBirth;
     private boolean governmentalDefendant;
     private String status = "new";
+    private UUID caseId;
     private Instant createdAt = Instant.now();
 }

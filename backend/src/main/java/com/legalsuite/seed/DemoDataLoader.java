@@ -595,6 +595,8 @@ public class DemoDataLoader implements CommandLineRunner {
         c.setDateOpened(LocalDate.now().minusDays(40));
         c.setConflictChecked(true);
         c.setCourtName("Travis County District Court");
+        c.setEngagementStatus("signed");
+        c.setAppearanceAuthorized(true);
         return cases.save(c);
     }
 

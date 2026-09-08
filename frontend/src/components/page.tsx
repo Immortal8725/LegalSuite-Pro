@@ -52,6 +52,8 @@ export function StatusBadge({ status }: { status: string }) {
     contacted: "bg-sky-50 text-sky-700",
     consultation: "bg-violet-50 text-violet-700",
     retained: "bg-emerald-50 text-emerald-700",
+    limited: "bg-amber-50 text-amber-800",
+    unsigned: "bg-amber-50 text-amber-800",
     declined: "bg-slate-100 text-slate-600",
     issued: "bg-sky-50 text-sky-700",
     signed: "bg-emerald-50 text-emerald-700",

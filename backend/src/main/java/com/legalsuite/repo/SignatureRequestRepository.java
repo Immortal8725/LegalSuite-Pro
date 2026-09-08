@@ -9,4 +9,9 @@ import java.util.UUID;
 public interface SignatureRequestRepository extends JpaRepository<SignatureRequest, UUID> {
     List<SignatureRequest> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     Optional<SignatureRequest> findByIdAndTenantId(UUID id, UUID tenantId);
+    Optional<SignatureRequest> findFirstByTenantIdAndLeadIdAndPurposeAndStatusOrderByCreatedAtDesc(
+            UUID tenantId, UUID leadId, String purpose, String status);
+    Optional<SignatureRequest> findFirstByTenantIdAndLeadIdAndPurposeOrderByCreatedAtDesc(
+            UUID tenantId, UUID leadId, String purpose);
+    Optional<SignatureRequest> findFirstByCaseIdAndPurposeOrderByCreatedAtDesc(UUID caseId, String purpose);
 }

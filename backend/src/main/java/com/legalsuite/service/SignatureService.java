@@ -19,11 +19,17 @@ public class SignatureService {
     private final SignatureRequestRepository signatures;
     private final NoteRepository notes;
     private final AuditService audit;
+    private final PracticeService practice;
 
-    public SignatureService(SignatureRequestRepository signatures, NoteRepository notes, AuditService audit) {
+    public SignatureService(
+            SignatureRequestRepository signatures,
+            NoteRepository notes,
+            AuditService audit,
+            PracticeService practice) {
         this.signatures = signatures;
         this.notes = notes;
         this.audit = audit;
+        this.practice = practice;
     }
 
     public List<Map<String, Object>> list() {
@@ -36,16 +42,24 @@ public class SignatureService {
         s.setTenantId(tid());
         if (body.get("caseId") != null) s.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
         if (body.get("clientId") != null) s.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
+        if (body.get("leadId") != null) s.setLeadId(UUID.fromString(String.valueOf(body.get("leadId"))));
+        if (body.get("conflictCheckId") != null) s.setConflictCheckId(UUID.fromString(String.valueOf(body.get("conflictCheckId"))));
+        s.setPurpose(str(body, "purpose", "engagement"));
         s.setTitle(str(body, "title", "Engagement letter"));
         s.setDocumentBody(str(body, "documentBody", ""));
         s.setSignerName(str(body, "signerName", "Signer"));
         s.setSignerEmail(str(body, "signerEmail", ""));
         s.setStatus("pending");
+        s.setDocumentHash(DocumentHash.sha256(s.getDocumentBody()));
         signatures.save(s);
         audit.record("signature.create", "signature", s.getId().toString(), s.getTitle() + " → " + s.getSignerEmail());
         Map<String, Object> view = staffView(s);
         view.put("signUrl", "/sign/" + s.getId());
         return view;
+    }
+
+    public Map<String, Object> instrumentView(SignatureRequest s) {
+        return staffView(s);
     }
 
     public Map<String, Object> publicView(UUID id) {
@@ -67,18 +81,30 @@ public class SignatureService {
         s.setStatus("signed");
         s.setSignedAt(Instant.now());
         if (body.get("signerName") != null) s.setSignerName(String.valueOf(body.get("signerName")));
+        s.setSignatureHash(DocumentHash.sha256(
+                s.getDocumentBody(),
+                s.getSignerName(),
+                s.getSignedAt().toString(),
+                dataUrl.substring(0, Math.min(80, dataUrl.length()))));
         signatures.save(s);
-        if (s.getCaseId() != null) {
+        TenantContext.setTenantId(s.getTenantId());
+        String purpose = s.getPurpose() == null ? "engagement" : s.getPurpose();
+        if (!"engagement".equals(purpose) && s.getCaseId() != null) {
             Note n = new Note();
             n.setTenantId(s.getTenantId());
             n.setCaseId(s.getCaseId());
             n.setClientId(s.getClientId());
-            n.setTitle("Engagement signed");
-            n.setBody(s.getSignerName() + " signed “" + s.getTitle() + "”. The wet ink lives on this tenant.");
+            n.setTitle("Conflict waiver signed");
+            n.setBody(s.getSignerName() + " signed “" + s.getTitle() + "”. Hash " + s.getSignatureHash() + ".");
             n.setType("esign");
             notes.save(n);
         }
-        return publicMap(s);
+        if ("engagement".equals(purpose) && s.getCaseId() != null) {
+            practice.activateEngagement(s.getCaseId(), s.getId(), s.getSignatureHash());
+        }
+        Map<String, Object> view = publicMap(s);
+        view.put("unlocked", "engagement".equals(purpose) && s.getCaseId() != null);
+        return view;
     }
 
     @Transactional
@@ -111,6 +137,10 @@ public class SignatureService {
         m.put("createdAt", s.getCreatedAt());
         boolean signed = "signed".equals(s.getStatus());
         m.put("signatureDataUrl", signed ? s.getSignatureDataUrl() : null);
+        m.put("purpose", s.getPurpose() == null ? "engagement" : s.getPurpose());
+        m.put("documentHash", s.getDocumentHash());
+        m.put("signatureHash", signed ? s.getSignatureHash() : null);
+        m.put("leadId", s.getLeadId());
         return m;
     }
 

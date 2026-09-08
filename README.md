@@ -48,7 +48,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
 8. **Launch polish** — This README, star ERD and class diagrams in `docs/`, tests, PWA manifest.
-9. **The unique loop** — Hire pipeline (party-aware conflict → Texas docket clocks → engagement e-sign → IOLTA retainer), SOL/TTCA notice as the home screen, month-end usage invoice (modules + PSTN), call ethics with opt-in recording parked on the matter. Client text does not leave the tenant.
+9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → Texas clocks → **limited file** → engagement e-sign unlocks appearance and posts the pledged IOLTA retainer). SOL/TTCA notice as the home screen, month-end usage, call ethics. Client text does not leave the tenant.
 
 ## Architecture
 

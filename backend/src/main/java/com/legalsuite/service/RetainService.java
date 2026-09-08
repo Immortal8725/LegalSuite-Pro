@@ -5,10 +5,12 @@ import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.Client;
 import com.legalsuite.domain.DocumentTemplate;
 import com.legalsuite.domain.Lead;
+import com.legalsuite.domain.SignatureRequest;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.repo.ClientRepository;
 import com.legalsuite.repo.DocumentTemplateRepository;
 import com.legalsuite.repo.LeadRepository;
+import com.legalsuite.repo.SignatureRequestRepository;
 import com.legalsuite.repo.TrustAccountRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,7 +32,7 @@ public class RetainService {
     private final PracticeService practice;
     private final TemplateService templatesEngine;
     private final SignatureService signatures;
-    private final FinanceService finance;
+    private final SignatureRequestRepository signatureRows;
     private final AuditService audit;
 
     public RetainService(
@@ -42,7 +44,7 @@ public class RetainService {
             PracticeService practice,
             TemplateService templatesEngine,
             SignatureService signatures,
-            FinanceService finance,
+            SignatureRequestRepository signatureRows,
             AuditService audit) {
         this.leads = leads;
         this.clients = clients;
@@ -52,7 +54,7 @@ public class RetainService {
         this.practice = practice;
         this.templatesEngine = templatesEngine;
         this.signatures = signatures;
-        this.finance = finance;
+        this.signatureRows = signatureRows;
         this.audit = audit;
     }
 
@@ -66,13 +68,31 @@ public class RetainService {
         extra.put("email", lead.getEmail());
         Map<String, Object> conflict = comms.conflictCheck(lead.getName(), extra);
         int matches = ((Number) conflict.getOrDefault("matchCount", 0)).intValue();
-        if (matches > 0 && !force && !"cleared".equals(conflict.get("status"))) {
-            Map<String, Object> blocked = new HashMap<>();
-            blocked.put("blocked", true);
-            blocked.put("reason", "Conflict hits on this name. Clear them or retain with force after a written waiver.");
-            blocked.put("conflict", conflict);
-            blocked.put("leadId", lead.getId());
-            return blocked;
+        SignatureRequest signedWaiver = signatureRows
+                .findFirstByTenantIdAndLeadIdAndPurposeAndStatusOrderByCreatedAtDesc(tid, leadId, "conflict_waiver", "signed")
+                .orElse(null);
+        if (matches > 0 && !"cleared".equals(conflict.get("status"))) {
+            if (!force) {
+                Map<String, Object> blocked = new HashMap<>();
+                blocked.put("blocked", true);
+                blocked.put("waiverRequired", true);
+                blocked.put("waiverSigned", signedWaiver != null);
+                blocked.put("reason", signedWaiver == null
+                        ? "Conflict hits. Issue a written waiver, get it signed, then retain. A button is not informed consent."
+                        : "Waiver is signed. Retain with the signed instrument to open a limited file.");
+                blocked.put("conflict", conflict);
+                blocked.put("leadId", lead.getId());
+                if (signedWaiver != null) {
+                    blocked.put("waiver", signatures.instrumentView(signedWaiver));
+                } else {
+                    signatureRows.findFirstByTenantIdAndLeadIdAndPurposeOrderByCreatedAtDesc(tid, leadId, "conflict_waiver")
+                            .ifPresent(w -> blocked.put("waiver", signatures.instrumentView(w)));
+                }
+                return blocked;
+            }
+            if (signedWaiver == null) {
+                throw ApiException.badRequest("No signed conflict waiver on file. Issue the waiver and get a signature first.");
+            }
         }
 
         Client client;
@@ -109,13 +129,25 @@ public class RetainService {
         caseBody.put("practiceArea", area);
         caseBody.put("caseType", area);
         caseBody.put("description", lead.getDescription());
-        caseBody.put("status", "intake");
         caseBody.put("opposingParty", facts.opposingParty);
         if (facts.accrualDate != null) caseBody.put("accrualDate", facts.accrualDate.toString());
         if (facts.dateOfBirth != null) caseBody.put("dateOfBirth", facts.dateOfBirth.toString());
         if (facts.discoveryDate != null) caseBody.put("discoveryDate", facts.discoveryDate.toString());
         if (facts.probateOpened != null) caseBody.put("probateOpened", facts.probateOpened.toString());
         caseBody.put("governmentalDefendant", facts.governmentalDefendant || TexasDocketRules.looksGovernmental(facts.opposingParty));
+        caseBody.put("status", "limited");
+        caseBody.put("engagementStatus", "unsigned");
+        caseBody.put("appearanceAuthorized", false);
+        BigDecimal retainer = new BigDecimal(String.valueOf(body.getOrDefault("retainerAmount", "2500")));
+        List<TrustAccount> accounts = trusts.findByTenantId(tid);
+        if (!accounts.isEmpty() && retainer.signum() > 0) {
+            caseBody.put("pendingRetainerAmount", retainer);
+            caseBody.put("pendingTrustAccountId", accounts.get(0).getId());
+        }
+        if (signedWaiver != null) {
+            caseBody.put("conflictWaiverSignatureId", signedWaiver.getId());
+            caseBody.put("conflictWaiverHash", signedWaiver.getSignatureHash());
+        }
         Map<String, Object> matter = practice.saveCase(null, caseBody);
         UUID caseId = (UUID) matter.get("id");
 
@@ -133,45 +165,110 @@ public class RetainService {
             merged = fallbackLetter(client, matter);
         }
 
-        Map<String, Object> sig = signatures.create(Map.of(
-                "title", "Engagement letter — " + client.displayName(),
-                "documentBody", merged,
-                "signerName", client.displayName(),
-                "signerEmail", client.getEmail() == null ? "" : client.getEmail(),
-                "caseId", caseId,
-                "clientId", client.getId()
-        ));
+        Map<String, Object> sigBody = new HashMap<>();
+        sigBody.put("title", "Engagement letter — " + client.displayName());
+        sigBody.put("documentBody", merged);
+        sigBody.put("signerName", client.displayName());
+        sigBody.put("signerEmail", client.getEmail() == null ? "" : client.getEmail());
+        sigBody.put("caseId", caseId);
+        sigBody.put("clientId", client.getId());
+        sigBody.put("leadId", lead.getId());
+        sigBody.put("purpose", "engagement");
+        Map<String, Object> sig = signatures.create(sigBody);
+        practice.saveCase(caseId, Map.of("engagementSignatureId", sig.get("id")));
 
-        BigDecimal retainer = new BigDecimal(String.valueOf(body.getOrDefault("retainerAmount", "2500")));
-        Map<String, Object> trust = Map.of();
-        List<TrustAccount> accounts = trusts.findByTenantId(tid);
-        if (!accounts.isEmpty() && retainer.signum() > 0) {
-            trust = finance.trustMove(Map.of(
-                    "accountId", accounts.get(0).getId(),
-                    "type", "deposit",
-                    "amount", retainer,
-                    "clientId", client.getId(),
-                    "caseId", caseId,
-                    "description", "Retainer on hire from website intake"
-            ));
-        }
+        Map<String, Object> trust = new HashMap<>();
+        trust.put("pledged", true);
+        trust.put("amount", retainer);
+        trust.put("posted", false);
+        trust.put("note", "Retainer is pledged. It posts to IOLTA when the engagement is signed.");
 
         lead.setStatus("retained");
+        lead.setCaseId(caseId);
         leads.save(lead);
-        audit.record("retain.complete", "lead", lead.getId().toString(), client.displayName());
+        audit.record("retain.limited", "lead", lead.getId().toString(), client.displayName());
 
         Map<String, Object> out = new HashMap<>();
         out.put("blocked", false);
+        out.put("limited", true);
         out.put("leadId", lead.getId());
         out.put("client", practice.clientView(client));
-        out.put("matter", matter);
+        out.put("matter", practice.getCase(caseId.toString()));
         out.put("conflict", conflict);
         out.put("signature", sig);
         out.put("signUrl", sig.get("signUrl"));
         out.put("trust", trust);
         out.put("docket", docket.asMap());
-        out.put("message", "Conflict ran. Texas clocks stamped. Matter opened. Engagement is out for signature. Retainer posted to trust when an IOLTA exists.");
+        if (signedWaiver != null) {
+            out.put("waiver", signatures.instrumentView(signedWaiver));
+        }
+        out.put("message", "Limited file opened. No appearance. Sign the engagement to authorize the file and post the pledged retainer to IOLTA.");
         return out;
+    }
+
+    @Transactional
+    public Map<String, Object> issueWaiver(UUID leadId) {
+        UUID tid = TenantContext.requireTenant();
+        Lead lead = leads.findByIdAndTenantId(leadId, tid).orElseThrow(() -> ApiException.notFound("Lead not found"));
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("opposingParty", lead.getOpposingParty());
+        extra.put("email", lead.getEmail());
+        Map<String, Object> conflict = comms.conflictCheck(lead.getName(), extra);
+        int matches = ((Number) conflict.getOrDefault("matchCount", 0)).intValue();
+        if (matches == 0) {
+            throw ApiException.badRequest("No conflict hits. A waiver is not required.");
+        }
+        var existing = signatureRows.findFirstByTenantIdAndLeadIdAndPurposeAndStatusOrderByCreatedAtDesc(
+                tid, leadId, "conflict_waiver", "pending");
+        if (existing.isPresent()) {
+            Map<String, Object> view = signatures.instrumentView(existing.get());
+            view.put("conflict", conflict);
+            view.put("message", "A waiver is already out for signature.");
+            return view;
+        }
+        Map<String, Object> create = new HashMap<>();
+        create.put("title", "Conflict waiver — " + lead.getName());
+        create.put("documentBody", waiverLetter(lead, conflict));
+        create.put("signerName", lead.getName());
+        create.put("signerEmail", lead.getEmail() == null ? "" : lead.getEmail());
+        create.put("leadId", lead.getId());
+        create.put("conflictCheckId", conflict.get("id"));
+        create.put("purpose", "conflict_waiver");
+        Map<String, Object> sig = signatures.create(create);
+        audit.record("waiver.issue", "lead", lead.getId().toString(), lead.getName());
+        Map<String, Object> out = new HashMap<>(sig);
+        out.put("conflict", conflict);
+        out.put("message", "Waiver issued. Get a signature. Then retain with the signed instrument.");
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    private String waiverLetter(Lead lead, Map<String, Object> conflict) {
+        StringBuilder hits = new StringBuilder();
+        Object raw = conflict.get("matches");
+        if (raw instanceof List<?> list) {
+            for (Object row : list) {
+                if (row instanceof Map<?, ?> m) {
+                    hits.append("- ")
+                            .append(m.get("role"))
+                            .append(": ")
+                            .append(m.get("name"))
+                            .append(" (")
+                            .append(m.get("detail"))
+                            .append(")\n");
+                }
+            }
+        }
+        return """
+                INFORMED CONSENT AND CONFLICT WAIVER
+
+                Prospective client: %s
+                Adverse / related hits:
+                %s
+                I have been told that this firm already has a relationship that may be adverse or substantially related. I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
+
+                This is a signed instrument. A click on “retain anyway” is not consent.
+                """.formatted(lead.getName(), hits.toString().isBlank() ? "- (see conflict record)\n" : hits);
     }
 
     static TexasDocketRules.Facts factsFromLead(Lead lead) {

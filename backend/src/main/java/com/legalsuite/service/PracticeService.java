@@ -44,6 +44,7 @@ public class PracticeService {
     private final CalendarEventRepository events;
     private final TaskItemRepository tasks;
     private final NoteRepository notes;
+    private final FinanceService finance;
     private final Path uploadRoot;
 
     public PracticeService(
@@ -54,6 +55,7 @@ public class PracticeService {
             CalendarEventRepository events,
             TaskItemRepository tasks,
             NoteRepository notes,
+            FinanceService finance,
             @Value("${legalsuite.upload-dir:./uploads}") String uploadDir) throws IOException {
         this.clients = clients;
         this.cases = cases;
@@ -62,6 +64,7 @@ public class PracticeService {
         this.events = events;
         this.tasks = tasks;
         this.notes = notes;
+        this.finance = finance;
         this.uploadRoot = Paths.get(uploadDir).toAbsolutePath();
         Files.createDirectories(this.uploadRoot);
     }
@@ -146,6 +149,23 @@ public class PracticeService {
         if (body.get("governmentalDefendant") != null) {
             c.setGovernmentalDefendant(TexasDocketRules.bool(body.get("governmentalDefendant")));
         }
+        if (body.get("engagementStatus") != null) c.setEngagementStatus(String.valueOf(body.get("engagementStatus")));
+        if (body.get("appearanceAuthorized") != null) {
+            c.setAppearanceAuthorized(TexasDocketRules.bool(body.get("appearanceAuthorized")));
+        }
+        if (body.get("pendingRetainerAmount") != null) {
+            c.setPendingRetainerAmount(new BigDecimal(String.valueOf(body.get("pendingRetainerAmount"))));
+        }
+        if (body.get("pendingTrustAccountId") != null) {
+            c.setPendingTrustAccountId(UUID.fromString(String.valueOf(body.get("pendingTrustAccountId"))));
+        }
+        if (body.get("engagementSignatureId") != null) {
+            c.setEngagementSignatureId(UUID.fromString(String.valueOf(body.get("engagementSignatureId"))));
+        }
+        if (body.get("conflictWaiverSignatureId") != null) {
+            c.setConflictWaiverSignatureId(UUID.fromString(String.valueOf(body.get("conflictWaiverSignatureId"))));
+        }
+        if (body.get("conflictWaiverHash") != null) c.setConflictWaiverHash(String.valueOf(body.get("conflictWaiverHash")));
         TexasDocketRules.Result docket = TexasDocketRules.compute(TexasDocketRules.factsFromCase(c));
         TexasDocketRules.stamp(c, docket);
         if (body.get("statuteOfLimitations") != null && !String.valueOf(body.get("statuteOfLimitations")).isBlank()) {
@@ -164,6 +184,10 @@ public class PracticeService {
     @Transactional
     public Map<String, Object> changeCaseStatus(UUID id, String status) {
         LegalCase c = requireCase(id);
+        if (!DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())
+                && !DocumentHash.statusAllowedWhileLimited(status)) {
+            throw ApiException.badRequest("Limited file: no appearance until the engagement is signed. Status stays limited.");
+        }
         c.setStatus(status);
         if ("closed".equals(status) || "settled".equals(status) || "archived".equals(status)) {
             c.setDateClosed(LocalDate.now());
@@ -171,6 +195,45 @@ public class PracticeService {
         c.setUpdatedAt(Instant.now());
         cases.save(c);
         return caseView(c);
+    }
+
+    @Transactional
+    public Map<String, Object> activateEngagement(UUID caseId, UUID signatureId, String signatureHash) {
+        LegalCase c = cases.findById(caseId).orElseThrow(() -> ApiException.notFound("Matter not found"));
+        c.setEngagementStatus("signed");
+        c.setAppearanceAuthorized(true);
+        c.setEngagementSignatureId(signatureId);
+        if ("limited".equals(c.getStatus())) {
+            c.setStatus("intake");
+        }
+        Map<String, Object> trust = Map.of();
+        if (c.getPendingRetainerAmount() != null
+                && c.getPendingRetainerAmount().signum() > 0
+                && c.getPendingTrustAccountId() != null) {
+            Map<String, Object> move = new HashMap<>();
+            move.put("accountId", c.getPendingTrustAccountId());
+            move.put("type", "deposit");
+            move.put("amount", c.getPendingRetainerAmount());
+            move.put("clientId", c.getClientId());
+            move.put("caseId", c.getId());
+            move.put("description", "Retainer posted on engagement signature");
+            trust = finance.trustMove(move, true);
+            c.setPendingRetainerAmount(BigDecimal.ZERO);
+        }
+        c.setUpdatedAt(Instant.now());
+        cases.save(c);
+        Note n = new Note();
+        n.setTenantId(c.getTenantId());
+        n.setCaseId(c.getId());
+        n.setClientId(c.getClientId());
+        n.setTitle("Engagement signed — file unlocked");
+        n.setBody("Appearance authorized. Retainer posted to IOLTA if pledged. Instrument hash "
+                + (signatureHash == null ? "(none)" : signatureHash) + ".");
+        n.setType("esign");
+        notes.save(n);
+        Map<String, Object> view = caseView(c);
+        view.put("trust", trust);
+        return view;
     }
 
     public List<Map<String, Object>> contacts() {
@@ -346,6 +409,12 @@ public class PracticeService {
         m.put("solCitation", c.getSolCitation());
         m.put("solReason", c.getSolReason());
         m.put("docketClocks", JsonLists.objects(c.getDocketClocksJson()));
+        m.put("engagementStatus", c.getEngagementStatus());
+        m.put("appearanceAuthorized", c.isAppearanceAuthorized());
+        m.put("engagementSignatureId", c.getEngagementSignatureId());
+        m.put("pendingRetainerAmount", c.getPendingRetainerAmount());
+        m.put("conflictWaiverSignatureId", c.getConflictWaiverSignatureId());
+        m.put("conflictWaiverHash", c.getConflictWaiverHash());
         clients.findById(c.getClientId()).ifPresent(cl -> m.put("clientName", cl.displayName()));
         return m;
     }

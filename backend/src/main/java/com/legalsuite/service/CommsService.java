@@ -22,6 +22,7 @@ import com.legalsuite.repo.ConversationRepository;
 import com.legalsuite.repo.LandingPageRepository;
 import com.legalsuite.repo.LeadRepository;
 import com.legalsuite.repo.LegalCaseRepository;
+import com.legalsuite.repo.SignatureRequestRepository;
 import com.legalsuite.repo.TenantRepository;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ public class CommsService {
     private final AppUserRepository users;
     private final PracticeService practice;
     private final AuthService auth;
+    private final SignatureRequestRepository signatures;
 
     public CommsService(
             ConversationRepository conversations,
@@ -62,7 +64,8 @@ public class CommsService {
             ConflictCheckRepository conflicts,
             AppUserRepository users,
             PracticeService practice,
-            AuthService auth) {
+            AuthService auth,
+            SignatureRequestRepository signatures) {
         this.conversations = conversations;
         this.messages = messages;
         this.notifications = notifications;
@@ -76,6 +79,7 @@ public class CommsService {
         this.users = users;
         this.practice = practice;
         this.auth = auth;
+        this.signatures = signatures;
     }
 
     @Transactional
@@ -237,8 +241,32 @@ public class CommsService {
         m.put("dateOfBirth", l.getDateOfBirth());
         m.put("governmentalDefendant", l.isGovernmentalDefendant());
         m.put("status", l.getStatus());
+        m.put("caseId", l.getCaseId());
         m.put("createdAt", l.getCreatedAt());
         m.put("docket", TexasDocketRules.compute(RetainService.factsFromLead(l)).asMap());
+        signatures.findFirstByTenantIdAndLeadIdAndPurposeOrderByCreatedAtDesc(
+                        TenantContext.requireTenant(), l.getId(), "conflict_waiver")
+                .ifPresent(w -> {
+                    Map<String, Object> wv = new HashMap<>();
+                    wv.put("id", w.getId());
+                    wv.put("status", w.getStatus());
+                    wv.put("signUrl", "/sign/" + w.getId());
+                    wv.put("documentHash", w.getDocumentHash());
+                    wv.put("signatureHash", w.getSignatureHash());
+                    m.put("waiver", wv);
+                });
+        if (l.getCaseId() != null) {
+            signatures.findFirstByCaseIdAndPurposeOrderByCreatedAtDesc(l.getCaseId(), "engagement")
+                    .ifPresent(e -> {
+                        Map<String, Object> ev = new HashMap<>();
+                        ev.put("id", e.getId());
+                        ev.put("status", e.getStatus());
+                        ev.put("signUrl", "/sign/" + e.getId());
+                        ev.put("documentHash", e.getDocumentHash());
+                        ev.put("signatureHash", e.getSignatureHash());
+                        m.put("engagement", ev);
+                    });
+        }
         return m;
     }
 

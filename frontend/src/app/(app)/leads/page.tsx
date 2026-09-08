@@ -12,15 +12,22 @@ import { formatDate } from "@/lib/utils";
 
 const STAGES = ["new", "contacted", "consultation", "retained", "declined"];
 
+type Instrument = { id?: string; status?: string; signUrl?: string; documentHash?: string; signatureHash?: string };
+
 type RetainResult = {
   blocked?: boolean;
+  waiverRequired?: boolean;
+  waiverSigned?: boolean;
   reason?: string;
   conflict?: ConflictHit;
   signUrl?: string;
   message?: string;
   leadId?: string;
+  limited?: boolean;
   matter?: { id: string; caseNumber?: string; title?: string; solCitation?: string; statuteOfLimitations?: string };
   docket?: DocketPreview;
+  waiver?: Instrument;
+  trust?: { pledged?: boolean; posted?: boolean; amount?: number; note?: string };
 };
 
 export default function LeadsPage() {
@@ -48,11 +55,33 @@ export default function LeadsPage() {
     }
   }
 
+  async function issueWaiver(id: string) {
+    setBusy(id);
+    setError(null);
+    try {
+      const res = await apiPost<RetainResult>(`/api/v1/retain/${id}/waiver`, {});
+      setResult({
+        blocked: true,
+        waiverRequired: true,
+        leadId: id,
+        message: res.message,
+        waiver: res,
+        conflict: res.conflict,
+        reason: res.message,
+      });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not issue waiver");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Hire pipeline"
-        subtitle="Website consult → party conflict → Texas clocks → engagement → IOLTA. One motion."
+        subtitle="Conflict waiver is a signed letter. Unsigned engagement is a limited file — no appearance, retainer pledged not posted."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
@@ -68,14 +97,33 @@ export default function LeadsPage() {
               </li>
             ))}
           </ul>
-          <Button className="mt-3" variant="danger" onClick={() => result.leadId && retain(result.leadId, true)}>
-            Written waiver on file — retain anyway
-          </Button>
+          {result.waiver?.signUrl && (
+            <p className="mt-2">
+              Waiver {result.waiver.status}:{" "}
+              <Link className="font-semibold underline" href={result.waiver.signUrl} target="_blank">
+                Open instrument
+              </Link>
+              {result.waiver.signatureHash && (
+                <span className="mt-1 block font-mono text-[11px]">hash {result.waiver.signatureHash.slice(0, 16)}…</span>
+              )}
+            </p>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {result.leadId && !result.waiverSigned && result.waiver?.status !== "signed" && (
+              <Button variant="danger" onClick={() => result.leadId && issueWaiver(result.leadId)}>
+                Issue conflict waiver
+              </Button>
+            )}
+            {result.leadId && (result.waiverSigned || result.waiver?.status === "signed") && (
+              <Button onClick={() => result.leadId && retain(result.leadId, true)}>Retain with signed waiver</Button>
+            )}
+          </div>
         </div>
       )}
       {result && !result.blocked && (
         <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p className="font-semibold">{result.message}</p>
+          {result.limited && <p className="mt-1 font-medium">File is limited until the engagement is signed.</p>}
           {result.matter && (
             <p className="mt-1">
               Matter{" "}
@@ -84,15 +132,15 @@ export default function LeadsPage() {
               </Link>
             </p>
           )}
+          {result.trust?.note && <p className="mt-1">{result.trust.note}</p>}
           {result.docket?.solDate && (
             <p className="mt-1">
               Texas clock: {result.docket.controllingCitation || "SOL"} · {formatDate(result.docket.solDate)}
-              {result.docket.controllingKind === "notice" ? " — governmental notice controls" : ""}
             </p>
           )}
           {result.signUrl && (
             <Link className="mt-2 inline-block font-semibold underline" href={result.signUrl} target="_blank">
-              Open engagement for signature
+              Sign the engagement
             </Link>
           )}
         </div>
@@ -116,8 +164,28 @@ export default function LeadsPage() {
                     {l.docket?.solDate && (
                       <p className="mt-1 text-[11px] text-navy">
                         {l.docket.controllingKind === "notice" ? "TTCA notice" : "SOL"} {formatDate(l.docket.controllingDate || l.docket.solDate)}
-                        {l.docket.controllingCitation ? ` · ${l.docket.controllingCitation}` : ""}
                       </p>
+                    )}
+                    {l.waiver && (
+                      <p className="mt-1 text-[11px]">
+                        Waiver <StatusBadge status={l.waiver.status} />{" "}
+                        <Link className="underline" href={l.waiver.signUrl || "#"} target="_blank">
+                          instrument
+                        </Link>
+                      </p>
+                    )}
+                    {l.engagement && (
+                      <p className="mt-1 text-[11px]">
+                        Engagement <StatusBadge status={l.engagement.status} />{" "}
+                        <Link className="underline" href={l.engagement.signUrl || "#"} target="_blank">
+                          sign
+                        </Link>
+                      </p>
+                    )}
+                    {l.caseId && (
+                      <Link className="mt-1 block text-[11px] font-semibold text-navy" href={`/cases/${l.caseId}`}>
+                        Open limited file
+                      </Link>
                     )}
                     <StatusBadge status={l.status} />
                     <select
@@ -133,12 +201,7 @@ export default function LeadsPage() {
                       ))}
                     </select>
                     {stage !== "retained" && stage !== "declined" && (
-                      <Button
-                        className="mt-2 w-full"
-                        size="sm"
-                        disabled={busy === l.id}
-                        onClick={() => retain(l.id)}
-                      >
+                      <Button className="mt-2 w-full" size="sm" disabled={busy === l.id} onClick={() => retain(l.id)}>
                         {busy === l.id ? "Running…" : "Retain"}
                       </Button>
                     )}

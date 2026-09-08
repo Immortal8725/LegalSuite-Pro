@@ -54,9 +54,16 @@ export default function PublicSignPage() {
               <StatusBadge status={doc.status} />
             </div>
             <pre className="mb-6 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed">{doc.documentBody}</pre>
+            {doc.documentHash && (
+              <p className="mb-4 font-mono text-[11px] text-slate-500">Document hash {doc.documentHash}</p>
+            )}
             {doc.status === "signed" ? (
               <div>
-                <p className="mb-2 text-sm font-semibold text-emerald-700">Signed {doc.signedAt ? new Date(doc.signedAt).toLocaleString() : ""}</p>
+                <p className="mb-2 text-sm font-semibold text-emerald-700">
+                  Signed {doc.signedAt ? new Date(doc.signedAt).toLocaleString() : ""}
+                </p>
+                {doc.unlocked && <p className="mb-2 text-sm">The limited file is now open. The pledged retainer posts to IOLTA.</p>}
+                {doc.signatureHash && <p className="mb-2 font-mono text-[11px] text-slate-500">Signature hash {doc.signatureHash}</p>}
                 {doc.signatureDataUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="Signature" src={doc.signatureDataUrl} className="h-24 rounded border bg-white" />

@@ -75,6 +75,11 @@ export type Matter = {
   solCitation?: string;
   solReason?: string;
   docketClocks?: DocketClock[];
+  engagementStatus?: string;
+  appearanceAuthorized?: boolean;
+  engagementSignatureId?: Id;
+  pendingRetainerAmount?: number;
+  conflictWaiverHash?: string;
   notes?: Note[];
   documents?: Doc[];
 };
@@ -269,6 +274,9 @@ export type Lead = {
   status: string;
   createdAt: string;
   docket?: DocketPreview;
+  caseId?: Id;
+  waiver?: { id: Id; status: string; signUrl?: string; documentHash?: string; signatureHash?: string };
+  engagement?: { id: Id; status: string; signUrl?: string; documentHash?: string; signatureHash?: string };
 };
 
 export type ConflictHit = {
@@ -312,6 +320,10 @@ export type SignReq = {
   createdAt?: string;
   caseId?: Id;
   clientId?: Id;
+  purpose?: string;
+  documentHash?: string;
+  signatureHash?: string | null;
+  unlocked?: boolean;
 };
 
 export type Integration = {

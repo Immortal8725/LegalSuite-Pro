@@ -27,12 +27,20 @@ public class SignatureRequest {
     private String signatureDataUrl;
     private Instant signedAt;
     private Instant createdAt;
+    private String purpose;
+    private UUID leadId;
+    private UUID conflictCheckId;
+    @Column(length = 128)
+    private String documentHash;
+    @Column(length = 128)
+    private String signatureHash;
 
     @PrePersist
     void persist() {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = Instant.now();
         if (status == null) status = "pending";
+        if (purpose == null) purpose = "engagement";
     }
 
     public UUID getId() { return id; }
@@ -59,4 +67,14 @@ public class SignatureRequest {
     public void setSignedAt(Instant signedAt) { this.signedAt = signedAt; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
+    public UUID getLeadId() { return leadId; }
+    public void setLeadId(UUID leadId) { this.leadId = leadId; }
+    public UUID getConflictCheckId() { return conflictCheckId; }
+    public void setConflictCheckId(UUID conflictCheckId) { this.conflictCheckId = conflictCheckId; }
+    public String getDocumentHash() { return documentHash; }
+    public void setDocumentHash(String documentHash) { this.documentHash = documentHash; }
+    public String getSignatureHash() { return signatureHash; }
+    public void setSignatureHash(String signatureHash) { this.signatureHash = signatureHash; }
 }

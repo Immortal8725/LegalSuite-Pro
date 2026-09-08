@@ -139,6 +139,11 @@ public class AdvancedControllers {
         return ApiResponse.ok(retain.retain(leadId, body == null ? Map.of() : body));
     }
 
+    @PostMapping("/api/v1/retain/{leadId}/waiver")
+    public ApiResponse<?> issueWaiver(@PathVariable UUID leadId) {
+        return ApiResponse.ok(retain.issueWaiver(leadId));
+    }
+
     @GetMapping("/api/v1/usage")
     public ApiResponse<?> usagePreview() {
         return ApiResponse.ok(usage.preview());

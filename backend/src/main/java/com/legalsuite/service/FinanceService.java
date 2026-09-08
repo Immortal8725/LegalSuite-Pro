@@ -6,12 +6,14 @@ import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
 import com.legalsuite.domain.Expense;
 import com.legalsuite.domain.Invoice;
+import com.legalsuite.domain.LegalCase;
 import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.domain.TrustTransaction;
 import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.ExpenseRepository;
 import com.legalsuite.repo.InvoiceRepository;
+import com.legalsuite.repo.LegalCaseRepository;
 import com.legalsuite.repo.TimeEntryRepository;
 import com.legalsuite.repo.TrustAccountRepository;
 import com.legalsuite.repo.TrustTransactionRepository;
@@ -35,6 +37,7 @@ public class FinanceService {
     private final TrustAccountRepository trusts;
     private final TrustTransactionRepository trustTx;
     private final AppUserRepository users;
+    private final LegalCaseRepository cases;
     private final Map<UUID, Instant> runningTimers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> timerCases = new ConcurrentHashMap<>();
 
@@ -44,13 +47,15 @@ public class FinanceService {
             ExpenseRepository expenses,
             TrustAccountRepository trusts,
             TrustTransactionRepository trustTx,
-            AppUserRepository users) {
+            AppUserRepository users,
+            LegalCaseRepository cases) {
         this.timeEntries = timeEntries;
         this.invoices = invoices;
         this.expenses = expenses;
         this.trusts = trusts;
         this.trustTx = trustTx;
         this.users = users;
+        this.cases = cases;
     }
 
     public List<Map<String, Object>> timeEntries() {
@@ -72,6 +77,13 @@ public class FinanceService {
                 .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
         t.setBillable(body.get("billable") == null || Boolean.parseBoolean(String.valueOf(body.get("billable"))));
         t.setSource(String.valueOf(body.getOrDefault("source", "manual")));
+        if (t.getCaseId() != null) {
+            cases.findByIdAndTenantId(t.getCaseId(), tid()).ifPresent(c -> {
+                if (t.isBillable() && !DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())) {
+                    throw ApiException.badRequest("Limited file: billable time is blocked until the engagement is signed.");
+                }
+            });
+        }
         timeEntries.save(t);
         return timeView(t);
     }
@@ -203,11 +215,23 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> trustMove(Map<String, Object> body) {
+        return trustMove(body, false);
+    }
+
+    @Transactional
+    public Map<String, Object> trustMove(Map<String, Object> body, boolean internalUnlock) {
         UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
         TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
                 .orElseThrow(() -> ApiException.notFound("Trust account not found"));
         String type = String.valueOf(body.getOrDefault("type", "deposit"));
         BigDecimal amount = new BigDecimal(String.valueOf(body.get("amount")));
+        if (body.get("caseId") != null && !internalUnlock) {
+            UUID caseId = UUID.fromString(String.valueOf(body.get("caseId")));
+            LegalCase matter = cases.findByIdAndTenantId(caseId, tid()).orElse(null);
+            if (matter != null && !DocumentHash.appearanceAuthorized(matter.getEngagementStatus(), matter.isAppearanceAuthorized())) {
+                throw ApiException.badRequest("Limited file: IOLTA movements wait until the engagement is signed. The retainer is pledged, not posted.");
+            }
+        }
         if ("withdrawal".equals(type) && acct.getBalance().compareTo(amount) < 0) {
             throw ApiException.badRequest("Insufficient trust funds for this client ledger");
         }
@@ -221,7 +245,7 @@ public class FinanceService {
         tx.setAmount(amount);
         tx.setBalanceAfter(next);
         tx.setDescription(String.valueOf(body.getOrDefault("description", type)));
-        tx.setCreatedBy(TenantContext.requireUser());
+        tx.setCreatedBy(TenantContext.getUserId());
         if (body.get("clientId") != null) tx.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
         if (body.get("caseId") != null) tx.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
         trustTx.save(tx);

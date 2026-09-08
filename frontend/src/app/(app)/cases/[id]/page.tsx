@@ -53,7 +53,7 @@ export default function CaseDetailPage() {
         actions={
           <div className="flex gap-2">
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-              {["intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"].map((s) => (
+              {["limited", "intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"].map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </Select>
@@ -68,9 +68,27 @@ export default function CaseDetailPage() {
           </div>
         }
       />
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <StatusBadge status={c.status} />
+        {c.engagementStatus && <StatusBadge status={c.engagementStatus} />}
       </div>
+      {!c.appearanceAuthorized && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <p className="font-semibold">Limited file — no appearance.</p>
+          <p className="mt-1">
+            The engagement is unsigned. Status cannot move to open or trial. IOLTA will not post the pledged retainer
+            {c.pendingRetainerAmount ? ` (${c.pendingRetainerAmount})` : ""} until this instrument is signed.
+          </p>
+          {c.engagementSignatureId && (
+            <Link className="mt-2 inline-block font-semibold underline" href={`/sign/${c.engagementSignatureId}`} target="_blank">
+              Open engagement for signature
+            </Link>
+          )}
+        </div>
+      )}
+      {c.conflictWaiverHash && (
+        <p className="mb-4 font-mono text-[11px] text-slate-500">Conflict waiver hash {c.conflictWaiverHash}</p>
+      )}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
