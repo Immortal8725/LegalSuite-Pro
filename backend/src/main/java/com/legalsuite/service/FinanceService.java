@@ -8,20 +8,26 @@ import com.legalsuite.domain.Expense;
 import com.legalsuite.domain.Invoice;
 import com.legalsuite.domain.LegalCase;
 import com.legalsuite.domain.TimeEntry;
+import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TrustAccount;
+import com.legalsuite.domain.TrustReconciliation;
 import com.legalsuite.domain.TrustTransaction;
 import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.ExpenseRepository;
 import com.legalsuite.repo.InvoiceRepository;
 import com.legalsuite.repo.LegalCaseRepository;
+import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.TimeEntryRepository;
 import com.legalsuite.repo.TrustAccountRepository;
+import com.legalsuite.repo.TrustReconciliationRepository;
 import com.legalsuite.repo.TrustTransactionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,8 +42,10 @@ public class FinanceService {
     private final ExpenseRepository expenses;
     private final TrustAccountRepository trusts;
     private final TrustTransactionRepository trustTx;
+    private final TrustReconciliationRepository recons;
     private final AppUserRepository users;
     private final LegalCaseRepository cases;
+    private final TenantRepository tenants;
     private final Map<UUID, Instant> runningTimers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> timerCases = new ConcurrentHashMap<>();
 
@@ -47,15 +55,19 @@ public class FinanceService {
             ExpenseRepository expenses,
             TrustAccountRepository trusts,
             TrustTransactionRepository trustTx,
+            TrustReconciliationRepository recons,
             AppUserRepository users,
-            LegalCaseRepository cases) {
+            LegalCaseRepository cases,
+            TenantRepository tenants) {
         this.timeEntries = timeEntries;
         this.invoices = invoices;
         this.expenses = expenses;
         this.trusts = trusts;
         this.trustTx = trustTx;
+        this.recons = recons;
         this.users = users;
         this.cases = cases;
+        this.tenants = tenants;
     }
 
     public List<Map<String, Object>> timeEntries() {
@@ -169,7 +181,15 @@ public class FinanceService {
         )).toList();
         inv.setLineItemsJson(JsonLists.toJson(lines));
         inv.setSubtotal(sub);
-        inv.setTotal(sub);
+        Tenant tenant = tenants.findById(tid()).orElse(null);
+        if ("ZA".equals(DocketEngine.of(tenant))) {
+            BigDecimal vat = sub.multiply(new BigDecimal("0.15")).setScale(2, RoundingMode.HALF_UP);
+            inv.setTaxAmount(vat);
+            inv.setTotal(sub.add(vat));
+            inv.setNotes("VAT 15% (Value-Added Tax Act 89 of 1991 s 7).");
+        } else {
+            inv.setTotal(sub);
+        }
         invoices.save(inv);
         unbilled.forEach(t -> {
             t.setBilled(true);
@@ -229,7 +249,15 @@ public class FinanceService {
             UUID caseId = UUID.fromString(String.valueOf(body.get("caseId")));
             LegalCase matter = cases.findByIdAndTenantId(caseId, tid()).orElse(null);
             if (matter != null && !DocumentHash.appearanceAuthorized(matter.getEngagementStatus(), matter.isAppearanceAuthorized())) {
-                throw ApiException.badRequest("Limited file: IOLTA movements wait until the engagement is signed. The retainer is pledged, not posted.");
+                throw ApiException.badRequest("Limited file: trust movements wait until the mandate is signed. The retainer is pledged, not posted.");
+            }
+        }
+        UUID clientId = body.get("clientId") == null ? null : UUID.fromString(String.valueOf(body.get("clientId")));
+        if ("withdrawal".equals(type) && clientId != null) {
+            BigDecimal ledger = clientLedger(acct.getId(), clientId);
+            if (ledger.compareTo(amount) < 0) {
+                throw ApiException.badRequest("Cannot use another client's trust money. This client's section 86 / IOLTA ledger is "
+                        + ledger.toPlainString() + ".");
             }
         }
         if ("withdrawal".equals(type) && acct.getBalance().compareTo(amount) < 0) {
@@ -246,7 +274,7 @@ public class FinanceService {
         tx.setBalanceAfter(next);
         tx.setDescription(String.valueOf(body.getOrDefault("description", type)));
         tx.setCreatedBy(TenantContext.getUserId());
-        if (body.get("clientId") != null) tx.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
+        if (clientId != null) tx.setClientId(clientId);
         if (body.get("caseId") != null) tx.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
         trustTx.save(tx);
         Map<String, Object> view = trustView(acct);
@@ -262,14 +290,154 @@ public class FinanceService {
 
     public List<Map<String, Object>> trustLedger(UUID accountId) {
         return trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), accountId).stream()
-                .map(tx -> Map.<String, Object>of(
-                        "id", tx.getId(),
-                        "type", tx.getType(),
-                        "amount", tx.getAmount(),
-                        "balanceAfter", tx.getBalanceAfter(),
-                        "description", tx.getDescription(),
-                        "createdAt", tx.getCreatedAt()))
+                .map(tx -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", tx.getId());
+                    m.put("type", tx.getType());
+                    m.put("amount", tx.getAmount());
+                    m.put("balanceAfter", tx.getBalanceAfter());
+                    m.put("description", tx.getDescription());
+                    m.put("clientId", tx.getClientId());
+                    m.put("createdAt", tx.getCreatedAt());
+                    return m;
+                })
                 .toList();
+    }
+
+    public Map<String, Object> liveRecon(UUID accountId) {
+        TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
+                .orElseThrow(() -> ApiException.notFound("Trust account not found"));
+        return liveRecon(acct, acct.getBankBalance());
+    }
+
+    public Map<String, Object> firmRecon() {
+        List<TrustAccount> accounts = trusts.findByTenantId(tid());
+        if (accounts.isEmpty()) {
+            return Map.of("status", "empty", "accounts", List.of(), "worstStatus", "empty");
+        }
+        List<Map<String, Object>> rows = accounts.stream().map(a -> liveRecon(a, a.getBankBalance())).toList();
+        String worst = rows.stream().anyMatch(r -> "unbalanced".equals(r.get("status"))) ? "unbalanced" : "balanced";
+        Map<String, Object> m = new HashMap<>();
+        m.put("accounts", rows);
+        m.put("worstStatus", worst);
+        m.put("history", recons.findByTenantIdOrderByCreatedAtDesc(tid()).stream().limit(8).map(this::reconView).toList());
+        return m;
+    }
+
+    @Transactional
+    public Map<String, Object> reconcile(Map<String, Object> body) {
+        UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
+        TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
+                .orElseThrow(() -> ApiException.notFound("Trust account not found"));
+        BigDecimal bank = new BigDecimal(String.valueOf(body.getOrDefault("bankBalance",
+                acct.getBankBalance() == null ? acct.getBalance() : acct.getBankBalance())));
+        boolean certify = Boolean.parseBoolean(String.valueOf(body.getOrDefault("certify", "false")));
+        String notes = String.valueOf(body.getOrDefault("notes", ""));
+        Map<String, Object> live = liveRecon(acct, bank);
+        BigDecimal difference = new BigDecimal(String.valueOf(live.get("difference")));
+        if (certify && difference.abs().compareTo(new BigDecimal("0.009")) > 0 && (notes == null || notes.trim().length() < 40)) {
+            throw ApiException.badRequest("Cannot certify an unbalanced three-way recon without a written explanation (40+ characters). LPC inspectors read the note.");
+        }
+        acct.setBankBalance(bank);
+        acct.setLastReconciledAt(Instant.now());
+        trusts.save(acct);
+        TrustReconciliation row = new TrustReconciliation();
+        row.setTenantId(tid());
+        row.setTrustAccountId(acct.getId());
+        row.setPeriodEnd(TexasDocketRules.parseDate(body.get("periodEnd")) == null
+                ? LocalDate.now() : TexasDocketRules.parseDate(body.get("periodEnd")));
+        row.setBankBalance(bank);
+        row.setBookBalance(new BigDecimal(String.valueOf(live.get("bookBalance"))));
+        row.setClientLedgerTotal(new BigDecimal(String.valueOf(live.get("clientLedgerTotal"))));
+        row.setDifference(difference);
+        row.setStatus(String.valueOf(live.get("status")));
+        row.setNotes(notes);
+        row.setLedgersJson(JsonLists.toJson(live.get("ledgers")));
+        if (certify) {
+            row.setCertified(true);
+            row.setCertifiedBy(TenantContext.getUserId());
+            row.setCertifiedAt(Instant.now());
+        }
+        recons.save(row);
+        Map<String, Object> view = reconView(row);
+        view.put("live", liveRecon(acct, bank));
+        return view;
+    }
+
+    BigDecimal clientLedger(UUID accountId, UUID clientId) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (TrustTransaction tx : trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), accountId)) {
+            if (clientId == null) {
+                if (tx.getClientId() != null) continue;
+            } else if (!clientId.equals(tx.getClientId())) {
+                continue;
+            }
+            if ("withdrawal".equals(tx.getType())) sum = sum.subtract(nz(tx.getAmount()));
+            else sum = sum.add(nz(tx.getAmount()));
+        }
+        return sum;
+    }
+
+    private Map<String, Object> liveRecon(TrustAccount acct, BigDecimal bankBalance) {
+        Map<UUID, BigDecimal> byClient = new LinkedHashMap<>();
+        BigDecimal unallocated = BigDecimal.ZERO;
+        for (TrustTransaction tx : trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), acct.getId())) {
+            BigDecimal delta = "withdrawal".equals(tx.getType()) ? nz(tx.getAmount()).negate() : nz(tx.getAmount());
+            if (tx.getClientId() == null) unallocated = unallocated.add(delta);
+            else byClient.merge(tx.getClientId(), delta, BigDecimal::add);
+        }
+        BigDecimal clientTotal = byClient.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add).add(unallocated);
+        BigDecimal book = nz(acct.getBalance());
+        BigDecimal bank = bankBalance == null ? book : bankBalance;
+        BigDecimal bankVsBook = bank.subtract(book);
+        BigDecimal bookVsClients = book.subtract(clientTotal);
+        boolean balanced = bankVsBook.abs().compareTo(new BigDecimal("0.009")) <= 0
+                && bookVsClients.abs().compareTo(new BigDecimal("0.009")) <= 0;
+        List<Map<String, Object>> ledgers = new ArrayList<>();
+        byClient.forEach((id, bal) -> {
+            Map<String, Object> row = new HashMap<>();
+            row.put("clientId", id);
+            row.put("balance", bal);
+            ledgers.add(row);
+        });
+        if (unallocated.signum() != 0) {
+            ledgers.add(Map.of("clientId", "", "balance", unallocated, "unallocated", true));
+        }
+        Map<String, Object> m = new HashMap<>();
+        m.put("accountId", acct.getId());
+        m.put("accountName", acct.getAccountName());
+        m.put("bankName", acct.getBankName());
+        m.put("bookBalance", book);
+        m.put("bankBalance", bank);
+        m.put("clientLedgerTotal", clientTotal);
+        m.put("bankVsBook", bankVsBook);
+        m.put("bookVsClients", bookVsClients);
+        m.put("difference", bankVsBook.abs().max(bookVsClients.abs()));
+        m.put("status", balanced ? "balanced" : "unbalanced");
+        m.put("ledgers", ledgers);
+        m.put("lastReconciledAt", acct.getLastReconciledAt());
+        m.put("rule", "Legal Practice Act 28 of 2014 ss 86–87: trust bank = cashbook = sum of client ledgers. Never mix clients.");
+        return m;
+    }
+
+    private Map<String, Object> reconView(TrustReconciliation r) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", r.getId());
+        m.put("trustAccountId", r.getTrustAccountId());
+        m.put("periodEnd", r.getPeriodEnd());
+        m.put("bankBalance", r.getBankBalance());
+        m.put("bookBalance", r.getBookBalance());
+        m.put("clientLedgerTotal", r.getClientLedgerTotal());
+        m.put("difference", r.getDifference());
+        m.put("status", r.getStatus());
+        m.put("certified", r.isCertified());
+        m.put("notes", r.getNotes());
+        m.put("createdAt", r.getCreatedAt());
+        return m;
+    }
+
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 
     private Map<String, Object> timeView(TimeEntry t) {
@@ -298,6 +466,7 @@ public class FinanceService {
         m.put("dateIssued", i.getDateIssued());
         m.put("dateDue", i.getDateDue());
         m.put("subtotal", i.getSubtotal());
+        m.put("taxAmount", i.getTaxAmount());
         m.put("total", i.getTotal());
         m.put("amountPaid", i.getAmountPaid());
         m.put("balanceDue", i.getTotal().subtract(i.getAmountPaid() == null ? BigDecimal.ZERO : i.getAmountPaid()));
@@ -329,7 +498,11 @@ public class FinanceService {
         m.put("accountName", a.getAccountName());
         m.put("bankName", a.getBankName());
         m.put("balance", a.getBalance());
+        m.put("bankBalance", a.getBankBalance());
+        m.put("lastReconciledAt", a.getLastReconciledAt());
+        m.put("accountType", a.getAccountType());
         m.put("status", a.getStatus());
+        m.put("recon", liveRecon(a, a.getBankBalance()));
         return m;
     }
 

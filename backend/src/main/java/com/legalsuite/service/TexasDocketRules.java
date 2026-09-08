@@ -33,6 +33,10 @@ public final class TexasDocketRules {
         public LocalDate dateOfBirth;
         public LocalDate probateOpened;
         public boolean governmentalDefendant;
+        public boolean rafClaimLodged;
+        public LocalDate rafLodgedDate;
+        public boolean noticeServed;
+        public boolean hitAndRun;
 
         public static Facts from(Map<String, Object> body) {
             Facts f = new Facts();
@@ -46,6 +50,10 @@ public final class TexasDocketRules {
             f.dateOfBirth = parseDate(body.get("dateOfBirth"));
             f.probateOpened = parseDate(body.get("probateOpened"));
             f.governmentalDefendant = bool(body.get("governmentalDefendant"));
+            f.rafClaimLodged = bool(body.get("rafClaimLodged"));
+            f.rafLodgedDate = parseDate(body.get("rafLodgedDate"));
+            f.noticeServed = bool(body.get("noticeServed"));
+            f.hitAndRun = bool(body.get("hitAndRun"));
             return f;
         }
     }
@@ -71,10 +79,10 @@ public final class TexasDocketRules {
         }
     }
 
-    public record Result(String track, List<Clock> clocks, List<String> caveats) {
+    public record Result(String jurisdiction, String track, List<Clock> clocks, List<String> caveats) {
         public LocalDate solDate() {
             return clocks.stream()
-                    .filter(c -> "sol".equals(c.kind))
+                    .filter(c -> "sol".equals(c.kind) || "raf_lodge".equals(c.kind) || "ccma".equals(c.kind))
                     .map(Clock::date)
                     .min(Comparator.naturalOrder())
                     .orElse(controlling() == null ? null : controlling().date);
@@ -86,7 +94,7 @@ public final class TexasDocketRules {
 
         public Map<String, Object> asMap() {
             Map<String, Object> m = new HashMap<>();
-            m.put("jurisdiction", JURISDICTION);
+            m.put("jurisdiction", jurisdiction);
             m.put("track", track);
             Clock ctrl = controlling();
             m.put("solDate", solDate());
@@ -95,7 +103,9 @@ public final class TexasDocketRules {
             m.put("controllingCitation", ctrl == null ? null : ctrl.citation());
             m.put("clocks", clocks.stream().map(Clock::asMap).toList());
             m.put("caveats", caveats);
-            m.put("disclaimer", "Texas docket clocks from filed facts. Confirm exceptions, tolling, and local rules before you rely on a date.");
+            m.put("disclaimer", "ZA".equals(jurisdiction)
+                    ? "South African docket clocks from filed facts. Confirm interruptions, condonation, RAF lodging, and the latest LPC practice notes before you rely on a date. This is not legal advice."
+                    : "Texas docket clocks from filed facts. Confirm exceptions, tolling, and local rules before you rely on a date.");
             return m;
         }
     }
@@ -131,7 +141,7 @@ public final class TexasDocketRules {
         }
 
         clocks.sort(Comparator.comparing(Clock::date));
-        return new Result(track, clocks, caveats);
+        return new Result("TX", track, clocks, caveats);
     }
 
     public static void stamp(LegalCase c, Result result) {
@@ -163,6 +173,10 @@ public final class TexasDocketRules {
         f.dateOfBirth = c.getPlaintiffDob();
         f.probateOpened = c.getProbateOpened();
         f.governmentalDefendant = c.isGovernmentalDefendant();
+        f.rafClaimLodged = c.isRafClaimLodged();
+        f.rafLodgedDate = c.getRafLodgedDate();
+        f.noticeServed = c.isNoticeServed();
+        f.hitAndRun = c.isHitAndRun();
         return f;
     }
 
@@ -253,7 +267,7 @@ public final class TexasDocketRules {
                 lettersNote));
     }
 
-    private static Clock clock(
+    static Clock clock(
             String kind, String ruleId, String citation, String title, LocalDate date, String reason, String assumption) {
         return new Clock(kind, ruleId, citation, title, date, reason, assumption);
     }

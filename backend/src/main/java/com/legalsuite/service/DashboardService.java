@@ -13,6 +13,7 @@ import com.legalsuite.repo.InvoiceRepository;
 import com.legalsuite.repo.LeadRepository;
 import com.legalsuite.repo.LegalCaseRepository;
 import com.legalsuite.repo.TaskItemRepository;
+import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.TimeEntryRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -39,6 +40,8 @@ public class DashboardService {
     private final CallRecordRepository calls;
     private final PracticeService practice;
     private final LeadRepository leads;
+    private final FinanceService finance;
+    private final TenantRepository tenants;
 
     public DashboardService(
             LegalCaseRepository cases,
@@ -50,7 +53,9 @@ public class DashboardService {
             AppNotificationRepository notifications,
             CallRecordRepository calls,
             PracticeService practice,
-            LeadRepository leads) {
+            LeadRepository leads,
+            FinanceService finance,
+            TenantRepository tenants) {
         this.cases = cases;
         this.clients = clients;
         this.tasks = tasks;
@@ -61,6 +66,8 @@ public class DashboardService {
         this.calls = calls;
         this.practice = practice;
         this.leads = leads;
+        this.finance = finance;
+        this.tenants = tenants;
     }
 
     public Map<String, Object> overview() {
@@ -100,6 +107,11 @@ public class DashboardService {
         m.put("newLeads", leads.findByTenantIdOrderByCreatedAtDesc(tid).stream()
                 .filter(l -> "new".equals(l.getStatus()) || "consultation".equals(l.getStatus()))
                 .count());
+        var tenant = tenants.findById(tid).orElse(null);
+        m.put("jurisdiction", DocketEngine.of(tenant));
+        m.put("trustLabel", DocketEngine.trustLabel(tenant));
+        m.put("currency", DocketEngine.currency(tenant));
+        m.put("trustRecon", finance.firmRecon());
         return m;
     }
 
@@ -150,6 +162,11 @@ public class DashboardService {
         }
         items.sort(Comparator.comparingLong(m -> ((Number) m.get("daysLeft")).longValue()));
         return items.stream().limit(16).toList();
+    }
+
+    public Map<String, Object> previewDocket(Map<String, Object> body) {
+        var tenant = tenants.findById(TenantContext.requireTenant()).orElseThrow();
+        return DocketEngine.preview(tenant, body).asMap();
     }
 
     private Map<String, Object> docketItem(

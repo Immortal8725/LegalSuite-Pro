@@ -2,18 +2,18 @@ import Link from "next/link";
 import { Scale, Check } from "lucide-react";
 
 const FEATURES = [
-  ["Hire in one motion", "Website consult, conflict check, merged engagement, e-sign, trust retainer — same tenant."],
-  ["The clock is the home screen", "Statutes of limitations and filings sit on the docket, not a buried calendar tab."],
-  ["The phone is on the file", "In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in with a two-party warning."],
+  ["Hire in one motion", "Website consult, conflict check, merged mandate, e-sign, trust retainer — same tenant."],
+  ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket — not a buried calendar tab."],
+  ["The phone is on the file", "In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in with a RICA / two-party warning."],
   ["Metered, not seated", "Core stays on. Add-ons and PSTN minutes invoice at month end for what you actually used."],
   ["Privilege-shaped AI", "Summaries and drafts never leave this tenant. No vendor, no training corpus."],
-  ["IOLTA that cannot overdraw", "Trust ledgers refuse a negative balance. Costs and retainers stay honest."],
+  ["Trust that would survive an inspector", "Per-client ledgers. Three-way recon (bank = cashbook = clients). No overdraw of another client's money."],
 ];
 
 const PLANS = [
   { name: "Free", price: "$0", note: "Solo start", items: ["Landing page", "2 users", "25 matters", "30 in-app minutes"] },
   { name: "Essentials", price: "$49", note: "per user / month", items: ["Unlimited cases", "Time + billing", "Client portal add-on", "200 PSTN minutes"] },
-  { name: "Professional", price: "$99", note: "per user / month", popular: true, items: ["Trust / IOLTA", "Call recording (opt-in)", "E-sign ready", "1,000 PSTN minutes"] },
+  { name: "Professional", price: "R1,800", note: "per user / month (demo USD $99)", popular: true, items: ["s 86 trust / IOLTA", "Call recording (opt-in)", "E-sign ready", "1,000 PSTN minutes"] },
   { name: "Enterprise", price: "$149", note: "per user / month", items: ["Unlimited seats", "SSO-ready roles", "API access", "Unlimited voice"] },
 ];
 
@@ -41,19 +41,19 @@ export default function MarketingPage() {
       </nav>
 
       <section className="mx-auto max-w-4xl px-6 pb-16 pt-10 text-center">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">The public page is how work enters</p>
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">South Africa first. Texas still in the other tenant.</p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight text-navy sm:text-5xl">
-          Register once. The website takes the consult. The docket watches the clock. The month-end bill is what you used.
+          Register once. The website takes the consult. The docket watches RAF and Act 40. The month-end bill is what you used.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-500">
-          Landing → intake → conflict → engagement → IOLTA retainer, in one tenant. In-app calls are free and write time on hangup. Client text never leaves the firm. Add-on modules and PSTN minutes invoice when the month closes — no prepaid buckets, no $99/seat tax on a two-lawyer shop.
+          Landing → intake → LPC conflict → signed mandate → section 86 trust, in one tenant. In-app calls are free and write time on hangup. Client text never leaves the firm. Add-on modules and PSTN minutes invoice when the month closes.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/register" className="rounded-xl bg-gold px-6 py-3 font-bold text-navy-dark shadow-lift">
             Register your firm
           </Link>
           <Link href="/login" className="rounded-xl border px-6 py-3 font-bold text-navy">
-            Demo: smith-associates
+            Demo: ndlovu-partners
           </Link>
         </div>
       </section>

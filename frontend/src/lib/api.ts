@@ -32,6 +32,10 @@ export type Tenant = {
   city?: string;
   state?: string;
   zip?: string;
+  country?: string;
+  jurisdiction?: string;
+  currency?: string;
+  trustLabel?: string;
   tagline?: string;
   practiceAreas?: string[];
 };

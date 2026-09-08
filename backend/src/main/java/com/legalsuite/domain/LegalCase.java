@@ -50,6 +50,11 @@ public class LegalCase {
     private LocalDate plaintiffDob;
     private LocalDate probateOpened;
     private boolean governmentalDefendant;
+    private boolean rafClaimLodged;
+    private LocalDate rafLodgedDate;
+    private boolean noticeServed;
+    private LocalDate noticeServedDate;
+    private boolean hitAndRun;
     private String docketTrack;
     private String controllingKind;
     private String solRuleId;

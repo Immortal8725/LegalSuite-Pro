@@ -182,7 +182,9 @@ export default function FirmLandingPage() {
                 checked={form.governmentalDefendant}
                 onChange={(e) => setForm({ ...form, governmentalDefendant: e.target.checked })}
               />
-              The other side is a city, county, school, or transit agency
+              {page.tenant?.country === "ZA"
+                ? "The other side is an organ of state (municipality, SAPS, department, metro)"
+                : "The other side is a city, county, school, or transit agency"}
             </label>
             <div>
               <Label>What happened?</Label>

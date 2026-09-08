@@ -6,7 +6,6 @@ import com.legalsuite.service.DashboardService;
 import com.legalsuite.service.FinanceService;
 import com.legalsuite.service.PracticeService;
 import com.legalsuite.service.TenantService;
-import com.legalsuite.service.TexasDocketRules;
 import com.legalsuite.service.VoiceService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -232,6 +231,15 @@ public class ApiControllers {
     @GetMapping("/api/v1/trust/accounts/{id}/ledger")
     public ApiResponse<?> ledger(@PathVariable UUID id) { return ApiResponse.ok(finance.trustLedger(id)); }
 
+    @GetMapping("/api/v1/trust/recon")
+    public ApiResponse<?> trustRecon() { return ApiResponse.ok(finance.firmRecon()); }
+
+    @GetMapping("/api/v1/trust/accounts/{id}/recon")
+    public ApiResponse<?> accountRecon(@PathVariable UUID id) { return ApiResponse.ok(finance.liveRecon(id)); }
+
+    @PostMapping("/api/v1/trust/reconcile")
+    public ApiResponse<?> reconcile(@RequestBody Map<String, Object> body) { return ApiResponse.ok(finance.reconcile(body)); }
+
     @PostMapping("/api/v1/trust/move")
     public ApiResponse<?> trustMove(@RequestBody Map<String, Object> body) { return ApiResponse.ok(finance.trustMove(body)); }
 
@@ -265,7 +273,7 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/docket/preview")
     public ApiResponse<?> docketPreview(@RequestBody Map<String, Object> body) {
-        return ApiResponse.ok(TexasDocketRules.compute(TexasDocketRules.Facts.from(body)).asMap());
+        return ApiResponse.ok(dashboard.previewDocket(body == null ? Map.of() : body));
     }
 
     @GetMapping("/api/v1/conversations")

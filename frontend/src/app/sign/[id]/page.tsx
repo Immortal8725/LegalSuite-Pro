@@ -62,7 +62,7 @@ export default function PublicSignPage() {
                 <p className="mb-2 text-sm font-semibold text-emerald-700">
                   Signed {doc.signedAt ? new Date(doc.signedAt).toLocaleString() : ""}
                 </p>
-                {doc.unlocked && <p className="mb-2 text-sm">The limited file is now open. The pledged retainer posts to IOLTA.</p>}
+                {doc.unlocked && <p className="mb-2 text-sm">The limited file is now open. The pledged retainer posts to the trust account.</p>}
                 {doc.signatureHash && <p className="mb-2 font-mono text-[11px] text-slate-500">Signature hash {doc.signatureHash}</p>}
                 {doc.signatureDataUrl && (
                   // eslint-disable-next-line @next/next/no-img-element

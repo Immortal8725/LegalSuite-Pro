@@ -10,7 +10,7 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import type { CallRow, TeamMember } from "@/lib/types";
 import { formatDateTime, moneyExact } from "@/lib/utils";
 
-type Ethics = { state: string; allPartyConsent: boolean; notice: string };
+type Ethics = { state: string; country?: string; allPartyConsent: boolean; notice: string; statute?: string };
 
 type Registry = {
   totalCalls: number;

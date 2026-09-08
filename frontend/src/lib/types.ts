@@ -45,6 +45,10 @@ export type Dashboard = {
   unreadNotifications: number;
   callCount: number;
   newLeads?: number;
+  jurisdiction?: string;
+  trustLabel?: string;
+  currency?: string;
+  trustRecon?: TrustRecon;
   docket?: DocketItem[];
   recentCases: Matter[];
   upcomingEvents: CalEvent[];
@@ -80,6 +84,10 @@ export type Matter = {
   engagementSignatureId?: Id;
   pendingRetainerAmount?: number;
   conflictWaiverHash?: string;
+  docketHold?: boolean;
+  docketHoldReason?: string;
+  noticeServed?: boolean;
+  rafClaimLodged?: boolean;
   notes?: Note[];
   documents?: Doc[];
 };
@@ -172,6 +180,7 @@ export type Invoice = {
   dateIssued?: string;
   dateDue?: string;
   subtotal?: number;
+  taxAmount?: number;
   total: number;
   amountPaid?: number;
   balanceDue?: number;
@@ -191,14 +200,50 @@ export type Expense = {
   status?: string;
 };
 
-export type TrustAcct = { id: Id; accountName: string; bankName?: string; balance: number; status?: string };
+export type TrustAcct = {
+  id: Id;
+  accountName: string;
+  bankName?: string;
+  balance: number;
+  bankBalance?: number;
+  lastReconciledAt?: string;
+  accountType?: string;
+  status?: string;
+  recon?: TrustReconLive;
+};
 export type TrustTx = {
   id: Id;
   type: string;
   amount: number;
   balanceAfter: number;
   description: string;
+  clientId?: Id;
   createdAt: string;
+};
+export type TrustReconLive = {
+  accountId?: Id;
+  accountName?: string;
+  bookBalance: number;
+  bankBalance: number;
+  clientLedgerTotal: number;
+  bankVsBook?: number;
+  bookVsClients?: number;
+  difference: number;
+  status: string;
+  ledgers?: { clientId?: string; balance: number; unallocated?: boolean }[];
+  rule?: string;
+};
+export type TrustRecon = {
+  worstStatus?: string;
+  accounts?: TrustReconLive[];
+  history?: {
+    id: Id;
+    periodEnd?: string;
+    difference?: number;
+    status: string;
+    certified?: boolean;
+    notes?: string;
+  }[];
 };
 
 export type CallRow = {
@@ -346,6 +391,7 @@ export type Landing = {
     city?: string;
     state?: string;
     zip?: string;
+    country?: string;
     tagline?: string;
     practiceAreas?: string[];
   };

@@ -80,6 +80,7 @@ const NAV = [
     section: "Admin",
     items: [
       { href: "/conflicts", label: "Conflict Check", icon: ShieldAlert, module: "conflicts" },
+      { href: "/fitness", label: "Practice fitness", icon: ShieldAlert },
       { href: "/reports", label: "Reports", icon: BarChart3, module: "reports" },
       { href: "/integrations", label: "Integrations", icon: Plug, module: "integrations" },
       { href: "/audit", label: "Audit log", icon: PenLine, module: "audit" },

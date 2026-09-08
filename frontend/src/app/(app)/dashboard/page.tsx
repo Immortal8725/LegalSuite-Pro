@@ -18,6 +18,17 @@ const URGENCY: Record<string, string> = {
   ok: "bg-slate-50 text-slate-600 border-slate-200",
 };
 
+function clockKind(kind?: string, za?: boolean) {
+  if (kind === "sol") return za ? "Prescription" : "Statute of limitations";
+  if (kind === "notice") return za ? "Organ-of-state notice" : "Governmental notice";
+  if (kind === "repose") return "Outer limit";
+  if (kind === "raf_lodge") return "Lodge RAF 1";
+  if (kind === "raf_summons") return "RAF summons";
+  if (kind === "ccma") return "CCMA referral";
+  if (kind === "inspection") return "L&D inspection";
+  return kind || "";
+}
+
 export default function DashboardPage() {
   const { user, tenant } = useAuth();
   const [data, setData] = useState<Dashboard | null>(null);
@@ -33,14 +44,25 @@ export default function DashboardPage() {
   if (!data) return <Loading />;
 
   const docket: DocketItem[] = data.docket || [];
+  const za = data.jurisdiction === "ZA" || tenant?.country === "ZA";
+  const recon = data.trustRecon;
+  const unbalanced = recon?.worstStatus === "unbalanced";
+  const trustName = data.trustLabel || tenant?.trustLabel || (za ? "section 86 trust" : "IOLTA");
 
   return (
     <div>
       <PageHeader
         title="Docket"
-        subtitle={`${user?.firstName}, Texas clocks first. SOL, TTCA notice, and consults that have not been retained yet.`}
+        subtitle={
+          za
+            ? `${user?.firstName}, South African clocks first. RAF, Act 40 notice, CCMA, prescription — and consults not yet mandated.`
+            : `${user?.firstName}, Texas clocks first. SOL, TTCA notice, and consults that have not been retained yet.`
+        }
         actions={
           <div className="flex gap-2">
+            <Link href="/fitness" className="rounded-lg border px-4 py-2 text-sm font-bold text-navy">
+              Practice fitness
+            </Link>
             <Link href="/leads" className="rounded-lg border px-4 py-2 text-sm font-bold text-navy">
               Hire queue {data.newLeads ? `(${data.newLeads})` : ""}
             </Link>
@@ -51,6 +73,20 @@ export default function DashboardPage() {
         }
       />
       <PrivilegeStrip />
+      {unbalanced && (
+        <Link
+          href="/trust"
+          className="mb-4 mt-4 block rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950"
+        >
+          <p className="font-semibold">
+            {za ? "LPA s 86 three-way is unbalanced." : "IOLTA three-way is unbalanced."} Do not certify.
+          </p>
+          <p className="mt-1">
+            Bank vs cashbook vs client ledgers do not agree. Open the {trustName} ledger and enter the statement
+            balance.
+          </p>
+        </Link>
+      )}
       <div className="mt-4 mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-5">
           <p className="text-xs text-slate-500">Active matters</p>
@@ -86,15 +122,7 @@ export default function DashboardPage() {
               className={`block rounded-xl border p-4 ${URGENCY[item.urgency] || URGENCY.ok}`}
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-[11px] font-bold uppercase tracking-wide">
-                  {item.kind === "sol"
-                    ? "Statute of limitations"
-                    : item.kind === "notice"
-                      ? "Governmental notice"
-                      : item.kind === "repose"
-                        ? "Statute of repose"
-                        : item.label}
-                </p>
+                <p className="text-[11px] font-bold uppercase tracking-wide">{clockKind(item.kind, za) || item.label}</p>
                 <p className="font-mono text-sm font-bold">
                   {item.daysLeft < 0 ? `${Math.abs(item.daysLeft)} days overdue` : `${item.daysLeft} days`}
                 </p>
@@ -105,7 +133,17 @@ export default function DashboardPage() {
               </p>
               {item.citation && <p className="mt-1 text-[11px] font-semibold opacity-90">{item.citation}</p>}
               {item.reason && <p className="mt-1 text-xs opacity-80">{item.reason}</p>}
-              <p className="text-xs opacity-80">{item.kind === "sol" || item.kind === "notice" || item.kind === "repose" ? formatDate(item.date) : formatDateTime(item.date)}</p>
+              <p className="text-xs opacity-80">
+                {item.kind === "sol" ||
+                item.kind === "notice" ||
+                item.kind === "repose" ||
+                item.kind === "raf_lodge" ||
+                item.kind === "raf_summons" ||
+                item.kind === "ccma" ||
+                item.kind === "inspection"
+                  ? formatDate(item.date)
+                  : formatDateTime(item.date)}
+              </p>
             </Link>
           ))}
         </CardBody>
@@ -136,10 +174,18 @@ export default function DashboardPage() {
           </CardHeader>
           <CardBody className="text-sm text-slate-600">
             <ol className="list-decimal space-y-2 pl-4">
-              <li>Public site {tenant?.slug ? <Link className="font-semibold text-navy" href={`/firm/${tenant.slug}`}>/{tenant.slug}</Link> : null} takes the consult.</li>
+              <li>
+                Public site{" "}
+                {tenant?.slug ? (
+                  <Link className="font-semibold text-navy" href={`/firm/${tenant.slug}`}>
+                    /{tenant.slug}
+                  </Link>
+                ) : null}{" "}
+                takes the consult.
+              </li>
               <li>Conflicts run before a file opens.</li>
-              <li>Engagement merges and goes out for signature.</li>
-              <li>Retainer hits IOLTA. The call is on the docket; hangup writes time.</li>
+              <li>The mandate merges and goes out for signature.</li>
+              <li>Retainer hits the {trustName}. The call is on the docket; hangup writes time.</li>
             </ol>
             <Link href="/leads" className="mt-4 inline-block font-semibold text-navy">
               Open the hire pipeline →

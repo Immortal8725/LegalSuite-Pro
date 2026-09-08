@@ -7,10 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
 
+const DEMOS = [
+  {
+    label: "South Africa — Ndlovu & Partners",
+    slug: "ndlovu-partners",
+    email: "thabo@ndlovulaw.co.za",
+    note: "RAF, Act 40, LPA s 86 recon",
+  },
+  {
+    label: "Texas — Smith & Associates",
+    slug: "smith-associates",
+    email: "john@smithlaw.com",
+    note: "SOL, TTCA, IOLTA",
+  },
+];
+
 export default function LoginPage() {
   const { login } = useAuth();
-  const [firmSlug, setFirmSlug] = useState("smith-associates");
-  const [email, setEmail] = useState("john@smithlaw.com");
+  const [firmSlug, setFirmSlug] = useState("ndlovu-partners");
+  const [email, setEmail] = useState("thabo@ndlovulaw.co.za");
   const [password, setPassword] = useState("password");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -21,13 +36,13 @@ export default function LoginPage() {
         <h1 className="text-5xl font-extrabold">
           Legal<span className="text-gold">Suite</span> Pro
         </h1>
-        <p className="mt-3 text-xl text-white/80">The operating desk for firms that still answer the phone.</p>
+        <p className="mt-3 text-xl text-white/80">Built for South African firms. Texas still runs on the other tenant.</p>
         <ul className="mt-10 space-y-3 text-white/85">
           {[
-            "Case, client, and document files in one tenant",
-            "Time, invoices, and IOLTA ledgers",
-            "Free in-app calling · PSTN billed at month end",
-            "A public website generated the moment you register",
+            "RAF, Act 40, CCMA, and Prescription Act clocks on the home screen",
+            "LPA s 86 three-way recon — bank, cashbook, client ledgers",
+            "RICA recording is opt-in even though the statute is one-party",
+            "Hire is a gate: conflict, signed waiver, limited file, signed mandate",
           ].map((t) => (
             <li key={t}>— {t}</li>
           ))}
@@ -50,7 +65,25 @@ export default function LoginPage() {
           }}
         >
           <h2 className="text-2xl font-bold text-navy">Welcome back</h2>
-          <p className="text-sm text-slate-500">Sign in with your firm slug. Demo: smith-associates / john@smithlaw.com / password</p>
+          <p className="text-sm text-slate-500">Sign in with your firm slug. Demo password is password.</p>
+          <div className="flex flex-col gap-2">
+            {DEMOS.map((d) => (
+              <button
+                key={d.slug}
+                type="button"
+                onClick={() => {
+                  setFirmSlug(d.slug);
+                  setEmail(d.email);
+                }}
+                className={`rounded-lg border px-3 py-2 text-left text-xs ${
+                  firmSlug === d.slug ? "border-navy bg-navy/5 font-semibold text-navy" : "border-slate-200 text-slate-600"
+                }`}
+              >
+                {d.label}
+                <span className="mt-0.5 block font-normal text-slate-400">{d.note}</span>
+              </button>
+            ))}
+          </div>
           <ErrorBanner error={error} />
           <div>
             <Label>Firm ID</Label>

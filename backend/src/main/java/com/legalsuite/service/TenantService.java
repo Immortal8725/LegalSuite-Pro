@@ -107,6 +107,7 @@ public class TenantService {
         if (body.get("city") != null) tenant.setCity(String.valueOf(body.get("city")));
         if (body.get("state") != null) tenant.setState(String.valueOf(body.get("state")));
         if (body.get("zip") != null) tenant.setZip(String.valueOf(body.get("zip")));
+        if (body.get("country") != null) tenant.setCountry(String.valueOf(body.get("country")));
         if (body.get("tagline") != null) tenant.setTagline(String.valueOf(body.get("tagline")));
         if (body.get("onboardingCompleted") != null) {
             tenant.setOnboardingCompleted(Boolean.parseBoolean(String.valueOf(body.get("onboardingCompleted"))));

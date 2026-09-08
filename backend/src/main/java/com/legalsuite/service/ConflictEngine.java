@@ -20,7 +20,8 @@ public final class ConflictEngine {
     private static final Pattern SPLIT = Pattern.compile("[^a-z0-9]+");
     private static final Set<String> STOP = Set.of(
             "the", "and", "of", "for", "vs", "v", "llc", "inc", "ltd", "co", "corp",
-            "company", "incorporated", "corporation", "lp", "pllc", "pc", "pa");
+            "company", "incorporated", "corporation", "lp", "pllc", "pc", "pa",
+            "pty", "proprietary", "limited", "npc", "cc", "rf", "soc");
     private static final Set<String> FIRST_SKIP = Set.of("a", "an", "mr", "mrs", "ms", "dr", "hon");
 
     private ConflictEngine() {}

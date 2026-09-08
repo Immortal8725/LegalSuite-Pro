@@ -8,15 +8,15 @@ import { Input, Label, Select } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
 
 const AREAS = [
-  "Family Law",
-  "Criminal Defense",
+  "RAF",
   "Personal Injury",
-  "Corporate",
-  "Real Estate",
-  "Estate Planning",
-  "Immigration",
-  "Bankruptcy",
-  "Employment",
+  "Labour",
+  "Deceased Estates",
+  "Commercial",
+  "Family Law",
+  "Criminal Defence",
+  "Medical Negligence",
+  "Property",
   "General Practice",
 ];
 
@@ -31,6 +31,9 @@ export default function RegisterPage() {
     phone: "",
     firmSize: "solo",
     practiceAreas: [] as string[],
+    country: "ZA",
+    state: "GP",
+    city: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,12 +58,12 @@ export default function RegisterPage() {
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
         <p className="text-sm text-slate-500">
-          In under a minute you get a tenant, an admin seat, and a public site at /firm/your-slug.
+          In under a minute you get a tenant, an admin seat, and a public site at /firm/your-slug. New firms default to South Africa (ZAR, Prescription Act, LPA s 86).
         </p>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm name</Label>
-          <Input required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Chen & Patel LLP" />
+              <Input required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -78,6 +81,25 @@ export default function RegisterPage() {
           <div>
             <Label>Password (8+)</Label>
             <Input type="password" required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label>Country</Label>
+            <Select
+              value={form.country}
+              onChange={(e) => {
+                const country = e.target.value;
+                setForm((p) => ({ ...p, country, state: country === "ZA" ? "GP" : "TX" }));
+              }}
+            >
+              <option value="ZA">South Africa</option>
+              <option value="US">United States</option>
+            </Select>
+          </div>
+          <div>
+            <Label>{form.country === "ZA" ? "Province" : "State"}</Label>
+            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
           </div>
         </div>
         <div>

@@ -110,6 +110,11 @@ public class AuthService {
         tenant.setStatus("trial");
         tenant.setTrialEndsAt(Instant.now().plus(14, ChronoUnit.DAYS));
         tenant.setPracticeAreasJson(JsonLists.toJson(req.practiceAreas()));
+        String country = req.country() == null || req.country().isBlank() ? "ZA" : req.country().trim();
+        tenant.setCountry(country);
+        if (req.state() != null && !req.state().isBlank()) tenant.setState(req.state());
+        else if ("ZA".equalsIgnoreCase(country)) tenant.setState("GP");
+        if (req.city() != null && !req.city().isBlank()) tenant.setCity(req.city());
         tenant.setTagline("Trusted counsel for every chapter of your case.");
         tenant = tenants.save(tenant);
 
@@ -282,6 +287,10 @@ public class AuthService {
         m.put("city", tenant.getCity());
         m.put("state", tenant.getState());
         m.put("zip", tenant.getZip());
+        m.put("country", tenant.getCountry());
+        m.put("jurisdiction", DocketEngine.of(tenant));
+        m.put("currency", DocketEngine.currency(tenant));
+        m.put("trustLabel", DocketEngine.trustLabel(tenant));
         m.put("tagline", tenant.getTagline());
         m.put("practiceAreas", JsonLists.strings(tenant.getPracticeAreasJson()));
         return m;

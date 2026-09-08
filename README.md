@@ -6,14 +6,20 @@ This repository is a **modular monolith**: Next.js (App Router) in `frontend/` a
 
 ## Demo (seeded on boot)
 
+South Africa is the default tenant. Texas remains on a second firm so both docket engines can be compared.
+
 | Role | Firm slug | Email | Password |
 | --- | --- | --- | --- |
-| Managing partner | `smith-associates` | `john@smithlaw.com` | `password` |
-| Partner | `smith-associates` | `maria@smithlaw.com` | `password` |
-| Associate | `smith-associates` | `alex@smithlaw.com` | `password` |
-| Client portal | `smith-associates` | `sarah@example.com` | `portal123` |
+| Director | `ndlovu-partners` | `thabo@ndlovulaw.co.za` | `password` |
+| Director | `ndlovu-partners` | `lindiwe@ndlovulaw.co.za` | `password` |
+| Associate | `ndlovu-partners` | `sipho@ndlovulaw.co.za` | `password` |
+| Client portal | `ndlovu-partners` | `nomsa@example.com` | `portal123` |
+| Managing partner (Texas) | `smith-associates` | `john@smithlaw.com` | `password` |
+| Client portal (Texas) | `smith-associates` | `sarah@example.com` | `portal123` |
 
-Public site: `/firm/smith-associates`
+Public sites: `/firm/ndlovu-partners` and `/firm/smith-associates`
+
+On the Sandton tenant, open **Practice fitness** and **Trust**. The section 86 three-way is deliberately unbalanced (bank short R11,750). C-2002 has an overdue Act 40 s 3 notice; trial status is blocked until you lodge, serve, or apply for condonation.
 
 ## Run locally
 
@@ -48,7 +54,9 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
 8. **Launch polish** — This README, star ERD and class diagrams in `docs/`, tests, PWA manifest.
-9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → Texas clocks → **limited file** → engagement e-sign unlocks appearance and posts the pledged IOLTA retainer). SOL/TTCA notice as the home screen, month-end usage, call ethics. Client text does not leave the tenant.
+9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → **limited file** → mandate e-sign unlocks appearance and posts the pledged retainer).
+10. **South Africa** — Prescription Act / RAF Act s 23 / Act 40 of 2002 / LRA s 191 clocks; RICA + LPC recording ethics; LPA s 86 three-way recon; per-client ledgers; VAT 15% on fee invoices; clock-generated tasks and docket hold.
+11. **Texas remains** — Smith & Associates still runs CPRC chapters 16, 74, 101.
 
 ## Architecture
 

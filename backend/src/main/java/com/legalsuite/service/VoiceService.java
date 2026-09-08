@@ -166,7 +166,7 @@ public class VoiceService {
 
     public Map<String, Object> ethics() {
         Tenant tenant = tenants.findById(tid()).orElseThrow(() -> ApiException.notFound("Firm not found"));
-        Map<String, Object> rules = new HashMap<>(CallEthics.forState(tenant.getState()));
+        Map<String, Object> rules = new HashMap<>(CallEthics.forTenant(tenant));
         rules.put("recordingOptIn", true);
         rules.put("inAppFree", true);
         return rules;

@@ -31,6 +31,7 @@ public class TaskItem {
     private String status = "todo";
     private String priority = "medium";
     private Instant dueDate;
+    private String sourceKey;
     private Instant completedAt;
     @Column(length = 4000)
     private String checklistJson;

@@ -192,6 +192,7 @@ public class CommsService {
         lead.setAccrualDate(TexasDocketRules.parseDate(body.get("accrualDate")));
         lead.setDateOfBirth(TexasDocketRules.parseDate(body.get("dateOfBirth")));
         lead.setGovernmentalDefendant(TexasDocketRules.bool(body.get("governmentalDefendant")));
+        lead.setHitAndRun(TexasDocketRules.bool(body.get("hitAndRun")));
         lead.setStatus("new");
         leads.save(lead);
         users.findByTenantIdOrderByLastNameAsc(tenant.getId()).stream()
@@ -240,10 +241,12 @@ public class CommsService {
         m.put("accrualDate", l.getAccrualDate());
         m.put("dateOfBirth", l.getDateOfBirth());
         m.put("governmentalDefendant", l.isGovernmentalDefendant());
+        m.put("hitAndRun", l.isHitAndRun());
         m.put("status", l.getStatus());
         m.put("caseId", l.getCaseId());
         m.put("createdAt", l.getCreatedAt());
-        m.put("docket", TexasDocketRules.compute(RetainService.factsFromLead(l)).asMap());
+        Tenant tenant = tenants.findById(l.getTenantId()).orElse(null);
+        m.put("docket", DocketEngine.compute(tenant, RetainService.factsFromLead(l)).asMap());
         signatures.findFirstByTenantIdAndLeadIdAndPurposeOrderByCreatedAtDesc(
                         TenantContext.requireTenant(), l.getId(), "conflict_waiver")
                 .ifPresent(w -> {

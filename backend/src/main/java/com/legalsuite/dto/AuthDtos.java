@@ -21,6 +21,9 @@ public class AuthDtos {
             String firmSlug,
             String planSlug,
             String firmSize,
+            String country,
+            String state,
+            String city,
             List<String> practiceAreas) {}
 
     public record RefreshRequest(String refreshToken) {}

@@ -3,6 +3,7 @@ package com.legalsuite.web;
 import com.legalsuite.common.ApiResponse;
 import com.legalsuite.service.AiService;
 import com.legalsuite.service.AuditService;
+import com.legalsuite.service.FitnessService;
 import com.legalsuite.service.IntegrationService;
 import com.legalsuite.service.RetainService;
 import com.legalsuite.service.SignatureService;
@@ -26,6 +27,7 @@ public class AdvancedControllers {
     private final AuditService audit;
     private final RetainService retain;
     private final UsageService usage;
+    private final FitnessService fitness;
 
     public AdvancedControllers(
             TemplateService templates,
@@ -34,7 +36,8 @@ public class AdvancedControllers {
             IntegrationService integrations,
             AuditService audit,
             RetainService retain,
-            UsageService usage) {
+            UsageService usage,
+            FitnessService fitness) {
         this.templates = templates;
         this.signatures = signatures;
         this.ai = ai;
@@ -42,6 +45,7 @@ public class AdvancedControllers {
         this.audit = audit;
         this.retain = retain;
         this.usage = usage;
+        this.fitness = fitness;
     }
 
     @GetMapping("/api/v1/templates")
@@ -162,5 +166,10 @@ public class AdvancedControllers {
     @PostMapping("/api/v1/usage/{id}/pay")
     public ApiResponse<?> payUsage(@PathVariable UUID id) {
         return ApiResponse.ok(usage.pay(id));
+    }
+
+    @GetMapping("/api/v1/fitness")
+    public ApiResponse<?> fitness() {
+        return ApiResponse.ok(fitness.snapshot());
     }
 }

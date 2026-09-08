@@ -25,6 +25,9 @@ public class TrustAccount {
     private String accountName;
     private String bankName;
     private BigDecimal balance = BigDecimal.ZERO;
+    private BigDecimal bankBalance;
+    private Instant lastReconciledAt;
+    private String accountType = "trust";
     private String status = "active";
     private Instant createdAt = Instant.now();
 }

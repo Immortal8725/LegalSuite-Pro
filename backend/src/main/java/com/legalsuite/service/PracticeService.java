@@ -10,6 +10,7 @@ import com.legalsuite.domain.DocumentFile;
 import com.legalsuite.domain.LegalCase;
 import com.legalsuite.domain.Note;
 import com.legalsuite.domain.TaskItem;
+import com.legalsuite.domain.Tenant;
 import com.legalsuite.repo.CalendarEventRepository;
 import com.legalsuite.repo.ClientRepository;
 import com.legalsuite.repo.ContactRepository;
@@ -17,6 +18,7 @@ import com.legalsuite.repo.DocumentFileRepository;
 import com.legalsuite.repo.LegalCaseRepository;
 import com.legalsuite.repo.NoteRepository;
 import com.legalsuite.repo.TaskItemRepository;
+import com.legalsuite.repo.TenantRepository;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -24,6 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,7 @@ public class PracticeService {
     private final TaskItemRepository tasks;
     private final NoteRepository notes;
     private final FinanceService finance;
+    private final TenantRepository tenants;
     private final Path uploadRoot;
 
     public PracticeService(
@@ -56,6 +61,7 @@ public class PracticeService {
             TaskItemRepository tasks,
             NoteRepository notes,
             FinanceService finance,
+            TenantRepository tenants,
             @Value("${legalsuite.upload-dir:./uploads}") String uploadDir) throws IOException {
         this.clients = clients;
         this.cases = cases;
@@ -65,6 +71,7 @@ public class PracticeService {
         this.tasks = tasks;
         this.notes = notes;
         this.finance = finance;
+        this.tenants = tenants;
         this.uploadRoot = Paths.get(uploadDir).toAbsolutePath();
         Files.createDirectories(this.uploadRoot);
     }
@@ -149,6 +156,14 @@ public class PracticeService {
         if (body.get("governmentalDefendant") != null) {
             c.setGovernmentalDefendant(TexasDocketRules.bool(body.get("governmentalDefendant")));
         }
+        if (body.get("rafClaimLodged") != null) c.setRafClaimLodged(TexasDocketRules.bool(body.get("rafClaimLodged")));
+        LocalDate rafLodged = TexasDocketRules.parseDate(body.get("rafLodgedDate"));
+        if (rafLodged != null) c.setRafLodgedDate(rafLodged);
+        if (body.get("noticeServed") != null) {
+            c.setNoticeServed(TexasDocketRules.bool(body.get("noticeServed")));
+            if (c.isNoticeServed() && c.getNoticeServedDate() == null) c.setNoticeServedDate(LocalDate.now());
+        }
+        if (body.get("hitAndRun") != null) c.setHitAndRun(TexasDocketRules.bool(body.get("hitAndRun")));
         if (body.get("engagementStatus") != null) c.setEngagementStatus(String.valueOf(body.get("engagementStatus")));
         if (body.get("appearanceAuthorized") != null) {
             c.setAppearanceAuthorized(TexasDocketRules.bool(body.get("appearanceAuthorized")));
@@ -166,8 +181,9 @@ public class PracticeService {
             c.setConflictWaiverSignatureId(UUID.fromString(String.valueOf(body.get("conflictWaiverSignatureId"))));
         }
         if (body.get("conflictWaiverHash") != null) c.setConflictWaiverHash(String.valueOf(body.get("conflictWaiverHash")));
-        TexasDocketRules.Result docket = TexasDocketRules.compute(TexasDocketRules.factsFromCase(c));
-        TexasDocketRules.stamp(c, docket);
+        Tenant tenant = tenants.findById(tid()).orElse(null);
+        TexasDocketRules.Result docket = DocketEngine.compute(tenant, TexasDocketRules.factsFromCase(c));
+        DocketEngine.stamp(c, docket);
         if (body.get("statuteOfLimitations") != null && !String.valueOf(body.get("statuteOfLimitations")).isBlank()) {
             c.setStatuteOfLimitations(LocalDate.parse(String.valueOf(body.get("statuteOfLimitations"))));
         }
@@ -178,6 +194,7 @@ public class PracticeService {
         c.setConflictChecked(true);
         c.setUpdatedAt(Instant.now());
         cases.save(c);
+        syncClockTasks(c, TenantContext.getUserId());
         return caseView(c);
     }
 
@@ -187,6 +204,9 @@ public class PracticeService {
         if (!DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())
                 && !DocumentHash.statusAllowedWhileLimited(status)) {
             throw ApiException.badRequest("Limited file: no appearance until the engagement is signed. Status stays limited.");
+        }
+        if (docketHold(c) && List.of("trial", "hearing", "issued").contains(status == null ? "" : status.toLowerCase())) {
+            throw ApiException.badRequest("Docket hold: a prescription or statutory notice is overdue. Serve, lodge, or apply for condonation before you appear.");
         }
         c.setStatus(status);
         if ("closed".equals(status) || "settled".equals(status) || "archived".equals(status)) {
@@ -227,7 +247,7 @@ public class PracticeService {
         n.setCaseId(c.getId());
         n.setClientId(c.getClientId());
         n.setTitle("Engagement signed — file unlocked");
-        n.setBody("Appearance authorized. Retainer posted to IOLTA if pledged. Instrument hash "
+        n.setBody("Appearance authorized. Retainer posted to the trust account if pledged. Instrument hash "
                 + (signatureHash == null ? "(none)" : signatureHash) + ".");
         n.setType("esign");
         notes.save(n);
@@ -403,6 +423,12 @@ public class PracticeService {
         m.put("plaintiffDob", c.getPlaintiffDob());
         m.put("probateOpened", c.getProbateOpened());
         m.put("governmentalDefendant", c.isGovernmentalDefendant());
+        m.put("rafClaimLodged", c.isRafClaimLodged());
+        m.put("rafLodgedDate", c.getRafLodgedDate());
+        m.put("noticeServed", c.isNoticeServed());
+        m.put("hitAndRun", c.isHitAndRun());
+        m.put("docketHold", docketHold(c));
+        m.put("docketHoldReason", docketHoldReason(c));
         m.put("docketTrack", c.getDocketTrack());
         m.put("controllingKind", c.getControllingKind());
         m.put("solRuleId", c.getSolRuleId());
@@ -470,6 +496,7 @@ public class PracticeService {
         m.put("dueDate", t.getDueDate());
         m.put("caseId", t.getCaseId());
         m.put("assignedTo", t.getAssignedTo());
+        m.put("sourceKey", t.getSourceKey());
         return m;
     }
 
@@ -481,6 +508,53 @@ public class PracticeService {
         m.put("type", n.getType());
         m.put("createdAt", n.getCreatedAt());
         return m;
+    }
+
+    public void syncClockTasks(LegalCase c, UUID actorId) {
+        if (c == null || c.getId() == null) return;
+        List<Map<String, Object>> clocks = JsonLists.objects(c.getDocketClocksJson());
+        LocalDate today = LocalDate.now();
+        for (Map<String, Object> clock : clocks) {
+            LocalDate date = TexasDocketRules.parseDate(clock.get("date"));
+            if (date == null) continue;
+            long days = ChronoUnit.DAYS.between(today, date);
+            if (days > 14) continue;
+            String ruleId = String.valueOf(clock.getOrDefault("ruleId", "clock"));
+            String source = "clock:" + c.getId() + ":" + ruleId;
+            if (tasks.findByTenantIdAndSourceKey(c.getTenantId(), source).isPresent()) continue;
+            TaskItem t = new TaskItem();
+            t.setTenantId(c.getTenantId());
+            t.setCaseId(c.getId());
+            t.setCreatedBy(actorId);
+            t.setAssignedTo(c.getLeadAttorneyId() == null ? actorId : c.getLeadAttorneyId());
+            t.setTitle(String.valueOf(clock.getOrDefault("title", "Docket clock")) + " — " + c.getCaseNumber());
+            t.setDescription(String.valueOf(clock.getOrDefault("citation", "")) + ". "
+                    + String.valueOf(clock.getOrDefault("reason", "Clock generated from the docket engine.")));
+            t.setStatus("todo");
+            t.setPriority(days < 0 ? "urgent" : days <= 7 ? "high" : "medium");
+            t.setDueDate(date.atStartOfDay().toInstant(ZoneOffset.UTC));
+            t.setSourceKey(source);
+            tasks.save(t);
+        }
+    }
+
+    static boolean docketHold(LegalCase c) {
+        return docketHoldReason(c) != null;
+    }
+
+    static String docketHoldReason(LegalCase c) {
+        if (c == null) return null;
+        LocalDate today = LocalDate.now();
+        for (Map<String, Object> clock : JsonLists.objects(c.getDocketClocksJson())) {
+            LocalDate date = TexasDocketRules.parseDate(clock.get("date"));
+            if (date == null || !date.isBefore(today)) continue;
+            String kind = String.valueOf(clock.getOrDefault("kind", ""));
+            if ("notice".equals(kind) && c.isNoticeServed()) continue;
+            if (List.of("notice", "raf_lodge", "ccma").contains(kind)) {
+                return String.valueOf(clock.getOrDefault("citation", kind)) + " is overdue.";
+            }
+        }
+        return null;
     }
 
     private LegalCase resolveCase(String ref) {

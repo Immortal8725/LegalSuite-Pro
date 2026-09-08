@@ -11,6 +11,7 @@ import com.legalsuite.repo.ClientRepository;
 import com.legalsuite.repo.DocumentTemplateRepository;
 import com.legalsuite.repo.LeadRepository;
 import com.legalsuite.repo.SignatureRequestRepository;
+import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.TrustAccountRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,6 +35,7 @@ public class RetainService {
     private final SignatureService signatures;
     private final SignatureRequestRepository signatureRows;
     private final AuditService audit;
+    private final TenantRepository tenants;
 
     public RetainService(
             LeadRepository leads,
@@ -45,7 +47,8 @@ public class RetainService {
             TemplateService templatesEngine,
             SignatureService signatures,
             SignatureRequestRepository signatureRows,
-            AuditService audit) {
+            AuditService audit,
+            TenantRepository tenants) {
         this.leads = leads;
         this.clients = clients;
         this.templates = templates;
@@ -56,6 +59,7 @@ public class RetainService {
         this.signatures = signatures;
         this.signatureRows = signatureRows;
         this.audit = audit;
+        this.tenants = tenants;
     }
 
     @Transactional
@@ -121,8 +125,11 @@ public class RetainService {
         if (body.get("accrualDate") != null) facts.accrualDate = TexasDocketRules.parseDate(body.get("accrualDate"));
         if (body.get("dateOfBirth") != null) facts.dateOfBirth = TexasDocketRules.parseDate(body.get("dateOfBirth"));
         if (body.get("governmentalDefendant") != null) facts.governmentalDefendant = TexasDocketRules.bool(body.get("governmentalDefendant"));
+        if (body.get("hitAndRun") != null) facts.hitAndRun = TexasDocketRules.bool(body.get("hitAndRun"));
         if (body.get("opposingParty") != null) facts.opposingParty = String.valueOf(body.get("opposingParty"));
-        TexasDocketRules.Result docket = TexasDocketRules.compute(facts);
+        com.legalsuite.domain.Tenant tenant = tenants.findById(tid).orElse(null);
+        String trustLabel = DocketEngine.trustLabel(tenant);
+        TexasDocketRules.Result docket = DocketEngine.compute(tenant, facts);
         Map<String, Object> caseBody = new HashMap<>();
         caseBody.put("clientId", client.getId());
         caseBody.put("title", area + " — " + client.displayName());
@@ -134,7 +141,12 @@ public class RetainService {
         if (facts.dateOfBirth != null) caseBody.put("dateOfBirth", facts.dateOfBirth.toString());
         if (facts.discoveryDate != null) caseBody.put("discoveryDate", facts.discoveryDate.toString());
         if (facts.probateOpened != null) caseBody.put("probateOpened", facts.probateOpened.toString());
-        caseBody.put("governmentalDefendant", facts.governmentalDefendant || TexasDocketRules.looksGovernmental(facts.opposingParty));
+        boolean organ = facts.governmentalDefendant
+                || ("ZA".equals(DocketEngine.of(tenant))
+                        ? SouthAfricanDocketRules.looksOrganOfState(facts.opposingParty)
+                        : TexasDocketRules.looksGovernmental(facts.opposingParty));
+        caseBody.put("governmentalDefendant", organ);
+        caseBody.put("hitAndRun", facts.hitAndRun || ("ZA".equals(DocketEngine.of(tenant)) && SouthAfricanDocketRules.looksHitAndRun(facts)));
         caseBody.put("status", "limited");
         caseBody.put("engagementStatus", "unsigned");
         caseBody.put("appearanceAuthorized", false);
@@ -181,7 +193,7 @@ public class RetainService {
         trust.put("pledged", true);
         trust.put("amount", retainer);
         trust.put("posted", false);
-        trust.put("note", "Retainer is pledged. It posts to IOLTA when the engagement is signed.");
+        trust.put("note", "Retainer is pledged. It posts to the " + trustLabel + " when the mandate is signed.");
 
         lead.setStatus("retained");
         lead.setCaseId(caseId);
@@ -202,7 +214,7 @@ public class RetainService {
         if (signedWaiver != null) {
             out.put("waiver", signatures.instrumentView(signedWaiver));
         }
-        out.put("message", "Limited file opened. No appearance. Sign the engagement to authorize the file and post the pledged retainer to IOLTA.");
+        out.put("message", "Limited file opened. No appearance. Sign the mandate to authorize the file and post the pledged retainer to the " + trustLabel + ".");
         return out;
     }
 
@@ -265,7 +277,7 @@ public class RetainService {
                 Prospective client: %s
                 Adverse / related hits:
                 %s
-                I have been told that this firm already has a relationship that may be adverse or substantially related. I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
+                I have been told that this firm already has a relationship that may be adverse or substantially related (LPC Code of Conduct — conflicts). I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
 
                 This is a signed instrument. A click on “retain anyway” is not consent.
                 """.formatted(lead.getName(), hits.toString().isBlank() ? "- (see conflict record)\n" : hits);
@@ -280,6 +292,7 @@ public class RetainService {
         f.accrualDate = lead.getAccrualDate();
         f.dateOfBirth = lead.getDateOfBirth();
         f.governmentalDefendant = lead.isGovernmentalDefendant();
+        f.hitAndRun = lead.isHitAndRun();
         return f;
     }
 
@@ -287,7 +300,7 @@ public class RetainService {
         return """
                 ENGAGEMENT AGREEMENT
 
-                This confirms that the firm will represent %s in %s (%s). Fees are hourly. Trust funds, if deposited, sit in the firm IOLTA and apply only to earned fees and costs.
+                This confirms that the firm will represent %s in %s (%s). Fees are hourly. Trust funds, if deposited, sit in the firm trust account (Legal Practice Act s 86 / IOLTA) and apply only to earned fees and costs.
 
                 Sign below to retain the firm. This is not a guarantee of result.
                 """.formatted(client.displayName(), matter.get("title"), matter.get("caseNumber"));

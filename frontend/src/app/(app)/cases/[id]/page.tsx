@@ -76,14 +76,20 @@ export default function CaseDetailPage() {
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
           <p className="font-semibold">Limited file — no appearance.</p>
           <p className="mt-1">
-            The engagement is unsigned. Status cannot move to open or trial. IOLTA will not post the pledged retainer
+            The mandate is unsigned. Status cannot move to open or trial. Trust will not post the pledged retainer
             {c.pendingRetainerAmount ? ` (${c.pendingRetainerAmount})` : ""} until this instrument is signed.
           </p>
           {c.engagementSignatureId && (
             <Link className="mt-2 inline-block font-semibold underline" href={`/sign/${c.engagementSignatureId}`} target="_blank">
-              Open engagement for signature
+              Open mandate for signature
             </Link>
           )}
+        </div>
+      )}
+      {c.docketHold && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950">
+          <p className="font-semibold">Docket hold — do not appear.</p>
+          <p className="mt-1">{c.docketHoldReason || "A statutory notice, RAF lodge, or CCMA referral is overdue."} Trial status is blocked until you lodge, serve, or apply for condonation.</p>
         </div>
       )}
       {c.conflictWaiverHash && (

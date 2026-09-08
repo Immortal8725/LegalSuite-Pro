@@ -10,4 +10,6 @@ public interface TaskItemRepository extends JpaRepository<TaskItem, UUID> {
     List<TaskItem> findByTenantIdOrderByDueDateAsc(UUID tenantId);
     Optional<TaskItem> findByIdAndTenantId(UUID id, UUID tenantId);
     long countByTenantIdAndStatusNot(UUID tenantId, String status);
+    java.util.Optional<TaskItem> findByTenantIdAndSourceKey(UUID tenantId, String sourceKey);
+    List<TaskItem> findByTenantIdAndCaseId(UUID tenantId, UUID caseId);
 }

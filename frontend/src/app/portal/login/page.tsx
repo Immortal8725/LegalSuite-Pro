@@ -9,8 +9,8 @@ import { ErrorBanner } from "@/components/ui/dialog";
 
 export default function PortalLoginPage() {
   const { portalLogin } = useAuth();
-  const [firmSlug, setFirmSlug] = useState("smith-associates");
-  const [email, setEmail] = useState("sarah@example.com");
+  const [firmSlug, setFirmSlug] = useState("ndlovu-partners");
+  const [email, setEmail] = useState("nomsa@example.com");
   const [password, setPassword] = useState("portal123");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function PortalLoginPage() {
         }}
       >
         <h1 className="text-2xl font-bold text-navy">Client portal</h1>
-        <p className="text-sm text-slate-500">View your matters, invoices, and message the firm. Demo: sarah@example.com / portal123</p>
+        <p className="text-sm text-slate-500">View your matters, invoices, and message the firm. Demo: ndlovu-partners / nomsa@example.com / portal123</p>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm ID</Label>
