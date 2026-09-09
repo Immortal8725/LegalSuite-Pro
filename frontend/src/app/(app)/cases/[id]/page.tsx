@@ -43,6 +43,10 @@ export default function CaseDetailPage() {
     );
   }
 
+  if (!c) return <p className="text-sm text-slate-500">Loading matter…</p>;
+
+  return (
+    <div>
       <PageHeader
         title={c.title}
         subtitle={`${c.caseNumber} · ${c.clientName || "Client"} · ${c.practiceArea || ""}`}
