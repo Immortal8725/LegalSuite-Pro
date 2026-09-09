@@ -29,7 +29,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginRequest req) {
-        return ApiResponse.ok(auth.login(req), "Login successful");
+        Map<String, Object> data = auth.login(req);
+        if (Boolean.TRUE.equals(data.get("requiresTotp"))) {
+            return ApiResponse.ok(data, "Authenticator code required");
+        }
+        return ApiResponse.ok(data, "Login successful");
     }
 
     @PostMapping("/register")
@@ -52,6 +56,21 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<Map<String, Object>> me() {
         return ApiResponse.ok(auth.me());
+    }
+
+    @PostMapping("/totp/start")
+    public ApiResponse<Map<String, Object>> totpStart() {
+        return ApiResponse.ok(auth.totpStart(), "Add this secret to your authenticator app");
+    }
+
+    @PostMapping("/totp/confirm")
+    public ApiResponse<Map<String, Object>> totpConfirm(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(auth.totpConfirm(body), "Authenticator enabled");
+    }
+
+    @PostMapping("/totp/disable")
+    public ApiResponse<Map<String, Object>> totpDisable(@RequestBody(required = false) Map<String, Object> body) {
+        return ApiResponse.ok(auth.totpDisable(body == null ? Map.of() : body), "Authenticator disabled");
     }
 
     @GetMapping("/check-slug/{slug}")

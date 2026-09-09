@@ -14,6 +14,7 @@ export default function PublicSignPage() {
   const [doc, setDoc] = useState<SignReq | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [identity, setIdentity] = useState("");
   const [busy, setBusy] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
@@ -64,6 +65,12 @@ export default function PublicSignPage() {
                 </p>
                 {doc.unlocked && <p className="mb-2 text-sm">The limited file is now open. The pledged retainer posts to the trust account.</p>}
                 {doc.signatureHash && <p className="mb-2 font-mono text-[11px] text-slate-500">Signature hash {doc.signatureHash}</p>}
+                {doc.signatureStandard && (
+                  <p className="mb-2 text-xs text-slate-500">
+                    Standard {doc.signatureStandard}
+                    {doc.identityCaptured ? " · identity number included in the hash" : ""}
+                  </p>
+                )}
                 {doc.signatureDataUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt="Signature" src={doc.signatureDataUrl} className="h-24 rounded border bg-white" />
@@ -75,6 +82,13 @@ export default function PublicSignPage() {
               <div className="space-y-3">
                 <Label>Type your name</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Label>Identity number (SA ID, passport, or equivalent)</Label>
+                <Input
+                  value={identity}
+                  onChange={(e) => setIdentity(e.target.value)}
+                  placeholder="Required — hashed into the instrument"
+                  required
+                />
                 <Label>Draw your signature</Label>
                 <canvas
                   ref={canvasRef}
@@ -114,6 +128,7 @@ export default function PublicSignPage() {
                     try {
                       const next = await apiPost<SignReq>(`/api/v1/sign/${params.id}`, {
                         signerName: name,
+                        signerIdentityNumber: identity,
                         signatureDataUrl: dataUrl,
                       });
                       setDoc(next);

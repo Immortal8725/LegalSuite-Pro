@@ -34,3 +34,20 @@ legalsuite:
 logging:
   level:
     com.legalsuite: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5432/legalsuite}
+    username: ${DB_USER:legalsuite}
+    password: ${DB_PASSWORD:legalsuite}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: false

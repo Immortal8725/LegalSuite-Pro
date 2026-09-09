@@ -15,6 +15,7 @@ export type User = {
   phone?: string;
   hourlyRate?: number;
   onlineStatus?: string;
+  totpEnabled?: boolean;
 };
 
 export type Tenant = {
@@ -38,6 +39,17 @@ export type Tenant = {
   trustLabel?: string;
   tagline?: string;
   practiceAreas?: string[];
+  ffcNumber?: string;
+  ffcExpiresOn?: string;
+  ffcHolderName?: string;
+  ffcCurrent?: boolean;
+  bankFeedImportedAt?: string;
+  lastBankFeedSource?: string;
+  informationOfficerName?: string;
+  informationOfficerEmail?: string;
+  paiaManualBody?: string;
+  popiaOperatorAcknowledged?: boolean;
+  popiaReady?: boolean;
 };
 
 type ApiEnvelope<T> = { success: boolean; message?: string; data: T; errors?: unknown };

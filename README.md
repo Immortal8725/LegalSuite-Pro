@@ -57,6 +57,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → **limited file** → mandate e-sign unlocks appearance and posts the pledged retainer).
 10. **South Africa** — Prescription Act / RAF Act s 23 / Act 40 of 2002 / LRA s 191 clocks; RICA + LPC recording ethics; LPA s 86 three-way recon; per-client ledgers; VAT 15% on fee invoices; clock-generated tasks and docket hold.
 11. **Texas remains** — Smith & Associates still runs CPRC chapters 16, 74, 101.
+12. **Inspection pack** — FFC gate, bank CSV, POPIA/PAIA, TOTP, identity-bound e-sign, RAF 1 pack.
 
 ## Architecture
 
@@ -71,4 +72,15 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 - Voice: WebSocket `/ws/signal` plus HTTP inbox fallback
 - Mobile: Flutter (Dart) against `/api/v1`
 
-Production would swap H2 for PostgreSQL and put the API behind TLS. The UI can publish to Vercel; the Java API needs a JVM host.
+Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) and put the API behind TLS. TOTP 2FA is in Settings; demo users stay without it so `password` still works. The UI can publish to Vercel; the Java API needs a JVM host.
+
+## Inspection pack (in product)
+
+- **FFC** — LPA s 84 number and expiry on the firm record. ZA trust movements refuse without a current certificate.
+- **Bank CSV** — Trust page imports FNB / Standard / ABSA CSV into the three-way bank leg.
+- **POPIA / PAIA** — Information officer, generated s 51 manual, operator acknowledgement.
+- **TOTP** — RFC 6238 enrol/confirm/disable. Login returns `{ requiresTotp: true }` (still HTTP 200) until the code is supplied.
+- **ECT Act s 13** — Public sign requires an identity number; the hash includes it. Not a SANAS-accredited CSP.
+- **RAF 1 pack** — Compile from C-2001 (or any RAF-track matter). Not CaseLines e-lodgement.
+
+Still demo, not production: H2 create-drop, unbalanced Ndlovu recon (bank short R11,750), overdue Act 40 on C-2002.

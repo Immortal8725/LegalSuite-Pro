@@ -77,13 +77,20 @@ public class SignatureService {
         if (dataUrl.isBlank()) {
             throw ApiException.badRequest("Draw or type a signature first");
         }
+        String identity = str(body, "signerIdentityNumber", "").trim();
+        if (identity.length() < 6) {
+            throw ApiException.badRequest("ECT Act s 13: enter the signer's identity number (SA ID, passport, or equivalent).");
+        }
         s.setSignatureDataUrl(dataUrl);
         s.setStatus("signed");
         s.setSignedAt(Instant.now());
         if (body.get("signerName") != null) s.setSignerName(String.valueOf(body.get("signerName")));
+        s.setSignerIdentityNumber(identity);
+        s.setSignatureStandard("ect_act_25_2002_s13");
         s.setSignatureHash(DocumentHash.sha256(
                 s.getDocumentBody(),
                 s.getSignerName(),
+                identity,
                 s.getSignedAt().toString(),
                 dataUrl.substring(0, Math.min(80, dataUrl.length()))));
         signatures.save(s);
@@ -141,6 +148,8 @@ public class SignatureService {
         m.put("documentHash", s.getDocumentHash());
         m.put("signatureHash", signed ? s.getSignatureHash() : null);
         m.put("leadId", s.getLeadId());
+        m.put("signatureStandard", s.getSignatureStandard());
+        m.put("identityCaptured", s.getSignerIdentityNumber() != null && !s.getSignerIdentityNumber().isBlank());
         return m;
     }
 

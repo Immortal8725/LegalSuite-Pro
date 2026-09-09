@@ -115,6 +115,18 @@ public class TenantService {
         if (body.get("practiceAreas") instanceof List<?> list) {
             tenant.setPracticeAreasJson(JsonLists.toJson(list));
         }
+        if (body.get("ffcNumber") != null) tenant.setFfcNumber(blankToNull(String.valueOf(body.get("ffcNumber"))));
+        if (body.get("ffcExpiresOn") != null) tenant.setFfcExpiresOn(TexasDocketRules.parseDate(body.get("ffcExpiresOn")));
+        if (body.get("ffcHolderName") != null) tenant.setFfcHolderName(blankToNull(String.valueOf(body.get("ffcHolderName"))));
+        if (body.get("informationOfficerName") != null) {
+            tenant.setInformationOfficerName(blankToNull(String.valueOf(body.get("informationOfficerName"))));
+        }
+        if (body.get("informationOfficerEmail") != null) {
+            tenant.setInformationOfficerEmail(blankToNull(String.valueOf(body.get("informationOfficerEmail"))));
+        }
+        if (body.get("popiaOperatorAcknowledged") != null) {
+            tenant.setPopiaOperatorAcknowledged(Boolean.parseBoolean(String.valueOf(body.get("popiaOperatorAcknowledged"))));
+        }
         tenant.setUpdatedAt(Instant.now());
         tenants.save(tenant);
         if (body.get("template") != null || body.get("heroSubtitle") != null) {
@@ -129,6 +141,19 @@ public class TenantService {
             page.setUpdatedAt(Instant.now());
             landingPages.save(page);
         }
+        return authService.tenantView(tenant);
+    }
+
+    @Transactional
+    public Map<String, Object> generatePaia() {
+        Tenant tenant = tenants.findById(TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if (tenant.getInformationOfficerName() == null || tenant.getInformationOfficerName().isBlank()) {
+            throw ApiException.badRequest("Appoint an information officer before generating the PAIA manual.");
+        }
+        tenant.setPaiaManualBody(PaiaManual.generate(tenant));
+        tenant.setUpdatedAt(Instant.now());
+        tenants.save(tenant);
         return authService.tenantView(tenant);
     }
 
@@ -171,6 +196,10 @@ public class TenantService {
         if (body.get("hourlyRate") != null) user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         users.save(user);
         return authService.userView(user);
+    }
+
+    private static String blankToNull(String v) {
+        return v == null || v.isBlank() || "null".equals(v) ? null : v.trim();
     }
 
     private void assertTenant(UUID tenantId) {

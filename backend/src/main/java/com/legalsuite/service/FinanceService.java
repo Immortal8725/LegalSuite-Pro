@@ -243,6 +243,7 @@ public class FinanceService {
         UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
         TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
                 .orElseThrow(() -> ApiException.notFound("Trust account not found"));
+        Compliance.requireFfcForTrust(tenants.findById(tid()).orElse(null));
         String type = String.valueOf(body.getOrDefault("type", "deposit"));
         BigDecimal amount = new BigDecimal(String.valueOf(body.get("amount")));
         if (body.get("caseId") != null && !internalUnlock) {
@@ -362,6 +363,37 @@ public class FinanceService {
         Map<String, Object> view = reconView(row);
         view.put("live", liveRecon(acct, bank));
         return view;
+    }
+
+    @Transactional
+    public Map<String, Object> importBankCsv(Map<String, Object> body) {
+        UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
+        TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
+                .orElseThrow(() -> ApiException.notFound("Trust account not found"));
+        String csv = body.get("csv") == null ? "" : String.valueOf(body.get("csv"));
+        BankCsv.Result parsed;
+        try {
+            parsed = BankCsv.parse(csv);
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest(e.getMessage());
+        }
+        acct.setBankBalance(parsed.closingBalance());
+        trusts.save(acct);
+        Tenant tenant = tenants.findById(tid()).orElseThrow();
+        tenant.setBankFeedImportedAt(Instant.now());
+        tenant.setLastBankFeedSource(parsed.source());
+        tenants.save(tenant);
+        Map<String, Object> recon = reconcile(Map.of(
+                "accountId", accountId.toString(),
+                "bankBalance", parsed.closingBalance().toPlainString(),
+                "certify", "false",
+                "notes", "Imported from bank CSV (" + parsed.rows().size() + " rows). Closing " + parsed.closingBalance().toPlainString() + "."));
+        Map<String, Object> out = new HashMap<>();
+        out.put("closingBalance", parsed.closingBalance());
+        out.put("rows", parsed.rows().size());
+        out.put("source", parsed.source());
+        out.put("recon", recon);
+        return out;
     }
 
     BigDecimal clientLedger(UUID accountId, UUID clientId) {

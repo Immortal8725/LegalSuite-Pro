@@ -27,6 +27,8 @@ export default function LoginPage() {
   const [firmSlug, setFirmSlug] = useState("ndlovu-partners");
   const [email, setEmail] = useState("thabo@ndlovulaw.co.za");
   const [password, setPassword] = useState("password");
+  const [totpCode, setTotpCode] = useState("");
+  const [needTotp, setNeedTotp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +58,10 @@ export default function LoginPage() {
             setLoading(true);
             setError(null);
             try {
-              await login(firmSlug, email, password);
+              const result = await login(firmSlug, email, password, totpCode || undefined);
+              if (result.requiresTotp) {
+                setNeedTotp(true);
+              }
             } catch (err) {
               setError(err instanceof Error ? err.message : "Sign-in failed");
             } finally {
@@ -74,6 +79,8 @@ export default function LoginPage() {
                 onClick={() => {
                   setFirmSlug(d.slug);
                   setEmail(d.email);
+                  setNeedTotp(false);
+                  setTotpCode("");
                 }}
                 className={`rounded-lg border px-3 py-2 text-left text-xs ${
                   firmSlug === d.slug ? "border-navy bg-navy/5 font-semibold text-navy" : "border-slate-200 text-slate-600"
@@ -97,6 +104,20 @@ export default function LoginPage() {
             <Label>Password</Label>
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
+          {needTotp && (
+            <div>
+              <Label>Authenticator code</Label>
+              <Input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+                placeholder="6-digit code"
+                required
+              />
+              <p className="mt-1 text-xs text-slate-500">This account has 2FA on. Demo users do not — enrol from Settings if you want to try it.</p>
+            </div>
+          )}
           <Button className="w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>

@@ -315,6 +315,57 @@ public class PracticeService {
         return documents.findByIdAndTenantId(id, tid()).orElseThrow(() -> ApiException.notFound("Document not found"));
     }
 
+    @Transactional
+    public Map<String, Object> generateRaf1(UUID caseId) {
+        LegalCase c = requireCase(caseId);
+        Tenant tenant = tenants.findById(tid()).orElseThrow();
+        if (!"ZA".equals(DocketEngine.of(tenant))) {
+            throw ApiException.badRequest("RAF 1 packs are for South African RAF matters.");
+        }
+        String track = c.getDocketTrack() == null ? "" : c.getDocketTrack();
+        String area = ((c.getPracticeArea() == null ? "" : c.getPracticeArea()) + " "
+                + (c.getCaseType() == null ? "" : c.getCaseType())).toLowerCase();
+        if (!"raf".equalsIgnoreCase(track) && !area.contains("raf")) {
+            throw ApiException.badRequest("This matter is not on the RAF track. Set practice area to RAF.");
+        }
+        Client client = c.getClientId() == null ? null : clients.findById(c.getClientId()).orElse(null);
+        TexasDocketRules.Result docket = DocketEngine.compute(tenant, TexasDocketRules.factsFromCase(c));
+        String body = Raf1Pack.render(tenant, client, c, docket);
+        try {
+            Path dir = uploadRoot.resolve(tid().toString());
+            Files.createDirectories(dir);
+            String filename = "RAF1-" + c.getCaseNumber() + ".txt";
+            Path dest = dir.resolve(UUID.randomUUID() + "-" + filename);
+            Files.writeString(dest, body);
+            DocumentFile doc = new DocumentFile();
+            doc.setTenantId(tid());
+            doc.setCaseId(c.getId());
+            doc.setClientId(c.getClientId());
+            doc.setUploadedBy(TenantContext.requireUser());
+            doc.setName(filename);
+            doc.setOriginalName(filename);
+            doc.setCategory("raf1");
+            doc.setMimeType("text/plain");
+            doc.setSizeBytes(body.getBytes().length);
+            doc.setStoragePath(dest.toString());
+            documents.save(doc);
+            Note n = new Note();
+            n.setTenantId(tid());
+            n.setCaseId(c.getId());
+            n.setClientId(c.getClientId());
+            n.setUserId(TenantContext.requireUser());
+            n.setTitle("RAF 1 pack compiled");
+            n.setBody("Lodge pack saved as " + filename + ". Take it to the Fund. This is not e-lodgement to CaseLines.");
+            n.setType("raf1");
+            notes.save(n);
+            Map<String, Object> view = docView(doc);
+            view.put("body", body);
+            return view;
+        } catch (IOException e) {
+            throw ApiException.badRequest("Could not write RAF 1 pack: " + e.getMessage());
+        }
+    }
+
     public List<Map<String, Object>> upcomingEvents() {
         return events.findByTenantIdAndStartTimeGreaterThanEqualOrderByStartTimeAsc(tid(), Instant.now().minusSeconds(3600))
                 .stream().limit(20).map(this::eventView).toList();

@@ -85,10 +85,75 @@ public class AuthService {
         if (!"active".equals(user.getStatus())) {
             throw ApiException.forbidden("User account is " + user.getStatus());
         }
+        if (user.isTotpEnabled()) {
+            String code = req.totpCode();
+            if (code == null || code.isBlank()) {
+                Map<String, Object> challenge = new HashMap<>();
+                challenge.put("requiresTotp", true);
+                challenge.put("email", user.getEmail());
+                return challenge;
+            }
+            if (!Totp.verify(user.getTotpSecret(), code)) {
+                throw ApiException.unauthorized("Invalid authenticator code");
+            }
+        }
         user.setLastLoginAt(Instant.now());
         user.setOnlineStatus("online");
         users.save(user);
         return tokens(user, tenant);
+    }
+
+    @Transactional
+    public Map<String, Object> totpStart() {
+        AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        if (user.isTotpEnabled()) {
+            throw ApiException.badRequest("Authenticator is already enabled");
+        }
+        String secret = Totp.newSecret();
+        user.setTotpSecret(secret);
+        users.save(user);
+        Map<String, Object> m = new HashMap<>();
+        m.put("secret", secret);
+        m.put("otpauthUrl", Totp.otpauthUrl(user.getEmail(), secret));
+        m.put("totpEnabled", false);
+        return m;
+    }
+
+    @Transactional
+    public Map<String, Object> totpConfirm(Map<String, Object> body) {
+        AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        if (user.getTotpSecret() == null || user.getTotpSecret().isBlank()) {
+            throw ApiException.badRequest("Start authenticator enrolment first");
+        }
+        String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
+        if (!Totp.verify(user.getTotpSecret(), code)) {
+            throw ApiException.badRequest("Invalid authenticator code");
+        }
+        user.setTotpEnabled(true);
+        users.save(user);
+        return Map.of("totpEnabled", true);
+    }
+
+    @Transactional
+    public Map<String, Object> totpDisable(Map<String, Object> body) {
+        AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        if (!user.isTotpEnabled()) {
+            return Map.of("totpEnabled", false);
+        }
+        String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
+        String password = body == null || body.get("password") == null ? "" : String.valueOf(body.get("password"));
+        boolean okCode = Totp.verify(user.getTotpSecret(), code);
+        boolean okPassword = !password.isBlank() && encoder.matches(password, user.getPasswordHash());
+        if (!okCode && !okPassword) {
+            throw ApiException.unauthorized("Enter the current authenticator code or your password");
+        }
+        user.setTotpEnabled(false);
+        user.setTotpSecret(null);
+        users.save(user);
+        return Map.of("totpEnabled", false);
     }
 
     @Transactional
@@ -261,6 +326,7 @@ public class AuthService {
         m.put("hourlyRate", user.getHourlyRate());
         m.put("onlineStatus", user.getOnlineStatus());
         m.put("barNumber", user.getBarNumber());
+        m.put("totpEnabled", user.isTotpEnabled());
         return m;
     }
 
@@ -293,6 +359,17 @@ public class AuthService {
         m.put("trustLabel", DocketEngine.trustLabel(tenant));
         m.put("tagline", tenant.getTagline());
         m.put("practiceAreas", JsonLists.strings(tenant.getPracticeAreasJson()));
+        m.put("ffcNumber", tenant.getFfcNumber());
+        m.put("ffcExpiresOn", tenant.getFfcExpiresOn());
+        m.put("ffcHolderName", tenant.getFfcHolderName());
+        m.put("ffcCurrent", Compliance.ffcCurrent(tenant));
+        m.put("bankFeedImportedAt", tenant.getBankFeedImportedAt());
+        m.put("lastBankFeedSource", tenant.getLastBankFeedSource());
+        m.put("informationOfficerName", tenant.getInformationOfficerName());
+        m.put("informationOfficerEmail", tenant.getInformationOfficerEmail());
+        m.put("paiaManualBody", tenant.getPaiaManualBody());
+        m.put("popiaOperatorAcknowledged", tenant.isPopiaOperatorAcknowledged());
+        m.put("popiaReady", Compliance.popiaReady(tenant));
         return m;
     }
 

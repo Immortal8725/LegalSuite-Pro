@@ -26,7 +26,7 @@ type AuthCtx = {
   tenant: Tenant | null;
   ready: boolean;
   isClient: boolean;
-  login: (firmSlug: string, email: string, password: string) => Promise<void>;
+  login: (firmSlug: string, email: string, password: string, totpCode?: string) => Promise<{ requiresTotp: boolean }>;
   registerFirm: (payload: Record<string, unknown>) => Promise<void>;
   portalLogin: (firmSlug: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -58,13 +58,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (firmSlug: string, email: string, password: string) => {
-      const data = await apiPost<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>(
-        "/api/v1/auth/login",
-        { firmSlug, email, password }
-      );
-      apply(data);
+    async (firmSlug: string, email: string, password: string, totpCode?: string) => {
+      const data = await apiPost<{
+        requiresTotp?: boolean;
+        accessToken?: string;
+        refreshToken?: string;
+        user?: User;
+        tenant?: Tenant;
+      }>("/api/v1/auth/login", { firmSlug, email, password, totpCode: totpCode || undefined });
+      if (data.requiresTotp || !data.accessToken || !data.user || !data.tenant) {
+        return { requiresTotp: true };
+      }
+      apply({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: data.user,
+        tenant: data.tenant,
+      });
       router.push(data.tenant.onboardingCompleted === false ? "/onboarding" : "/dashboard");
+      return { requiresTotp: false };
     },
     [apply, router]
   );
@@ -110,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const reloadMe = useCallback(async () => {
     const data = await apiGet<{ user: User; tenant: Tenant }>("/api/v1/auth/me");
     setUser(data.user);
+    if (typeof window !== "undefined") localStorage.setItem("ls_user", JSON.stringify(data.user));
     refreshTenant(data.tenant);
   }, [refreshTenant]);
 

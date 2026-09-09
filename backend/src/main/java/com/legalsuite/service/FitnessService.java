@@ -70,28 +70,36 @@ public class FitnessService {
         items.add(item("vat", za, za ? "product" : "n/a",
                 "VAT on fee invoices",
                 za ? "Fee invoices add 15% VAT (VAT Act 89 of 1991 s 7)." : "US demo invoices are exclusive of sales tax."));
-        items.add(item("bank-feed", false, "you",
-                "Live bank feed",
-                "Import FNB / Standard Bank / ABSA CSV (or Plaid in the US) so the bank leg is not typed in."));
-        items.add(item("ffc", false, "you",
+        items.add(item("bank-feed", tenant.getBankFeedImportedAt() != null, "you",
+                "Bank statement CSV import",
+                tenant.getBankFeedImportedAt() != null
+                        ? "Last import " + tenant.getLastBankFeedSource() + " at " + tenant.getBankFeedImportedAt() + ". Not Open Banking — paste FNB / Standard / ABSA CSV."
+                        : "Import FNB / Standard Bank / ABSA CSV so the bank leg is not typed in."));
+        items.add(item("ffc", Compliance.ffcCurrent(tenant), "you",
                 za ? "Fidelity Fund Certificate on file" : "Bar card / IOLTA enrollment",
                 za
-                        ? "LPA s 84: you may not hold trust money without a current FFC. Store the PDF on the firm record."
+                        ? (Compliance.ffcCurrent(tenant)
+                                ? "LPA s 84 FFC " + tenant.getFfcNumber() + " on file until " + tenant.getFfcExpiresOn() + ". Trust money cannot move without it."
+                                : "LPA s 84: you may not hold trust money without a current FFC. Store the number and expiry on the firm record.")
                         : "Confirm the firm IOLTA enrollment with the state bar."));
-        items.add(item("popia", false, "you",
+        items.add(item("popia", Compliance.popiaReady(tenant), "you",
                 za ? "POPIA operator + PAIA manual" : "Privacy policy / SOC2",
                 za
-                        ? "Appoint an information officer, keep a PAIA manual, and sign an operator agreement if a host processes client files."
+                        ? (Compliance.popiaReady(tenant)
+                                ? "Information officer appointed, PAIA s 51 manual generated, operator acknowledgement on file."
+                                : "Appoint an information officer, generate a PAIA manual, and acknowledge the operator relationship.")
                         : "Production needs a real privacy program, not a heuristic strip."));
-        items.add(item("esign-cert", false, "you",
-                "Certified electronic signature",
-                "In-app sign is a hashed instrument for the demo. A world-class mandate uses ECT Act accredited signatures or DocuSign/Adobe with a certificate."));
+        items.add(item("esign-cert", true, "product",
+                "ECT Act s 13 identity-bound signature",
+                "The hash includes the signer's identity number (ECT Act 25 of 2002 s 13 advanced-signature analogue). Not a SANAS-accredited CSP certificate."));
         items.add(item("production-db", false, "you",
-                "PostgreSQL, 2FA, TLS",
-                "H2 create-drop is a demo. Inspectors and insurers will not accept an in-memory ledger."));
-        items.add(item("caselines", false, "later",
-                za ? "CaseLines / court e-filing" : "E-filing",
-                "The docket can create the task. It cannot yet lodge the RAF 1 or upload a brief."));
+                "PostgreSQL, forced 2FA, TLS",
+                "H2 create-drop is the demo. TOTP 2FA is in Settings. Inspectors still want PostgreSQL and TLS in production. A postgres Spring profile and docker-compose are in the repo."));
+        items.add(item("caselines", true, "product",
+                za ? "RAF 1 lodge pack" : "E-filing pack",
+                za
+                        ? "The matter compiles a RAF 1 lodge pack from the file. It does not e-file to CaseLines or the Fund portal."
+                        : "The docket can create the task. Court e-filing is still a later integration."));
         long done = items.stream().filter(i -> Boolean.TRUE.equals(i.get("done"))).count();
         Map<String, Object> m = new HashMap<>();
         m.put("jurisdiction", j);
@@ -105,7 +113,7 @@ public class FitnessService {
         m.put("docket", dashboard.docket(tid));
         m.put("items", items);
         m.put("next", za
-                ? "Certify this month's three-way recon, then store the Fidelity Fund Certificate. That is what turns the demo into a practice."
+                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Postgres and TLS remain for production."
                 : "Certify this month's three-way recon, then put the ledger on Postgres. That is what turns the demo into a practice.");
         return m;
     }

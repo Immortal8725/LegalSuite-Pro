@@ -19,8 +19,12 @@ export default function TrustPage() {
   const [recon, setRecon] = useState<TrustRecon | null>(null);
   const [open, setOpen] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   const [move, setMove] = useState({ type: "deposit", amount: "5000", description: "Retainer deposit" });
   const [bank, setBank] = useState({ bankBalance: "", notes: "" });
+  const [csv, setCsv] = useState(
+    "Date,Description,Amount,Balance\n2026-09-01,Balance brought forward,0,438250.00\n2026-09-02,Unidentified transfer,-11750.00,438250.00"
+  );
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -51,7 +55,10 @@ export default function TrustPage() {
             : "Client funds never mix with operating. Withdrawals refuse if this client's ledger would go negative."
         }
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setCsvOpen(true)}>
+              Import bank CSV
+            </Button>
             <Button variant="outline" onClick={() => setBankOpen(true)}>
               Enter bank balance
             </Button>
@@ -219,6 +226,46 @@ export default function TrustPage() {
         />
         <Label className="mt-3">Explanation</Label>
         <Textarea value={bank.notes} onChange={(e) => setBank({ ...bank, notes: e.target.value })} />
+      </Dialog>
+      <Dialog
+        open={csvOpen}
+        onClose={() => setCsvOpen(false)}
+        title="Import bank statement CSV"
+        wide
+        footer={
+          <Button
+            onClick={async () => {
+              try {
+                setError(null);
+                await apiPost("/api/v1/trust/bank-import", { accountId: acct?.id, csv });
+                setCsvOpen(false);
+                load();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "Could not import CSV");
+              }
+            }}
+          >
+            Import and recon
+          </Button>
+        }
+      >
+        <p className="mb-3 text-sm text-slate-600">
+          FNB, Standard Bank, or ABSA-style CSV. The last Balance column becomes the bank leg of the three-way. This is
+          not Open Banking.
+        </p>
+        <Label>Statement file</Label>
+        <input
+          type="file"
+          accept=".csv,text/csv,text/plain"
+          className="mb-3 block text-sm"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setCsv(await file.text());
+          }}
+        />
+        <Label>CSV</Label>
+        <Textarea className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
       </Dialog>
     </div>
   );

@@ -574,6 +574,16 @@ public class DemoDataLoader implements CommandLineRunner {
         firm.setOnboardingCompleted(true);
         firm.setTagline("Gauteng trial lawyers. RAF, delict, and the files that cannot wait.");
         firm.setPracticeAreasJson(JsonLists.toJson(List.of("RAF", "Personal Injury", "Labour", "Deceased Estates", "Commercial")));
+        firm.setFfcNumber("FFC-GP-2026-44821");
+        firm.setFfcExpiresOn(LocalDate.of(2027, 12, 31));
+        firm.setFfcHolderName("Thabo Ndlovu");
+        firm.setInformationOfficerName("Thabo Ndlovu");
+        firm.setInformationOfficerEmail("thabo@ndlovulaw.co.za");
+        firm.setPopiaOperatorAcknowledged(true);
+        firm.setBankFeedImportedAt(Instant.now());
+        firm.setLastBankFeedSource("csv:FNB");
+        firm = tenants.save(firm);
+        firm.setPaiaManualBody(com.legalsuite.service.PaiaManual.generate(firm));
         firm = tenants.save(firm);
 
         for (AppModule m : modules.findAll()) {

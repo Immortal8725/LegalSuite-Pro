@@ -44,6 +44,8 @@ public class AppUser {
     private String onlineStatus = "offline";
     private Instant lastLoginAt;
     private boolean emailVerified;
+    private String totpSecret;
+    private boolean totpEnabled;
     private Instant createdAt = Instant.now();
 
     public String getFullName() {

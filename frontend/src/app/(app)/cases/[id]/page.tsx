@@ -43,15 +43,27 @@ export default function CaseDetailPage() {
     );
   }
 
-  if (!c) return <p className="text-sm text-slate-500">Loading matter…</p>;
-
-  return (
-    <div>
       <PageHeader
         title={c.title}
         subtitle={`${c.caseNumber} · ${c.clientName || "Client"} · ${c.practiceArea || ""}`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(c.docketTrack === "raf" || (c.practiceArea || "").toLowerCase().includes("raf") || (c.caseType || "").toLowerCase().includes("raf")) && (
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    setError(null);
+                    await apiPost(`/api/v1/cases/${c.id}/raf1`);
+                    load();
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Could not compile RAF 1 pack");
+                  }
+                }}
+              >
+                Compile RAF 1 pack
+              </Button>
+            )}
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               {["limited", "intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"].map((s) => (
                 <option key={s}>{s}</option>
@@ -68,6 +80,7 @@ export default function CaseDetailPage() {
           </div>
         }
       />
+      <ErrorBanner error={error} />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <StatusBadge status={c.status} />
         {c.engagementStatus && <StatusBadge status={c.engagementStatus} />}
@@ -137,7 +150,7 @@ export default function CaseDetailPage() {
         <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Texas docket clocks</CardTitle>
+            <CardTitle>Docket clocks</CardTitle>
           </CardHeader>
           <CardBody className="space-y-3 text-sm">
             {(c.docketClocks || []).length === 0 && (
@@ -170,6 +183,25 @@ export default function CaseDetailPage() {
             >
               Save note
             </Button>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Files</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-2 text-sm">
+            {(c.documents || []).length === 0 && <p className="text-slate-500">No files on this matter yet.</p>}
+            {(c.documents || []).map((d) => (
+              <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                <div>
+                  <p className="font-semibold">{d.name}</p>
+                  <p className="text-xs text-slate-500">{d.category}</p>
+                </div>
+                <a className="text-xs font-semibold text-navy underline" href={`/api/v1/documents/${d.id}/download`}>
+                  Download
+                </a>
+              </div>
+            ))}
           </CardBody>
         </Card>
         </div>

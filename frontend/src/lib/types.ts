@@ -369,6 +369,8 @@ export type SignReq = {
   documentHash?: string;
   signatureHash?: string | null;
   unlocked?: boolean;
+  signatureStandard?: string;
+  identityCaptured?: boolean;
 };
 
 export type Integration = {

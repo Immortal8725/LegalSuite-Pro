@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,16 @@ public class Tenant {
     private String practiceAreasJson;
     private String tagline;
     private boolean onboardingCompleted;
+    private String ffcNumber;
+    private LocalDate ffcExpiresOn;
+    private String ffcHolderName;
+    private Instant bankFeedImportedAt;
+    private String lastBankFeedSource;
+    private String informationOfficerName;
+    private String informationOfficerEmail;
+    @Column(length = 8000)
+    private String paiaManualBody;
+    private boolean popiaOperatorAcknowledged;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }

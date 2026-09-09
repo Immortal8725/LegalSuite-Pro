@@ -20,5 +20,6 @@ trap cleanup EXIT INT TERM
 
 echo "API  http://127.0.0.1:18081"
 echo "Web  http://127.0.0.1:43123"
-echo "Demo john@smithlaw.com / password  (firm smith-associates)"
+echo "Demo thabo@ndlovulaw.co.za / password  (firm ndlovu-partners)"
+echo "     john@smithlaw.com / password      (firm smith-associates)"
 wait

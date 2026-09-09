@@ -34,6 +34,8 @@ public class SignatureRequest {
     private String documentHash;
     @Column(length = 128)
     private String signatureHash;
+    private String signerIdentityNumber;
+    private String signatureStandard;
 
     @PrePersist
     void persist() {
@@ -77,4 +79,8 @@ public class SignatureRequest {
     public void setDocumentHash(String documentHash) { this.documentHash = documentHash; }
     public String getSignatureHash() { return signatureHash; }
     public void setSignatureHash(String signatureHash) { this.signatureHash = signatureHash; }
+    public String getSignerIdentityNumber() { return signerIdentityNumber; }
+    public void setSignerIdentityNumber(String signerIdentityNumber) { this.signerIdentityNumber = signerIdentityNumber; }
+    public String getSignatureStandard() { return signatureStandard; }
+    public void setSignatureStandard(String signatureStandard) { this.signatureStandard = signatureStandard; }
 }

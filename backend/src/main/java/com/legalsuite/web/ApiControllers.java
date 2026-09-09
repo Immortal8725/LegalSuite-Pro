@@ -70,6 +70,11 @@ public class ApiControllers {
         return ApiResponse.ok(tenants.updateFirm(body));
     }
 
+    @PostMapping("/api/v1/tenants/me/paia")
+    public ApiResponse<?> generatePaia() {
+        return ApiResponse.ok(tenants.generatePaia(), "PAIA manual generated");
+    }
+
     @GetMapping("/api/v1/users")
     public ApiResponse<?> team() { return ApiResponse.ok(tenants.team()); }
 
@@ -123,6 +128,11 @@ public class ApiControllers {
     @PostMapping("/api/v1/cases/{id}/notes")
     public ApiResponse<?> addNote(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return ApiResponse.ok(practice.addNote(id, body));
+    }
+
+    @PostMapping("/api/v1/cases/{id}/raf1")
+    public ApiResponse<?> raf1(@PathVariable UUID id) {
+        return ApiResponse.ok(practice.generateRaf1(id), "RAF 1 pack compiled");
     }
 
     @GetMapping("/api/v1/documents")
@@ -242,6 +252,11 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/trust/move")
     public ApiResponse<?> trustMove(@RequestBody Map<String, Object> body) { return ApiResponse.ok(finance.trustMove(body)); }
+
+    @PostMapping("/api/v1/trust/bank-import")
+    public ApiResponse<?> bankImport(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.importBankCsv(body), "Bank CSV imported");
+    }
 
     @GetMapping("/api/v1/calls")
     public ApiResponse<?> calls() { return ApiResponse.ok(voice.history()); }

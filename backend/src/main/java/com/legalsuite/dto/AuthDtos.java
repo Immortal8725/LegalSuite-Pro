@@ -9,7 +9,8 @@ public class AuthDtos {
     public record LoginRequest(
             @NotBlank String firmSlug,
             @NotBlank @Email String email,
-            @NotBlank String password) {}
+            @NotBlank String password,
+            String totpCode) {}
 
     public record RegisterRequest(
             @NotBlank @Size(min = 2, max = 255) String firmName,
