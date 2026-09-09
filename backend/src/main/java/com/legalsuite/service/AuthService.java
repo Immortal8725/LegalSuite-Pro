@@ -141,6 +141,8 @@ public class AuthService {
         AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
         if (!user.isTotpEnabled()) {
+            user.setTotpSecret(null);
+            users.save(user);
             return Map.of("totpEnabled", false);
         }
         String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
