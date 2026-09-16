@@ -129,7 +129,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     const isPublic =
-      PUBLIC.has(pathname) || pathname.startsWith("/firm/") || pathname.startsWith("/sign/");
+      PUBLIC.has(pathname) ||
+      pathname.startsWith("/firm/") ||
+      pathname.startsWith("/sign/") ||
+      pathname.startsWith("/legal");
     if (isPublic) return;
     if (!getToken()) {
       router.replace(pathname.startsWith("/portal") ? "/portal/login" : "/login");

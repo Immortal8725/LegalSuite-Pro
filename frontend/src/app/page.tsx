@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Scale, Check } from "lucide-react";
+import { LegalFooter } from "@/components/legal-footer";
 
 const FEATURES = [
   ["Hire in one motion", "Website consult, conflict check, merged mandate, e-sign, trust retainer — same tenant."],
@@ -97,9 +96,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      <footer className="border-t px-6 py-8 text-center text-sm text-slate-400">
-        LegalSuite Pro · Attorney-client privilege stays on your tenant row. Call recording is opt-in.
-      </footer>
+      <LegalFooter />
     </div>
   );
 }
