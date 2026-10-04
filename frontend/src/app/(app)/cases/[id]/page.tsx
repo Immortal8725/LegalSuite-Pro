@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { apiGet, apiPatch, apiPost, apiPut } from "@/lib/api";
+import { apiGet, apiPatch, apiPost, apiPut, getToken } from "@/lib/api";
 import { daysLeftLabel, daysUntil, todayIso } from "@/lib/docket";
 import { formatDate, formatDateTime, moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
@@ -111,6 +111,35 @@ export default function CaseDetailPage() {
       setError(e instanceof Error ? e.message : fail);
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function downloadFile(id: string, name: string) {
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/documents/${id}/download`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) {
+        let message = "Could not download this file";
+        try {
+          const body = (await res.json()) as { message?: string };
+          if (body.message) message = body.message;
+        } catch {
+          /* the body was not JSON */
+        }
+        setError(message);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not download this file");
     }
   }
 
@@ -391,9 +420,13 @@ export default function CaseDetailPage() {
                     <p className="font-semibold">{d.name}</p>
                     <p className="text-xs text-slate-500">{d.category}</p>
                   </div>
-                  <a className="text-xs font-semibold text-navy underline" href={`/api/v1/documents/${d.id}/download`}>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-navy underline"
+                    onClick={() => downloadFile(d.id, d.name)}
+                  >
                     Download
-                  </a>
+                  </button>
                 </div>
               ))}
             </CardBody>
