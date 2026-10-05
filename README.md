@@ -2,7 +2,7 @@
 
 Multi-tenant practice platform for law firms. A firm registers once, receives a public website and intake form, then turns modules on as the docket grows. In-app WebRTC voice is free. PSTN minutes and add-on modules invoice at month end.
 
-This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys.
+This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md).
 
 ## Demo (seeded on boot)
 
@@ -52,7 +52,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 4. **Communication** — Internal messages, WebRTC voice (in-app free; PSTN recorded for invoicing), call registry, recording opt-in.
 5. **Advanced** — Conflicts, reports, module toggles, team, settings, global search.
 6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
-7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
+7. **AI & integrations** — Staff assistant on the matter workspace and on `/ai` (summarize, draft, intake screen, chat). Answers are assistive; the attorney remains responsible. The default is the on-tenant heuristic. `LEGALSUITE_AI_PROVIDER=openai|anthropic` plus `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` opts into a model vendor for a single matter; a missing key falls back on the tenant. Document merge templates, built-in e-sign, connect/disconnect hub, audit log.
 8. **Launch polish** — This README, star ERD and class diagrams in `docs/`, tests, PWA manifest.
 9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → **limited file** → mandate e-sign unlocks appearance and posts the pledged retainer).
 10. **South Africa** — Prescription Act / RAF Act s 23 / Act 40 of 2002 / LRA s 191 clocks; RICA + LPC recording ethics; LPA s 86 three-way recon; per-client ledgers; VAT 15% on fee invoices; clock-generated tasks and docket hold.
