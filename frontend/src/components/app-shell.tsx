@@ -72,7 +72,7 @@ const NAV = [
     items: [
       { href: "/messages", label: "Messages", icon: MessageSquare, module: "messages" },
       { href: "/voice", label: "Voice Calls", icon: Phone, module: "voice" },
-      { href: "/leads", label: "Hire pipeline", icon: Globe, module: "clientportal" },
+      { href: "/leads", label: "Hire pipeline", icon: Globe },
       { href: "/ai", label: "AI Assistant", icon: Sparkles, module: "ai" },
     ],
   },
