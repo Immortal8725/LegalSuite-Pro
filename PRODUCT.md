@@ -43,7 +43,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | --- | --- | --- |
 | 1 | Foundation | JWT, tenant isolation, register, onboarding, app shell |
 | 2 | Landing + practice | Public `/firm/{slug}`, intake, cases, clients, contacts, documents, calendar, tasks |
-| 3 | Financial | Timers, fee invoices (ZA VAT 15%), s 86 / IOLTA trust, expenses |
+| 3 | Financial | Timers, fee invoices (ZA VAT 15%), payments, write-offs, trust-to-fee, proof of payment, s 86 / IOLTA trust, expenses |
 | 4 | Communication | Internal messages, WebRTC voice, PSTN caller ID, SMS, WhatsApp, email, call registry, leads |
 | 5 | Advanced | Conflicts, reports, modules, team, settings, search |
 | 6 | Mobile | Responsive web + PWA; Flutter client in `mobile/` |
@@ -53,6 +53,16 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | 10 | South Africa | Prescription / RAF / Act 40 / CCMA clocks, RICA, LPA s 86, VAT, docket hold |
 | 11 | Texas | Smith & Associates still runs CPRC 16 / 74 / 101 |
 | 12 | Inspection pack | FFC gate, bank CSV, POPIA/PAIA, TOTP, identity-bound e-sign, RAF 1 pack |
+
+### Bookkeeping
+
+Fee invoices keep the original total. A payment (cash, EFT, card, or other) can be partial. Overpayment is refused. `amountPaid` is the sum of the payment rows. A write-off stores the amount, reason, user, and time in `writeOffAmount` beside the original total. Balance due is total minus payments minus write-offs. Status becomes `partial`, `paid`, or `write_off` from those figures.
+
+Trust-to-fee withdraws from that client's section 86 or IOLTA ledger through the existing trust movement (FFC, per-client ledger, and limited-file gates) and records the matching invoice payment in the same step. The withdrawal uses the invoice's own client.
+
+Proof of payment is a PDF, JPEG, or PNG up to 10 MB, stored with the firm's other uploads. Status runs `pending_review`, then `accepted` or `rejected`. Accept records one real payment (EFT, cash, card, or other) for an amount within the balance due. A later accept of the same proof leaves that payment in place. Reject keeps the file and requires a note, and the invoice balance stays as it was. Clients can submit a slip from the portal. Staff review the queue on Billing.
+
+The firm remains the merchant of record for client fee invoices. Card collection for the LegalSuite subscription is separate and is not part of this ledger.
 
 ---
 
@@ -329,6 +339,7 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | 1.1 | 5 October 2026 | Matter-scoped staff assistant. Model vendor stays off unless an operator sets a key. |
 | 1.2 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
 | 1.3 | 5 October 2026 | SMS, WhatsApp, and email from a matter or contact. Messaging is pay-what-you-use. Email via SMTP is not metered. |
+| 1.4 | 5 October 2026 | Fee invoice payments, write-offs, trust-to-fee, and proof of payment. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

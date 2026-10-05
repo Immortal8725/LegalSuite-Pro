@@ -89,7 +89,7 @@ class ConflictsAndErrorsTest {
         String thabo = token();
         String invoiceId = data(mvc.perform(get("/api/v1/invoices").header("Authorization", "Bearer " + thabo))
                 .andExpect(status().isOk()).andReturn()).get(0).get("id").asText();
-        MvcResult missing = send(post("/api/v1/invoices/" + invoiceId + "/write-off"), thabo, "{}");
+        MvcResult missing = send(post("/api/v1/invoices/" + invoiceId + "/refund-everything"), thabo, "{}");
         assertEquals(404, missing.getResponse().getStatus());
         assertFalse(missing.getResponse().getContentAsString().contains("Unexpected error"));
 

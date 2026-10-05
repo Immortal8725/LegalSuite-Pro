@@ -83,7 +83,13 @@ public class DashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal outstanding = invoices.findByTenantIdOrderByDateIssuedDesc(tid).stream()
                 .filter(i -> !List.of("paid", "void", "write_off").contains(i.getStatus()))
-                .map(Invoice::getTotal)
+                .map(i -> {
+                    BigDecimal total = i.getTotal() == null ? BigDecimal.ZERO : i.getTotal();
+                    BigDecimal paid = i.getAmountPaid() == null ? BigDecimal.ZERO : i.getAmountPaid();
+                    BigDecimal written = i.getWriteOffAmount() == null ? BigDecimal.ZERO : i.getWriteOffAmount();
+                    BigDecimal due = total.subtract(paid).subtract(written);
+                    return due.signum() < 0 ? BigDecimal.ZERO : due;
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         Map<String, Object> m = new HashMap<>();
         m.put("activeCases", cases.countByTenantIdAndStatusNotIn(tid, Set.of("closed", "archived", "settled")));

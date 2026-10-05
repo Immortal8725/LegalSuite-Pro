@@ -2,6 +2,7 @@ package com.legalsuite.billing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +40,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class BillingTrustTest {
     @Autowired private MockMvc mvc;
     @Autowired private TenantRepository tenants;
+    @Autowired private com.legalsuite.repo.InvoicePaymentRepository payments;
     @Autowired private ClientRepository clients;
     @Autowired private LegalCaseRepository cases;
     @Autowired private TimeEntryRepository timeEntries;
@@ -134,11 +136,17 @@ class BillingTrustTest {
         assertEquals(0, new BigDecimal("750").compareTo(balance(account.getId())));
         Invoice part = invoices.findById(sent.getId()).orElseThrow();
         assertEquals(0, new BigDecimal("250").compareTo(part.getAmountPaid()));
-        assertEquals("sent", part.getStatus());
+        assertEquals("partial", part.getStatus());
+        // The transfer is recorded once, as a trust payment that points back at the trust ledger row.
+        var trustPayments = payments.findByTenantIdAndInvoiceIdOrderByPaidAtAscCreatedAtAsc(firm, sent.getId());
+        assertEquals(1, trustPayments.size());
+        assertEquals("trust", trustPayments.get(0).getMethod());
+        assertNotNull(trustPayments.get(0).getTrustTransactionId());
 
         call(post("/api/v1/trust/move"), john, move(acct, "fee_transfer", "150", clientField + ",\"invoiceId\":\"" + sent.getId() + "\""))
                 .andExpect(status().isOk());
         assertEquals("paid", invoices.findById(sent.getId()).orElseThrow().getStatus());
+        assertEquals(2, payments.findByTenantIdAndInvoiceIdOrderByPaidAtAscCreatedAtAsc(firm, sent.getId()).size());
         assertEquals(0, new BigDecimal("600").compareTo(balance(account.getId())));
 
         // Book, client ledger and bank still agree: the fee transfer came off the client's ledger.
