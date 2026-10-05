@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     List<Expense> findByTenantIdOrderByDateDesc(UUID tenantId);
+    List<Expense> findByTenantIdAndBilledFalseAndBillableTrue(UUID tenantId);
 }

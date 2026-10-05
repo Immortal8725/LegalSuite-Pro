@@ -39,7 +39,7 @@ export default function ExpensesPage() {
               <Td>{e.vendor}</Td>
               <Td>{e.description}</Td>
               <Td>{moneyExact(e.amount)}</Td>
-              <Td>{e.status}</Td>
+              <Td>{e.billed ? "Billed" : e.status}</Td>
             </tr>
           ))}
         </tbody>

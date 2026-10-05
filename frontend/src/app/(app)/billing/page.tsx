@@ -23,8 +23,8 @@ export default function BillingPage() {
     <div>
       <PageHeader
         title="Billing & invoices"
-        subtitle="Generate a draft from unbilled time. Clients can pay from the portal."
-        actions={<Button onClick={() => setOpen(true)}>Generate from unbilled time</Button>}
+        subtitle="Generate a draft from unbilled time and expenses. Clients can pay from the portal."
+        actions={<Button onClick={() => setOpen(true)}>Generate from unbilled time and expenses</Button>}
       />
       <TableWrap>
         <thead>

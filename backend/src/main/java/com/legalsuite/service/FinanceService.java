@@ -165,6 +165,9 @@ public class FinanceService {
         List<TimeEntry> unbilled = timeEntries.findByTenantIdAndBilledFalseAndBillableTrue(tid()).stream()
                 .filter(t -> caseId == null || caseId.equals(t.getCaseId()))
                 .toList();
+        List<Expense> unbilledExpenses = expenses.findByTenantIdAndBilledFalseAndBillableTrue(tid()).stream()
+                .filter(e -> caseId == null || caseId.equals(e.getCaseId()))
+                .toList();
         Invoice inv = new Invoice();
         inv.setTenantId(tid());
         inv.setClientId(clientId);
@@ -173,12 +176,25 @@ public class FinanceService {
         inv.setStatus("draft");
         inv.setDateDue(LocalDate.now().plusDays(30));
         BigDecimal sub = unbilled.stream().map(TimeEntry::getTotalAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        List<Map<String, Object>> lines = unbilled.stream().map(t -> Map.<String, Object>of(
-                "description", t.getDescription(),
-                "minutes", t.getDurationMinutes(),
-                "amount", t.getTotalAmount()
-        )).toList();
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(unbilledExpenses.stream().map(e -> nz(e.getAmount())).reduce(BigDecimal.ZERO, BigDecimal::add));
+        List<Map<String, Object>> lines = new ArrayList<>();
+        for (TimeEntry t : unbilled) {
+            Map<String, Object> line = new LinkedHashMap<>();
+            line.put("kind", "time");
+            line.put("description", t.getDescription());
+            line.put("minutes", t.getDurationMinutes());
+            line.put("amount", t.getTotalAmount());
+            lines.add(line);
+        }
+        for (Expense e : unbilledExpenses) {
+            Map<String, Object> line = new LinkedHashMap<>();
+            line.put("kind", "expense");
+            line.put("description", e.getDescription());
+            line.put("category", e.getCategory());
+            line.put("amount", nz(e.getAmount()));
+            lines.add(line);
+        }
         inv.setLineItemsJson(JsonLists.toJson(lines));
         inv.setSubtotal(sub);
         Tenant tenant = tenants.findById(tid()).orElse(null);
@@ -195,6 +211,11 @@ public class FinanceService {
             t.setBilled(true);
             t.setInvoiceId(inv.getId());
             timeEntries.save(t);
+        });
+        unbilledExpenses.forEach(e -> {
+            e.setBilled(true);
+            e.setInvoiceId(inv.getId());
+            expenses.save(e);
         });
         return invoiceView(inv);
     }
@@ -520,6 +541,8 @@ public class FinanceService {
         m.put("date", e.getDate());
         m.put("vendor", e.getVendor());
         m.put("billable", e.isBillable());
+        m.put("billed", e.isBilled());
+        m.put("invoiceId", e.getInvoiceId());
         m.put("status", e.getStatus());
         return m;
     }

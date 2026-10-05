@@ -34,6 +34,7 @@ public class Expense {
     private String vendor;
     private boolean billable = true;
     private boolean billed;
+    private UUID invoiceId;
     private String status = "pending";
     private Instant createdAt = Instant.now();
 }
