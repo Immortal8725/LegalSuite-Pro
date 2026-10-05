@@ -45,13 +45,17 @@ The merchant key travels in the signed checkout form. The passphrase does not.
 
 ## Sandbox, then live
 
-1. Create a PayFast sandbox merchant. Enable subscriptions and tokenization on that merchant.
-2. Set the passphrase in the sandbox security settings and copy it to `PAYFAST_PASSPHRASE`.
+1. Create a PayFast sandbox merchant at `https://sandbox.payfast.co.za`. Enable subscriptions and tokenization on that merchant.
+2. Set the salt passphrase in the sandbox security settings and copy that exact value to `PAYFAST_PASSPHRASE`. The checkout signature appends it. The adhoc signature sorts it in with the other API fields.
 3. Keep `PAYFAST_ENV=sandbox`.
 4. Point return, cancel, and notify at a public HTTPS host.
 5. Sign in as a firm owner or director. Open **Product billing**. Subscribe. PayFast's sandbox card completes the redirect.
 6. Confirm the ITN in the PayFast dashboard if it does not arrive. The seat status becomes `active` only after signature check and server confirm. A browser return is not proof of payment.
 7. Place a public-network call with a non-zero per-minute rate, then use **Invoice minutes and charge**. With no token, the invoice is stored and no charge is sent.
+
+The developer-docs sample (`merchant_id` `10000100`, passphrase `jt7NOE43FZPn`) is rejected by the sandbox. That merchant accepts an unsigned once-off form. A signature is checked when one is sent, and `jt7NOE43FZPn` is not the salt. Subscriptions need a passphrase that matches the merchant. PayFast's support article lists a separate sandbox merchant that already has a salt (`merchant_id` `10004002`, passphrase `payfast`). Prefer your own sandbox merchant. Do not commit either pair.
+
+A PayFast page that says "Generated signature does not match submitted signature" means the env passphrase is not the salt on that merchant id. The form field order in this app matches PayFast's attribute order, and that order is what the sandbox accepts when the salt matches.
 
 Live cutover, after PayFast KYC:
 

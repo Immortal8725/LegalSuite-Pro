@@ -78,9 +78,9 @@ class PayFastSignatureTest {
                 "min-abc");
         String canonical = "amount=119900&item_description=2026-09+public-network+minutes"
                 + "&item_name=LegalSuite+phone+minutes&m_payment_id=min-abc&merchant-id=10000100"
-                + "&timestamp=2026-10-05T18%3A00%3A00%2B00%3A00&version=v1&passphrase=sandbox-passphrase";
-        assertEquals(canonical, PayFastSignature.canonical(sortedCopy(prepared.signedFields()), PASSPHRASE));
-        assertEquals("243a87b8804ac4c26e33de7e47928128", prepared.signature());
+                + "&passphrase=sandbox-passphrase&timestamp=2026-10-05T18%3A00%3A00%2B00%3A00&version=v1";
+        assertEquals(canonical, PayFastSignature.canonicalAlphabetical(prepared.signedFields(), PASSPHRASE));
+        assertEquals("e9319ea9356f6f443bb838dc2bbdc872", prepared.signature());
     }
 
     @Test
@@ -148,9 +148,4 @@ class PayFastSignatureTest {
         return new PayFastSignature.Field(name, value);
     }
 
-    private static List<PayFastSignature.Field> sortedCopy(List<PayFastSignature.Field> fields) {
-        return fields.stream()
-                .sorted(java.util.Comparator.comparing(PayFastSignature.Field::name))
-                .toList();
-    }
 }

@@ -12,7 +12,8 @@ import java.util.Locale;
 
 /**
  * PayFast MD5 signatures.
- * Checkout and ITN use the posted field order. The adhoc API sorts keys.
+ * Checkout and ITN use the posted field order, then append the passphrase.
+ * The adhoc API sorts every key, including the passphrase, and does not append it again.
  * Encoding matches PHP {@code urlencode}: spaces are {@code +}, {@code *} is {@code %2A}.
  */
 public final class PayFastSignature {
@@ -40,17 +41,30 @@ public final class PayFastSignature {
         return md5(canonical(fields, passphrase));
     }
 
+    /**
+     * PayFast API signature. The passphrase is one of the sorted variables, not a suffix.
+     * Checkout and ITN must keep using {@link #sign}, which appends the passphrase.
+     */
     public static String signAlphabetical(List<Field> fields, String passphrase) {
+        return md5(canonicalAlphabetical(fields, passphrase));
+    }
+
+    /** Sorted API string, including the passphrase in key order. No trailing passphrase suffix. */
+    public static String canonicalAlphabetical(List<Field> fields, String passphrase) {
         List<Field> sorted = new ArrayList<>();
         if (fields != null) {
             for (Field field : fields) {
                 if (field == null || field.name() == null || "signature".equals(field.name())) continue;
+                if ("passphrase".equals(field.name())) continue;
                 if (field.value() == null || field.value().isEmpty()) continue;
                 sorted.add(field);
             }
         }
+        if (passphrase != null && !passphrase.isBlank()) {
+            sorted.add(new Field("passphrase", passphrase.trim()));
+        }
         sorted.sort(Comparator.comparing(Field::name));
-        return sign(sorted, passphrase);
+        return canonical(sorted, null);
     }
 
     public static boolean matches(List<Field> fields, String passphrase, String postedSignature) {

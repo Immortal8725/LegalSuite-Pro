@@ -3,7 +3,7 @@ package com.legalsuite.payfast;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Header and body fields for {@code POST /subscriptions/{token}/adhoc}, signed alphabetically. */
+/** Header and body fields for {@code POST /subscriptions/{token}/adhoc}. The signature sorts every key, including the passphrase. */
 public final class PayFastAdhocRequest {
     public record Prepared(String signature, String body, List<PayFastSignature.Field> signedFields) {}
 
