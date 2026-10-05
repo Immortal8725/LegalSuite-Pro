@@ -203,6 +203,8 @@ export type Expense = {
   date: string;
   vendor?: string;
   billable?: boolean;
+  billed?: boolean;
+  invoiceId?: Id;
   status?: string;
 };
 
