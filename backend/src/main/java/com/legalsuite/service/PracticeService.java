@@ -247,7 +247,7 @@ public class PracticeService {
         n.setTenantId(c.getTenantId());
         n.setCaseId(c.getId());
         n.setClientId(c.getClientId());
-        n.setTitle("Engagement signed — file unlocked");
+        n.setTitle("Engagement signed. File unlocked.");
         n.setBody("Appearance authorized. Retainer posted to the trust account if pledged. Instrument hash "
                 + (signatureHash == null ? "(none)" : signatureHash) + ".");
         n.setType("esign");
@@ -580,7 +580,7 @@ public class PracticeService {
             t.setCaseId(c.getId());
             t.setCreatedBy(actorId);
             t.setAssignedTo(c.getLeadAttorneyId() == null ? actorId : c.getLeadAttorneyId());
-            t.setTitle(String.valueOf(clock.getOrDefault("title", "Docket clock")) + " — " + c.getCaseNumber());
+            t.setTitle(String.valueOf(clock.getOrDefault("title", "Docket clock")) + ": " + c.getCaseNumber());
             t.setDescription(String.valueOf(clock.getOrDefault("citation", "")) + ". "
                     + String.valueOf(clock.getOrDefault("reason", "Clock generated from the docket engine.")));
             t.setStatus("todo");

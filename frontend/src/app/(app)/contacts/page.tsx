@@ -18,7 +18,7 @@ export default function ContactsPage() {
 
   return (
     <div>
-      <PageHeader title="Contacts" subtitle="Judges, opposing counsel, experts, and vendors — not clients." actions={<Button onClick={() => setOpen(true)}>Add contact</Button>} />
+      <PageHeader title="Contacts" subtitle="Judges, opposing counsel, experts, and vendors." actions={<Button onClick={() => setOpen(true)}>Add contact</Button>} />
       {rows.length === 0 ? (
         <EmptyState title="No contacts" body="Add opposing counsel before the first hearing." />
       ) : (

@@ -125,7 +125,7 @@ classDiagram
     Conversation --> ChatMessage
 ```
 
-## AI, templates, e-sign, integrations
+## Draft help, templates, e-sign, integrations
 
 ```mermaid
 classDiagram

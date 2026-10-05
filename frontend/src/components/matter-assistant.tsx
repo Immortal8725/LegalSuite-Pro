@@ -29,7 +29,7 @@ export function MatterAssistant({
   onCaseId,
   matters,
   matterLabel,
-  title = "Ask about this matter",
+  title = "Draft help on this matter",
 }: {
   caseId?: string;
   onCaseId?: (caseId: string) => void;
@@ -62,7 +62,7 @@ export function MatterAssistant({
       ]);
       setPrompt("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The assistant could not answer");
+      setError(e instanceof Error ? e.message : "Could not prepare a draft");
     } finally {
       setBusy(false);
     }
@@ -78,10 +78,10 @@ export function MatterAssistant({
           <div className="space-y-1">
             <Label>Matter</Label>
             <Select value={caseId || ""} onChange={(e) => onCaseId(e.target.value)}>
-              <option value="">Whole docket — no single file</option>
+              <option value="">Whole docket, no single file</option>
               {matters.map((matter) => (
                 <option key={matter.id} value={matter.id}>
-                  {matter.caseNumber} — {matter.title}
+                  {matter.caseNumber}: {matter.title}
                 </option>
               ))}
             </Select>
@@ -95,18 +95,18 @@ export function MatterAssistant({
         )}
         {!caseId && (
           <p className="text-xs text-slate-500">
-            No single matter is selected, so this search stays on the firm docket. Open a matter to ask about its clocks, notes, and file names.
+            No single matter is selected, so this search stays on the firm docket. Open a matter for its clocks, notes, and file names.
           </p>
         )}
         <ErrorBanner error={error} />
         <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg bg-slate-50 p-3 text-sm">
           {turns.length === 0 && (
-            <p className="text-slate-500">Ask about the parties, the computed clocks, the notes, or the file names.</p>
+            <p className="text-slate-500">Parties, computed clocks, notes, and file names.</p>
           )}
           {turns.map((turn, i) => (
             <div key={i}>
               <p className={turn.role === "you" ? "font-semibold text-navy" : "whitespace-pre-wrap text-slate-700"}>
-                {turn.role === "you" ? "You: " : "Assistant: "}
+                {turn.role === "you" ? "Staff: " : "Draft: "}
                 {turn.text}
               </p>
               {turn.notice && (
@@ -142,10 +142,10 @@ export function MatterAssistant({
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
-          placeholder="Ask about this file. Deadlines follow the computed clocks."
+          placeholder="Parties, clocks, notes, or file names. Deadlines follow the computed clocks."
         />
         <Button disabled={busy || !prompt.trim()} onClick={() => void ask(prompt)}>
-          {busy ? "Thinking…" : "Ask"}
+          {busy ? "Working…" : "Send"}
         </Button>
       </CardBody>
     </Card>

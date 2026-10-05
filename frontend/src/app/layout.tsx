@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "LegalSuite Pro — Law Firm Operating System",
-  description: "Cases, clients, billing, trust accounting, voice calling, and a live firm website — in one platform.",
+  title: "LegalSuite Pro",
+  description: "Cases, clients, billing, trust accounting, voice calling, and a live firm website.",
   manifest: "/manifest.json",
   themeColor: "#1a365d",
   appleWebApp: {

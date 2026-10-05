@@ -52,7 +52,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + (role == null ? "STAFF" : role.toUpperCase()))));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (Exception ignored) {
-                    // invalid token — continue unauthenticated
+                    // invalid token; continue unauthenticated
                 }
             }
             chain.doFilter(request, response);

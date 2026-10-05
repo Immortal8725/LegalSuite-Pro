@@ -86,7 +86,7 @@ export default function PublicSignPage() {
                 <Input
                   value={identity}
                   onChange={(e) => setIdentity(e.target.value)}
-                  placeholder="Required — hashed into the instrument"
+                  placeholder="Required. Hashed into the instrument"
                   required
                 />
                 <Label>Draw your signature</Label>

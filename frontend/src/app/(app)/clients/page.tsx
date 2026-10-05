@@ -20,7 +20,7 @@ export default function ClientsPage() {
 
   return (
     <div>
-      <PageHeader title="Clients" subtitle="People and companies you represent — portal access is a toggle, not a separate product." actions={<Button onClick={() => setOpen(true)}>New client</Button>} />
+      <PageHeader title="Clients" subtitle="People and companies the firm represents. Portal access is a toggle." actions={<Button onClick={() => setOpen(true)}>New client</Button>} />
       <ErrorBanner error={error} />
       {rows.length === 0 ? (
         <EmptyState title="No clients" body="Add a retained client or wait for an intake from your public site." />

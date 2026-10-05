@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntegrationService {
     private static final List<Map<String, String>> CATALOG = List.of(
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
-                    "description", "Card payments on invoices. Connect in production with a restricted key — local demo stores the toggle only."),
+                    "description", "Card payments on invoices. Connect in production with a restricted key. The local demo stores the toggle only."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
                     "description", "PSTN minutes and SMS. In-app WebRTC stays free; this is only for the public network."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",
