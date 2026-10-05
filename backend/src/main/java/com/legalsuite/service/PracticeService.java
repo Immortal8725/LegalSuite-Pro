@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -481,11 +482,12 @@ public class PracticeService {
         m.put("docketHold", docketHold(c));
         m.put("docketHoldReason", docketHoldReason(c));
         m.put("docketTrack", c.getDocketTrack());
+        m.put("jurisdiction", DocketEngine.of(tenants.findById(c.getTenantId()).orElse(null)));
         m.put("controllingKind", c.getControllingKind());
         m.put("solRuleId", c.getSolRuleId());
         m.put("solCitation", c.getSolCitation());
         m.put("solReason", c.getSolReason());
-        m.put("docketClocks", JsonLists.objects(c.getDocketClocksJson()));
+        m.put("docketClocks", clocksWithDays(c.getDocketClocksJson()));
         m.put("engagementStatus", c.getEngagementStatus());
         m.put("appearanceAuthorized", c.isAppearanceAuthorized());
         m.put("engagementSignatureId", c.getEngagementSignatureId());
@@ -589,6 +591,20 @@ public class PracticeService {
         }
     }
 
+    private static List<Map<String, Object>> clocksWithDays(String json) {
+        List<Map<String, Object>> clocks = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (Map<String, Object> clock : JsonLists.objects(json)) {
+            Map<String, Object> row = new HashMap<>(clock);
+            LocalDate date = TexasDocketRules.parseDate(clock.get("date"));
+            if (date != null) {
+                row.put("daysLeft", ChronoUnit.DAYS.between(today, date));
+            }
+            clocks.add(row);
+        }
+        return clocks;
+    }
+
     static boolean docketHold(LegalCase c) {
         return docketHoldReason(c) != null;
     }
@@ -601,6 +617,7 @@ public class PracticeService {
             if (date == null || !date.isBefore(today)) continue;
             String kind = String.valueOf(clock.getOrDefault("kind", ""));
             if ("notice".equals(kind) && c.isNoticeServed()) continue;
+            if ("raf_lodge".equals(kind) && c.isRafClaimLodged()) continue;
             if (List.of("notice", "raf_lodge", "ccma").contains(kind)) {
                 return String.valueOf(clock.getOrDefault("citation", kind)) + " is overdue.";
             }
