@@ -9,6 +9,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Select, Textarea } from "@/components/ui/input";
 import type { Matter } from "@/lib/types";
+import { MatterAssistant } from "@/components/matter-assistant";
 import Link from "next/link";
 
 export default function CaseDetailPage() {
@@ -209,6 +210,9 @@ export default function CaseDetailPage() {
           </CardBody>
         </Card>
         </div>
+      </div>
+      <div className="mt-6">
+        <MatterAssistant caseId={c.id} matterLabel={`${c.caseNumber} · ${c.title}`} />
       </div>
       <Card className="mt-6">
         <CardHeader>

@@ -5,7 +5,7 @@ const FEATURES = [
   ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket — not a buried calendar tab."],
   ["The phone is on the file", "In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in with a RICA / two-party warning."],
   ["Metered, not seated", "Core stays on. Add-ons and PSTN minutes invoice at month end for what you actually used."],
-  ["Privilege-shaped AI", "Summaries and drafts never leave this tenant. No vendor, no training corpus."],
+  ["Privilege-shaped AI", "Summaries stay on this tenant unless the firm turns on a model vendor. No training corpus."],
   ["Trust that would survive an inspector", "Per-client ledgers. Three-way recon (bank = cashbook = clients). No overdraw of another client's money."],
 ];
 

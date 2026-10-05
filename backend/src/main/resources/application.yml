@@ -30,6 +30,16 @@ legalsuite:
     access-ms: 86400000
     refresh-ms: 604800000
   upload-dir: ${user.dir}/uploads
+  ai:
+    # local (default) never sends a prompt off the tenant.
+    # openai or anthropic run only when the matching key is set.
+    provider: ${LEGALSUITE_AI_PROVIDER:local}
+    openai-api-key: ${OPENAI_API_KEY:}
+    anthropic-api-key: ${ANTHROPIC_API_KEY:}
+    openai-model: ${OPENAI_MODEL:gpt-4o-mini}
+    anthropic-model: ${ANTHROPIC_MODEL:claude-3-5-haiku-latest}
+    openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    anthropic-base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com/v1}
 
 logging:
   level:
