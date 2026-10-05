@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { InvoiceLines } from "@/components/invoice-lines";
 import { StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Invoice, Matter } from "@/lib/types";
-import { money } from "@/lib/utils";
+import { money, moneyExact } from "@/lib/utils";
 
 export default function PortalHome() {
   const { user, tenant, logout } = useAuth();
   const [cases, setCases] = useState<Matter[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -85,18 +87,39 @@ export default function PortalHome() {
                   <Th>Status</Th>
                   <Th>Total</Th>
                   <Th>Balance</Th>
+                  <Th>Lines</Th>
                 </tr>
               </thead>
               <tbody>
                 {invoices.map((i) => (
-                  <tr key={i.id}>
-                    <Td>{i.invoiceNumber}</Td>
-                    <Td>
-                      <StatusBadge status={i.status} />
-                    </Td>
-                    <Td>{money(i.total)}</Td>
-                    <Td>{money(i.balanceDue)}</Td>
-                  </tr>
+                  <Fragment key={i.id}>
+                    <tr>
+                      <Td>{i.invoiceNumber}</Td>
+                      <Td>
+                        <StatusBadge status={i.status} />
+                      </Td>
+                      <Td>{money(i.total)}</Td>
+                      <Td>{money(i.balanceDue)}</Td>
+                      <Td>
+                        <button className="text-sm font-semibold text-navy" onClick={() => setExpanded(expanded === i.id ? null : i.id)}>
+                          {expanded === i.id ? "Hide lines" : "Lines"}
+                        </button>
+                      </Td>
+                    </tr>
+                    {expanded === i.id && (
+                      <tr>
+                        <td colSpan={5} className="border-t border-slate-100 p-0">
+                          <InvoiceLines raw={i.rawLineItems} />
+                          <div className="flex flex-wrap justify-end gap-6 px-4 py-3 text-sm">
+                            <span>Subtotal {moneyExact(i.subtotal)}</span>
+                            {Number(i.taxAmount) > 0 && <span>VAT {moneyExact(i.taxAmount)}</span>}
+                            <span className="font-semibold">Total {moneyExact(i.total)}</span>
+                          </div>
+                          {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </TableWrap>

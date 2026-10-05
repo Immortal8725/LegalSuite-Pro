@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Check, Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
 
 const FEATURES = [

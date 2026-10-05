@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
+import { InvoiceLines } from "@/components/invoice-lines";
 import { Dialog } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/input";
 import type { Invoice, Party } from "@/lib/types";
@@ -13,6 +14,7 @@ export default function BillingPage() {
   const [clients, setClients] = useState<Party[]>([]);
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
   const load = () => apiGet<Invoice[]>("/api/v1/invoices").then(setRows);
   useEffect(() => {
     load();
@@ -35,33 +37,51 @@ export default function BillingPage() {
             <Th>Total</Th>
             <Th>Balance</Th>
             <Th>Status</Th>
-            <Th></Th>
+            <Th>Lines</Th>
           </tr>
         </thead>
         <tbody>
           {rows.map((i) => (
-            <tr key={i.id}>
-              <Td className="font-mono font-semibold">{i.invoiceNumber}</Td>
-              <Td>{i.dateIssued}</Td>
-              <Td>{i.dateDue}</Td>
-              <Td>{moneyExact(i.total)}</Td>
-              <Td>{moneyExact(i.balanceDue)}</Td>
-              <Td>
-                <StatusBadge status={i.status} />
-              </Td>
-              <Td className="space-x-2">
-                {i.status !== "paid" && (
-                  <>
-                    <button className="text-sm font-semibold text-navy" onClick={() => apiPost(`/api/v1/invoices/${i.id}/send`, {}).then(load)}>
-                      Send
-                    </button>
-                    <button className="text-sm font-semibold text-emerald-700" onClick={() => apiPost(`/api/v1/invoices/${i.id}/pay`, {}).then(load)}>
-                      Record paid
-                    </button>
-                  </>
-                )}
-              </Td>
-            </tr>
+            <Fragment key={i.id}>
+              <tr>
+                <Td className="font-mono font-semibold">{i.invoiceNumber}</Td>
+                <Td>{i.dateIssued}</Td>
+                <Td>{i.dateDue}</Td>
+                <Td>{moneyExact(i.total)}</Td>
+                <Td>{moneyExact(i.balanceDue)}</Td>
+                <Td>
+                  <StatusBadge status={i.status} />
+                </Td>
+                <Td className="space-x-2">
+                  <button className="text-sm font-semibold text-navy" onClick={() => setExpanded(expanded === i.id ? null : i.id)}>
+                    {expanded === i.id ? "Hide lines" : "Lines"}
+                  </button>
+                  {i.status !== "paid" && (
+                    <>
+                      <button className="text-sm font-semibold text-navy" onClick={() => apiPost(`/api/v1/invoices/${i.id}/send`, {}).then(load)}>
+                        Send
+                      </button>
+                      <button className="text-sm font-semibold text-emerald-700" onClick={() => apiPost(`/api/v1/invoices/${i.id}/pay`, {}).then(load)}>
+                        Record paid
+                      </button>
+                    </>
+                  )}
+                </Td>
+              </tr>
+              {expanded === i.id && (
+                <tr>
+                  <td colSpan={7} className="border-t border-slate-100 p-0">
+                    <InvoiceLines raw={i.rawLineItems} />
+                    <div className="flex flex-wrap justify-end gap-6 px-4 py-3 text-sm">
+                      <span>Subtotal {moneyExact(i.subtotal)}</span>
+                      {Number(i.taxAmount) > 0 && <span>VAT {moneyExact(i.taxAmount)}</span>}
+                      <span className="font-semibold">Total {moneyExact(i.total)}</span>
+                    </div>
+                    {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </TableWrap>

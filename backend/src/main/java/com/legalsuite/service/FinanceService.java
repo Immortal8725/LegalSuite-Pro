@@ -182,6 +182,7 @@ public class FinanceService {
         for (TimeEntry t : unbilled) {
             Map<String, Object> line = new LinkedHashMap<>();
             line.put("kind", "time");
+            if (t.getDate() != null) line.put("date", t.getDate().toString());
             line.put("description", t.getDescription());
             line.put("minutes", t.getDurationMinutes());
             line.put("amount", t.getTotalAmount());
@@ -190,8 +191,10 @@ public class FinanceService {
         for (Expense e : unbilledExpenses) {
             Map<String, Object> line = new LinkedHashMap<>();
             line.put("kind", "expense");
+            if (e.getDate() != null) line.put("date", e.getDate().toString());
             line.put("description", e.getDescription());
-            line.put("category", e.getCategory());
+            if (e.getCategory() != null) line.put("category", e.getCategory());
+            if (e.getVendor() != null && !e.getVendor().isBlank()) line.put("vendor", e.getVendor());
             line.put("amount", nz(e.getAmount()));
             lines.add(line);
         }
