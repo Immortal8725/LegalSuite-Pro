@@ -81,7 +81,7 @@ export function TableWrap({ children }: { children: ReactNode }) {
   );
 }
 
-export function Th({ children }: { children: ReactNode }) {
+export function Th({ children }: { children?: ReactNode }) {
   return (
     <th className="bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">
       {children}
