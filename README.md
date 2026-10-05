@@ -49,7 +49,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 1. **Foundation.** JWT auth, tenant isolation, firm registration, onboarding, and the app shell.
 2. **Landing and practice.** Public site, intake, cases, clients, contacts, documents, calendar, and tasks.
 3. **Financial.** Timers, invoices, IOLTA trust (no overdraw), and expenses. Usage add-ons stay on the month-end invoice.
-4. **Communication.** Internal messages, WebRTC voice (in-app free; PSTN recorded for invoicing), call registry, and recording opt-in.
+4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), call registry, and recording opt-in. PSTN minutes are recorded for invoicing. Emergency numbers stay on the device dialer.
 5. **Advanced.** Conflicts, reports, module toggles, team, settings, and global search.
 6. **Mobile.** Responsive web and a PWA. Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **Assistant and integrations.** Staff draft help on the matter workspace and on `/ai` (summarize, draft, intake screen, and questions about the file). Answers are drafts. The attorney remains responsible. The default stays on the tenant. `LEGALSUITE_AI_PROVIDER=openai|anthropic` plus `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` opts into a model vendor for a single matter. A missing key falls back on the tenant. Also includes document merge templates, built-in e-sign, the connect/disconnect hub, and the audit log.
@@ -69,10 +69,38 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 
 - Frontend: Next.js 15, React 19, Tailwind, shadcn-style primitives
 - Backend: Spring Boot 3.4, Java 21, JPA, H2 (local), JWT (jjwt)
-- Voice: WebSocket `/ws/signal` plus HTTP inbox fallback
+- Voice: WebSocket `/ws/signal` for in-app WebRTC. Public-network calls use a Twilio callback bridge. See [Public network calls](#public-network-calls). Do not commit Twilio secrets.
 - Mobile: Flutter (Dart) against `/api/v1`
 
 Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) and put the API behind TLS. TOTP 2FA is in Settings; demo users stay without it so `password` still works. The UI can publish to Vercel; the Java API needs a JVM host.
+
+## Public network calls
+
+Outbound calls stay a callback bridge. The attorney's phone rings first. Twilio then dials the other party and presents a caller ID. This is not a browser softphone.
+
+Set these on the API process. Names and an empty template are in `backend/.env.example`. Do not commit real values. Spring does not load that file on its own.
+
+| Variable | Required | Role |
+| --- | --- | --- |
+| `TWILIO_ACCOUNT_SID` | yes | Twilio account |
+| `TWILIO_AUTH_TOKEN` | yes | API auth. Never stored in the app |
+| `TWILIO_PUBLIC_BASE_URL` | yes | Public https origin Twilio uses for the bridge and status webhooks |
+| `TWILIO_VOICE_FROM` | no | E.164 number this account already owns or has verified, used when the firm has no saved caller ID |
+
+No IncomingPhoneNumber purchase is required. No South Africa End-User or regulatory bundle is required for this path.
+
+When Place call leaves caller ID on Automatic, resolution order is:
+
+1. The firm's active rented Twilio DID, if one is already saved in the app.
+2. Else the firm's verified personal number saved in the app (mobile or landline). The stored kind stays `verified_landline`.
+3. Else `TWILIO_VOICE_FROM`, if set.
+4. Else the first IncomingPhoneNumber already on the Twilio account (covers a leftover trial number).
+5. Else the first verified Outgoing Caller ID on the Twilio account.
+6. If none of those exist, the API says to verify a personal number in the app or set `TWILIO_VOICE_FROM`.
+
+An upgraded Twilio account no longer has the free trial From number. Verify a personal mobile or landline in Voice Calls, or set `TWILIO_VOICE_FROM`. A trial account, if one is still in use, can only call destinations Twilio has already verified. An upgraded account can call any number the account's geo permissions allow.
+
+Also connect the Twilio toggle on Integrations. That toggle does not store a password. Emergency numbers stay on the device dialer. Recording stays opt-in. Matter calls still write a time entry and PSTN minutes still roll into the usage invoice.
 
 ## Inspection pack (in product)
 

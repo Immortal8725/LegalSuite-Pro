@@ -102,9 +102,18 @@ classDiagram
         +initiate()
         +answer()
         +end()
+        +placePstn()
+        +bridgeTwiml()
         +iceServers()
         +pushSignal()
     }
+    class FirmNumberService {
+        +search()
+        +buy()
+        +startVerification()
+        +requireForDial()
+    }
+    class TwilioGateway
     class CommsService {
         +conversations()
         +sendMessage()
@@ -119,6 +128,8 @@ classDiagram
     class Lead
     class ConflictCheck
     VoiceService --> CallRecord
+    VoiceService --> FirmNumberService
+    FirmNumberService --> TwilioGateway
     SignalingHandler --> VoiceService
     CommsService --> Conversation
     CommsService --> Lead

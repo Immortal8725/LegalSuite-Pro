@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:legalsuite_mobile/api.dart';
+import 'package:legalsuite_mobile/screens/calls.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.api, required this.onLogout});
@@ -41,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [_dash(), _cases(), _time()];
+    final pages = [_dash(), _cases(), _time(), CallsScreen(api: widget.api)];
     return Scaffold(
       appBar: AppBar(
         title: const Text('LegalSuite Pro'),
@@ -63,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Desk'),
           NavigationDestination(icon: Icon(Icons.folder_outlined), label: 'Matters'),
           NavigationDestination(icon: Icon(Icons.timer_outlined), label: 'Time'),
+          NavigationDestination(icon: Icon(Icons.phone_outlined), label: 'Calls'),
         ],
       ),
     );
@@ -102,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
               .toList(),
         ),
         const SizedBox(height: 16),
-        const Text('Pull to refresh after a hearing. Voice calling stays on the web app in this slice.'),
+        const Text('Pull to refresh after a hearing. Public network calls start on the Calls tab. The phone rings on your mobile.'),
       ],
     );
   }

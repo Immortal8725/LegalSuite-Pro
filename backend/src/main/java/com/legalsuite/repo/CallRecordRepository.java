@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CallRecordRepository extends JpaRepository<CallRecord, UUID> {
     List<CallRecord> findByTenantIdOrderByStartedAtDesc(UUID tenantId);
     Optional<CallRecord> findByIdAndTenantId(UUID id, UUID tenantId);
+    Optional<CallRecord> findByBridgeToken(String bridgeToken);
+    Optional<CallRecord> findByTwilioCallSid(String twilioCallSid);
 }
