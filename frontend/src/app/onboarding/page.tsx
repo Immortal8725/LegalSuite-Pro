@@ -98,7 +98,7 @@ export default function OnboardingPage() {
             <div>
               <h2 className="text-xl font-bold">Core modules stay on</h2>
               <p className="mt-2 text-sm text-slate-500">
-                Cases, clients, calendar, tasks, documents, time, billing, messaging, conflict check, and reports are included. Add trust, portal, or research later from Modules — you only pay for what you enable.
+                Cases, clients, calendar, tasks, documents, time, billing, messaging, conflict check, and reports are included. Add trust, portal, or research later from Modules. You only pay for what you enable.
               </p>
             </div>
           )}

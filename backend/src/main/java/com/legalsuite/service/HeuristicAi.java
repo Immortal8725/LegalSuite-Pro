@@ -15,7 +15,7 @@ public final class HeuristicAi {
         List<String> flags = new ArrayList<>();
         if (containsAny(text, "injury", "accident", "crash", "malpractice")) {
             score += 18;
-            flags.add("Personal-injury posture — confirm statute of limitations on day one.");
+            flags.add("Personal-injury posture. Confirm the statute of limitations on day one.");
         }
         if (containsAny(text, "urgent", "emergency", "tomorrow", "injunction", "tro")) {
             score += 20;
@@ -23,22 +23,22 @@ public final class HeuristicAi {
         }
         if (containsAny(text, "estate", "will", "probate", "trust")) {
             score += 8;
-            flags.add("Estate matter — ask for the original will and death certificate.");
+            flags.add("Estate matter. Ask for the original will and death certificate.");
         }
         if (containsAny(text, "criminal", "arrest", "dui", "felony")) {
             score += 10;
-            flags.add("Criminal inquiry — check for a first-appearance date.");
+            flags.add("Criminal inquiry. Check for a first-appearance date.");
         }
         if (containsAny(text, "corporation", "llc", "formation", "contract")) {
             score += 6;
-            flags.add("Business work — request formation docs or the disputed agreement.");
+            flags.add("Business work. Request formation docs or the disputed agreement.");
         }
         if (containsAny(text, "pro bono", "cannot pay", "no money")) {
             score -= 15;
             flags.add("Fee sensitivity flagged. Discuss limited-scope or referral.");
         }
         if (name != null && name.toLowerCase(Locale.ROOT).contains("corp")) {
-            flags.add("Entity name — run a conflicts search against officers as well as the company.");
+            flags.add("Entity name. Run a conflicts search against officers as well as the company.");
         }
         score = Math.max(5, Math.min(98, score));
         String band = score >= 75 ? "retain_now" : score >= 55 ? "consult" : "screen";
@@ -63,9 +63,9 @@ public final class HeuristicAi {
         }
         StringBuilder sb = new StringBuilder();
         sb.append("Matter summary");
-        if (title != null && !title.isBlank()) sb.append(" — ").append(title);
+        if (title != null && !title.isBlank()) sb.append(": ").append(title);
         sb.append(".\n\n");
-        sb.append("There are ").append(notes.size()).append(" note(s) on file. Highlights:\n");
+        sb.append("There are ").append(notes.size()).append(" note(s) on file:\n");
         int i = 1;
         for (String n : notes) {
             if (n == null || n.isBlank()) continue;
@@ -74,7 +74,7 @@ public final class HeuristicAi {
             sb.append(i++).append(". ").append(clip).append("\n");
             if (i > 6) break;
         }
-        sb.append("\nSuggested next step: confirm the upcoming deadline and log the last client conversation as a time entry.");
+        sb.append("\nNext: confirm the upcoming deadline and log the last client conversation as a time entry.");
         return sb.toString();
     }
 
@@ -84,7 +84,7 @@ public final class HeuristicAi {
         String note = extra == null ? "" : extra.trim();
         return switch (kind == null ? "status" : kind.toLowerCase(Locale.ROOT)) {
             case "retainer" -> """
-                    Subject: Engagement letter — %s
+                    Subject: Engagement letter: %s
 
                     Dear %s,
 
@@ -97,7 +97,7 @@ public final class HeuristicAi {
                     Respectfully,
                     """.formatted(matter, who, matter, note);
             case "demand" -> """
-                    Subject: Demand — %s
+                    Subject: Demand: %s
 
                     Counsel:
 
@@ -110,7 +110,7 @@ public final class HeuristicAi {
                     Very truly yours,
                     """.formatted(matter, who, matter, note.isBlank() ? "Please see the facts already exchanged." : note);
             case "status" -> """
-                    Subject: Status update — %s
+                    Subject: Status update: %s
 
                     Dear %s,
 

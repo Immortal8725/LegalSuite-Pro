@@ -1,11 +1,13 @@
+import Link from "next/link";
+import { Check, Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
 
 const FEATURES = [
-  ["Hire in one motion", "Website consult, conflict check, merged mandate, e-sign, trust retainer — same tenant."],
-  ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket — not a buried calendar tab."],
+  ["Hire in one motion", "Website consult, conflict check, merged mandate, e-sign, and trust retainer, on the same tenant."],
+  ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket with the file."],
   ["The phone is on the file", "In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in with a RICA / two-party warning."],
   ["Metered, not seated", "Core stays on. Add-ons and PSTN minutes invoice at month end for what you actually used."],
-  ["Privilege-shaped AI", "Summaries and drafts never leave this tenant. No vendor, no training corpus."],
+  ["Drafts stay on the firm", "Summaries stay on this tenant unless the firm turns on a model vendor. Tenant files are not a training set. The attorney remains responsible."],
   ["Trust that would survive an inspector", "Per-client ledgers. Three-way recon (bank = cashbook = clients). No overdraw of another client's money."],
 ];
 
@@ -71,7 +73,7 @@ export default function MarketingPage() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-3xl font-extrabold text-navy">Plans that grow with the docket</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-slate-500">
-          Start on Free. Voice over the public switched network and add-on modules invoice at month end — no prepaid buckets required.
+          Start on Free. Voice over the public switched network and add-on modules invoice at month end. There is no prepaid bucket.
         </p>
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {PLANS.map((p) => (

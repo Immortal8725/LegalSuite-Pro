@@ -28,7 +28,6 @@ import {
   Menu,
   Globe,
   Plus,
-  Sparkles,
   FileSignature,
   Plug,
   ScrollText,
@@ -72,8 +71,8 @@ const NAV = [
     items: [
       { href: "/messages", label: "Messages", icon: MessageSquare, module: "messages" },
       { href: "/voice", label: "Voice Calls", icon: Phone, module: "voice" },
-      { href: "/leads", label: "Hire pipeline", icon: Globe, module: "clientportal" },
-      { href: "/ai", label: "AI Assistant", icon: Sparkles, module: "ai" },
+      { href: "/leads", label: "Hire pipeline", icon: Globe },
+      { href: "/ai", label: "Draft help", icon: PenLine, module: "ai" },
     ],
   },
   {

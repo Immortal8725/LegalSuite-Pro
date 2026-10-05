@@ -1,4 +1,4 @@
-# LegalSuite Pro — web
+# LegalSuite Pro web
 
 Next.js 15 attorney desk, public firm sites, client portal, and e-sign.
 

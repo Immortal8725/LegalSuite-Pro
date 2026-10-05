@@ -17,10 +17,10 @@ export default function AuditPage() {
 
   return (
     <div>
-      <PageHeader title="Audit log" subtitle="Who changed a template, connected Stripe, or asked the assistant — on this tenant only." />
+      <PageHeader title="Audit log" subtitle="Template changes, Stripe connections, and draft-help questions, on this tenant only." />
       <ErrorBanner error={error} />
       {rows.length === 0 ? (
-        <EmptyState title="Quiet so far" body="Merges, signatures, AI prompts, and integration toggles appear here." />
+        <EmptyState title="No rows yet" body="Merges, signatures, draft-help questions, and integration toggles appear here." />
       ) : (
         <TableWrap>
           <thead>

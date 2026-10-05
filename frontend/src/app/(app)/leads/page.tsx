@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { PrivilegeStrip } from "@/components/privilege-strip";
+import { statutoryClockLabel } from "@/lib/docket";
 import type { ConflictHit, DocketPreview, Lead } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -31,6 +33,7 @@ type RetainResult = {
 };
 
 export default function LeadsPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Lead[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -45,9 +48,12 @@ export default function LeadsPage() {
     setBusy(id);
     setError(null);
     try {
-      const res = await apiPost<RetainResult>(`/api/v1/retain/${id}`, { retainerAmount: 2500, force });
+      const res = await apiPost<RetainResult>(`/api/v1/retain/${id}`, { force });
       setResult(res);
       await load();
+      if (!res.blocked && res.matter?.id) {
+        router.push(`/cases/${res.matter.id}`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Retain failed");
     } finally {
@@ -81,7 +87,7 @@ export default function LeadsPage() {
     <div>
       <PageHeader
         title="Hire pipeline"
-        subtitle="Conflict waiver is a signed letter. Unsigned engagement is a limited file — no appearance, retainer pledged not posted."
+        subtitle="A conflict waiver is a signed letter. An unsigned engagement is a limited file. No appearance, and the pledged retainer is not posted."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
@@ -93,7 +99,7 @@ export default function LeadsPage() {
             {(result.conflict?.matches || []).map((m, i) => (
               <li key={i}>
                 <span className="font-semibold uppercase">{m.role || m.type}</span>: {m.name}
-                {m.detail ? ` — ${m.detail}` : ""}
+                {m.detail ? `. ${m.detail}` : ""}
               </li>
             ))}
           </ul>
@@ -135,7 +141,9 @@ export default function LeadsPage() {
           {result.trust?.note && <p className="mt-1">{result.trust.note}</p>}
           {result.docket?.solDate && (
             <p className="mt-1">
-              Texas clock: {result.docket.controllingCitation || "SOL"} · {formatDate(result.docket.solDate)}
+              {statutoryClockLabel(result.docket.jurisdiction, result.docket.controllingKind)}
+              {result.docket.controllingCitation ? `: ${result.docket.controllingCitation}` : ""} ·{" "}
+              {formatDate(result.docket.solDate)}
             </p>
           )}
           {result.signUrl && (
@@ -163,7 +171,8 @@ export default function LeadsPage() {
                     <p className="mt-1 text-xs text-slate-500">{l.description}</p>
                     {l.docket?.solDate && (
                       <p className="mt-1 text-[11px] text-navy">
-                        {l.docket.controllingKind === "notice" ? "TTCA notice" : "SOL"} {formatDate(l.docket.controllingDate || l.docket.solDate)}
+                        {statutoryClockLabel(l.docket.jurisdiction, l.docket.controllingKind)}{" "}
+                        {formatDate(l.docket.controllingDate || l.docket.solDate)}
                       </p>
                     )}
                     {l.waiver && (

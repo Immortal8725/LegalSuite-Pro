@@ -44,7 +44,7 @@ public final class CallEthics {
         m.put("notice", allParty
                 ? "All-party consent state. Every person on the line must be told before you record. Recording stays opt-in."
                 : "One-party consent in " + st
-                        + ". This product still requires an opt-in click. Tell the other party anyway — ethics is not a loophole.");
+                        + ". This product still requires an opt-in click. Tell the other party anyway. Ethics is not a loophole.");
         return m;
     }
 

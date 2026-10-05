@@ -190,7 +190,7 @@ public class DemoDataLoader implements CommandLineRunner {
         module("E-Signatures", "esignatures", "Send retainers out for in-app signature. No DocuSign key required.", "documents", "✍️", 15, false, "professional", 13);
         module("Conflict Check", "conflicts", "Search clients, parties, and counsel.", "compliance", "🔍", 0, true, "essentials", 14);
         module("Reports", "reports", "Realization, pipeline, and aging.", "analytics", "📈", 0, true, "essentials", 15);
-        module("AI Assistant", "ai", "Local summaries, intake screening, and drafts. No API key.", "analytics", "✨", 19, false, "professional", 16);
+        module("Draft help", "ai", "Summaries, intake screening, and drafts for staff. The attorney remains responsible.", "analytics", "✎", 19, false, "professional", 16);
         AppModule mVoice = module("Voice Calling", "voice", "In-app WebRTC. Pay only for PSTN minutes.", "communication", "📞", 0, true, "essentials", 17);
         module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 10, false, "essentials", 18);
         module("Integrations", "integrations", "Connect Stripe, Twilio, Calendar, and import tools.", "platform", "🔌", 0, false, "professional", 19);
@@ -250,7 +250,7 @@ public class DemoDataLoader implements CommandLineRunner {
         c2.setAccrualDate(LocalDate.now().plusDays(5).minusYears(2));
         stampDocket(c2, "TX");
         LegalCase c3 = matter(firm.getId(), martinez, john, "C-1038", "Martinez Estate", "Estate Planning", "pending", "350");
-        c3.setDescription("Probate of the Martinez estate — inventory and creditor window.");
+        c3.setDescription("Probate of the Martinez estate. Inventory and creditor window.");
         c3.setProbateOpened(LocalDate.now().plusDays(12).minusMonths(4));
         stampDocket(c3, "TX");
         LegalCase c4 = matter(firm.getId(), abc, alex, "C-1050", "ABC Corp Formation", "Corporate", "open", "225");
@@ -297,11 +297,11 @@ public class DemoDataLoader implements CommandLineRunner {
         openInv.setLineItemsJson(JsonLists.toJson(List.of(Map.of("description", "Discovery and hearing prep", "amount", 8750))));
         invoices.save(openInv);
 
-        event(firm.getId(), c1, john, "Hearing — Johnson v. Corp Inc.", "court_date", Instant.now().plus(4, ChronoUnit.HOURS), "County Courthouse, Room 4B");
-        event(firm.getId(), c1, john, "Client meeting — Sarah Williams", "meeting", Instant.now().plus(8, ChronoUnit.HOURS), "Conference Room A");
-        event(firm.getId(), c3, maria, "Filing deadline — Martinez Estate", "deadline", Instant.now().plus(28, ChronoUnit.HOURS), "Probate clerk");
-        event(firm.getId(), c1, john, "Deposition — Dr. Robert Chen", "deposition", Instant.now().plus(11, ChronoUnit.DAYS), "Zoom");
-        event(firm.getId(), c5, maria, "Mediation — Taylor Contract Dispute", "mediation", Instant.now().plus(13, ChronoUnit.DAYS), "Mediation Center");
+        event(firm.getId(), c1, john, "Hearing: Johnson v. Corp Inc.", "court_date", Instant.now().plus(4, ChronoUnit.HOURS), "County Courthouse, Room 4B");
+        event(firm.getId(), c1, john, "Client meeting: Sarah Williams", "meeting", Instant.now().plus(8, ChronoUnit.HOURS), "Conference Room A");
+        event(firm.getId(), c3, maria, "Filing deadline: Martinez Estate", "deadline", Instant.now().plus(28, ChronoUnit.HOURS), "Probate clerk");
+        event(firm.getId(), c1, john, "Deposition: Dr. Robert Chen", "deposition", Instant.now().plus(11, ChronoUnit.DAYS), "Zoom");
+        event(firm.getId(), c5, maria, "Mediation: Taylor Contract Dispute", "mediation", Instant.now().plus(13, ChronoUnit.DAYS), "Mediation Center");
 
         task(firm.getId(), c1, john, alex, "Draft motion in limine", "in_progress", "high");
         task(firm.getId(), c3, maria, maria, "File inventory with probate court", "todo", "urgent");
@@ -354,7 +354,7 @@ public class DemoDataLoader implements CommandLineRunner {
 
         TrustAccount iolta = new TrustAccount();
         iolta.setTenantId(firm.getId());
-        iolta.setAccountName("IOLTA — Operating trust");
+        iolta.setAccountName("IOLTA operating trust");
         iolta.setBankName("First State Bank");
         iolta.setBalance(new BigDecimal("156000.00"));
         iolta.setBankBalance(new BigDecimal("156000.00"));
@@ -380,7 +380,7 @@ public class DemoDataLoader implements CommandLineRunner {
         tx2.setType("deposit");
         tx2.setAmount(new BigDecimal("80000"));
         tx2.setBalanceAfter(new BigDecimal("105000.00"));
-        tx2.setDescription("Estate funds — Martinez");
+        tx2.setDescription("Estate funds, Martinez");
         tx2.setCreatedBy(john.getId());
         trustTx.save(tx2);
         TrustTransaction tx3 = new TrustTransaction();
@@ -391,7 +391,7 @@ public class DemoDataLoader implements CommandLineRunner {
         tx3.setType("deposit");
         tx3.setAmount(new BigDecimal("51000"));
         tx3.setBalanceAfter(new BigDecimal("156000.00"));
-        tx3.setDescription("Retainer — Davis v. Metro Transit");
+        tx3.setDescription("Retainer, Davis v. Metro Transit");
         tx3.setCreatedBy(maria.getId());
         trustTx.save(tx3);
 
@@ -400,7 +400,7 @@ public class DemoDataLoader implements CommandLineRunner {
         exp.setCaseId(c1.getId());
         exp.setUserId(alex.getId());
         exp.setCategory("filing fees");
-        exp.setDescription("County filing fee — motion");
+        exp.setDescription("County filing fee, motion");
         exp.setAmount(new BigDecimal("237.00"));
         exp.setVendor("Travis County Clerk");
         expenses.save(exp);
@@ -410,7 +410,7 @@ public class DemoDataLoader implements CommandLineRunner {
         page.setTemplate("classic");
         page.setHeroTitle("Smith & Associates");
         page.setHeroSubtitle("Trial lawyers for families and closely held companies in Texas.");
-        page.setAboutText("We take matters that require both judgment and stamina — commercial disputes, serious injuries, and the private work of families putting their houses in order.");
+        page.setAboutText("We take matters that require both judgment and stamina: commercial disputes, serious injuries, and the private work of families putting their houses in order.");
         page.setColorsJson("{\"primary\":\"#1a365d\",\"accent\":\"#c6a052\"}");
         page.setSeoTitle("Smith & Associates | Austin Law Firm");
         page.setPublished(true);
@@ -472,7 +472,7 @@ public class DemoDataLoader implements CommandLineRunner {
 
                 {{case.opposing}}
 
-                Re: {{case.title}} — {{case.number}}
+                Re: {{case.title}}, {{case.number}}
 
                 We represent {{client.name}}. This letter demands that you cure the dispute described in the complaint and confirm a written response within fourteen (14) days.
 
@@ -485,7 +485,7 @@ public class DemoDataLoader implements CommandLineRunner {
         sig.setTenantId(firm.getId());
         sig.setCaseId(c1.getId());
         sig.setClientId(sarah.getId());
-        sig.setTitle("Engagement letter — Johnson v. Corp Inc.");
+        sig.setTitle("Engagement letter: Johnson v. Corp Inc.");
         sig.setSignerName("Sarah Williams");
         sig.setSignerEmail("sarah@example.com");
         sig.setStatus("pending");
@@ -531,7 +531,7 @@ public class DemoDataLoader implements CommandLineRunner {
         hot.setEmail("priya.nair@example.com");
         hot.setPhone("(555) 010-8822");
         hot.setCaseType("Personal Injury");
-        hot.setDescription("Rear-end crash on I-35 yesterday. Urgent — opposing insurer already called.");
+        hot.setDescription("Rear-end crash on I-35 yesterday. Urgent. The opposing insurer already called.");
         hot.setAccrualDate(LocalDate.now().minusDays(1));
         hot.setStatus("new");
         leads.save(hot);
@@ -649,7 +649,7 @@ public class DemoDataLoader implements CommandLineRunner {
         contact(firm.getId(), "judge", "T.", "Mabena", "Johannesburg High Court", null);
         note(firm.getId(), raf, thabo, "RAF 1 pack", "Hospital records requested. Do not let s 23 run.");
         time(firm.getId(), raf, thabo, 120, "RAF 1 compilation and hospital follow-up", true, false);
-        time(firm.getId(), pothole, lindiwe, 90, "Act 40 s 3 notice draft — overdue", true, false);
+        time(firm.getId(), pothole, lindiwe, 90, "Act 40 s 3 notice draft, overdue", true, false);
 
         Invoice inv = new Invoice();
         inv.setTenantId(firm.getId());
@@ -666,20 +666,20 @@ public class DemoDataLoader implements CommandLineRunner {
         inv.setLineItemsJson(JsonLists.toJson(List.of(Map.of("description", "RAF claim compilation", "amount", 21000))));
         invoices.save(inv);
 
-        event(firm.getId(), raf, thabo, "Lodge RAF 1 — Khumalo", "filing", Instant.now().plus(6, ChronoUnit.DAYS), "RAF Parktown");
-        event(firm.getId(), labour, sipho, "CCMA referral — Patel", "deadline", Instant.now().plus(2, ChronoUnit.DAYS), "CCMA Johannesburg");
+        event(firm.getId(), raf, thabo, "Lodge RAF 1: Khumalo", "filing", Instant.now().plus(6, ChronoUnit.DAYS), "RAF Parktown");
+        event(firm.getId(), labour, sipho, "CCMA referral: Patel", "deadline", Instant.now().plus(2, ChronoUnit.DAYS), "CCMA Johannesburg");
 
         TrustAccount trust = new TrustAccount();
         trust.setTenantId(firm.getId());
-        trust.setAccountName("Section 86(2) trust — FNB");
+        trust.setAccountName("Section 86(2) trust, FNB");
         trust.setBankName("First National Bank");
         trust.setAccountType("trust");
         trust.setBalance(new BigDecimal("450000.00"));
         trust.setBankBalance(new BigDecimal("438250.00"));
         trust = trusts.save(trust);
-        zaDeposit(firm.getId(), trust, nomsa.getId(), raf.getId(), thabo.getId(), "180000", "180000", "RAF interim payment — Khumalo");
-        zaDeposit(firm.getId(), trust, pieter.getId(), pothole.getId(), lindiwe.getId(), "95000", "275000", "Retainer — Van der Merwe");
-        zaDeposit(firm.getId(), trust, horizon.getId(), commercial.getId(), lindiwe.getId(), "175000", "450000", "Retainer — Horizon Logistics");
+        zaDeposit(firm.getId(), trust, nomsa.getId(), raf.getId(), thabo.getId(), "180000", "180000", "RAF interim payment, Khumalo");
+        zaDeposit(firm.getId(), trust, pieter.getId(), pothole.getId(), lindiwe.getId(), "95000", "275000", "Retainer, Van der Merwe");
+        zaDeposit(firm.getId(), trust, horizon.getId(), commercial.getId(), lindiwe.getId(), "175000", "450000", "Retainer, Horizon Logistics");
 
         TrustReconciliation recon = new TrustReconciliation();
         recon.setTenantId(firm.getId());
@@ -699,7 +699,7 @@ public class DemoDataLoader implements CommandLineRunner {
         page.setTemplate("modern");
         page.setHeroTitle("Ndlovu & Partners");
         page.setHeroSubtitle("Sandton attorneys for RAF, delict against organs of state, labour, and deceased estates.");
-        page.setAboutText("We take the files whose clocks actually kill the claim — Road Accident Fund, Act 40 notices, CCMA referrals — and we will not open a file until conflicts and a signed mandate are on the instrument.");
+        page.setAboutText("We take the files whose clocks can end the claim, including Road Accident Fund, Act 40 notices, and CCMA referrals. We will not open a file until conflicts and a signed mandate are on the instrument.");
         page.setColorsJson("{\"primary\":\"#1a365d\",\"accent\":\"#c6a052\"}");
         page.setSeoTitle("Ndlovu & Partners | Sandton Law Firm");
         page.setPublished(true);
@@ -732,7 +732,7 @@ public class DemoDataLoader implements CommandLineRunner {
         templates.save(mandate);
 
         notify(firm.getId(), thabo.getId(), "Trust recon is short", "Section 86 three-way is unbalanced by R11,750. Do not certify.", "trust", "/trust");
-        notify(firm.getId(), thabo.getId(), "Act 40 notice overdue", "Van der Merwe v City of Johannesburg — s 3 notice is overdue. Condonation before you issue.", "docket", "/cases");
+        notify(firm.getId(), thabo.getId(), "Act 40 notice overdue", "Van der Merwe v City of Johannesburg. The s 3 notice is overdue. Condonation before you issue.", "docket", "/cases");
         notify(firm.getId(), lindiwe.getId(), "New website consult", "A RAF consult is waiting on the hire pipeline.", "intake", "/leads");
 
         Lead hot = new Lead();
@@ -742,7 +742,7 @@ public class DemoDataLoader implements CommandLineRunner {
         hot.setPhone("073 555 0190");
         hot.setCaseType("RAF");
         hot.setOpposingParty("Road Accident Fund");
-        hot.setDescription("Taxi collision on the N1 yesterday. Identified driver. Urgent — the other insurer already called.");
+        hot.setDescription("Taxi collision on the N1 yesterday. Identified driver. Urgent. The other insurer already called.");
         hot.setAccrualDate(LocalDate.now().minusDays(1));
         hot.setStatus("new");
         leads.save(hot);

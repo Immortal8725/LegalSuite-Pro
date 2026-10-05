@@ -2,7 +2,7 @@
 
 Multi-tenant practice platform for law firms. A firm registers once, receives a public website and intake form, then turns modules on as the docket grows. In-app WebRTC voice is free. PSTN minutes and add-on modules invoice at month end.
 
-This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys.
+This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md).
 
 ## Demo (seeded on boot)
 
@@ -33,10 +33,10 @@ chmod +x scripts/dev.sh
 Or two terminals:
 
 ```bash
-# API — http://127.0.0.1:18081
+# API at http://127.0.0.1:18081
 cd backend && ./mvnw -DskipTests spring-boot:run
 
-# Web — pick an unused port
+# Web. Pick an unused port.
 cd frontend && npm install && npm run dev -- -p 43123 -H 0.0.0.0
 ```
 
@@ -46,18 +46,18 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 
 ## What shipped (all eight phases)
 
-1. **Foundation** — JWT auth, tenant isolation, firm registration, onboarding, app shell.
-2. **Landing + practice** — Auto-generated public site, intake, cases, clients, contacts, documents, calendar, tasks.
-3. **Financial** — Timers, invoices, IOLTA trust (no overdraw), expenses. Usage add-ons stay on the month-end invoice.
-4. **Communication** — Internal messages, WebRTC voice (in-app free), PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), call registry, recording opt-in. Emergency numbers stay on the device dialer.
-5. **Advanced** — Conflicts, reports, module toggles, team, settings, global search.
-6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
-7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
-8. **Launch polish** — This README, star ERD and class diagrams in `docs/`, tests, PWA manifest.
-9. **The unique loop** — Hire pipeline (party-aware conflict → **signed waiver instrument** if needed → **limited file** → mandate e-sign unlocks appearance and posts the pledged retainer).
-10. **South Africa** — Prescription Act / RAF Act s 23 / Act 40 of 2002 / LRA s 191 clocks; RICA + LPC recording ethics; LPA s 86 three-way recon; per-client ledgers; VAT 15% on fee invoices; clock-generated tasks and docket hold.
-11. **Texas remains** — Smith & Associates still runs CPRC chapters 16, 74, 101.
-12. **Inspection pack** — FFC gate, bank CSV, POPIA/PAIA, TOTP, identity-bound e-sign, RAF 1 pack.
+1. **Foundation.** JWT auth, tenant isolation, firm registration, onboarding, and the app shell.
+2. **Landing and practice.** Public site, intake, cases, clients, contacts, documents, calendar, and tasks.
+3. **Financial.** Timers, invoices, IOLTA trust (no overdraw), and expenses. Usage add-ons stay on the month-end invoice.
+4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), call registry, and recording opt-in. PSTN minutes are recorded for invoicing. Emergency numbers stay on the device dialer.
+5. **Advanced.** Conflicts, reports, module toggles, team, settings, and global search.
+6. **Mobile.** Responsive web and a PWA. Flutter client in `mobile/` (`flutter run` after `flutter create .`).
+7. **Assistant and integrations.** Staff draft help on the matter workspace and on `/ai` (summarize, draft, intake screen, and questions about the file). Answers are drafts. The attorney remains responsible. The default stays on the tenant. `LEGALSUITE_AI_PROVIDER=openai|anthropic` plus `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` opts into a model vendor for a single matter. A missing key falls back on the tenant. Also includes document merge templates, built-in e-sign, the connect/disconnect hub, and the audit log.
+8. **Launch polish.** This README, ERD and class diagrams in `docs/`, tests, and the PWA manifest.
+9. **Hire pipeline.** Party-aware conflict, then a **signed waiver instrument** if needed, then a **limited file**, then a mandate e-sign that unlocks appearance and posts the pledged retainer.
+10. **South Africa.** Prescription Act, RAF Act s 23, Act 40 of 2002, and LRA s 191 clocks. RICA and LPC recording ethics. LPA s 86 three-way recon. Per-client ledgers. VAT 15% on fee invoices. Clock-generated tasks and docket hold.
+11. **Texas.** Smith & Associates still runs CPRC chapters 16, 74, and 101.
+12. **Inspection pack.** FFC gate, bank CSV, POPIA/PAIA, TOTP, identity-bound e-sign, and the RAF 1 pack.
 
 ## Architecture
 
@@ -104,11 +104,11 @@ Also connect the Twilio toggle on Integrations. That toggle does not store a pas
 
 ## Inspection pack (in product)
 
-- **FFC** — LPA s 84 number and expiry on the firm record. ZA trust movements refuse without a current certificate.
-- **Bank CSV** — Trust page imports FNB / Standard / ABSA CSV into the three-way bank leg.
-- **POPIA / PAIA** — Information officer, generated s 51 manual, operator acknowledgement.
-- **TOTP** — RFC 6238 enrol/confirm/disable. Login returns `{ requiresTotp: true }` (still HTTP 200) until the code is supplied.
-- **ECT Act s 13** — Public sign requires an identity number; the hash includes it. Not a SANAS-accredited CSP.
-- **RAF 1 pack** — Compile from C-2001 (or any RAF-track matter). Not CaseLines e-lodgement.
+- **FFC.** LPA s 84 number and expiry on the firm record. ZA trust movements refuse without a current certificate.
+- **Bank CSV.** The trust page imports FNB, Standard, or ABSA CSV into the three-way bank leg.
+- **POPIA / PAIA.** Information officer, generated s 51 manual, and operator acknowledgement.
+- **TOTP.** RFC 6238 enrol, confirm, and disable. Login returns `{ requiresTotp: true }` (still HTTP 200) until the code is supplied.
+- **ECT Act s 13.** Public sign requires an identity number, and the hash includes it. Not a SANAS-accredited CSP.
+- **RAF 1 pack.** Compile from C-2001, or any RAF-track matter. Not CaseLines e-lodgement.
 
 Still demo, not production: H2 create-drop, unbalanced Ndlovu recon (bank short R11,750), overdue Act 40 on C-2002.

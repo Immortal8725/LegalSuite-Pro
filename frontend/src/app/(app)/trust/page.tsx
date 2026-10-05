@@ -70,7 +70,7 @@ export default function TrustPage() {
       {live && (
         <Card className={`mb-6 ${unbalanced ? "border-red-300 bg-red-50" : "border-emerald-200 bg-emerald-50"}`}>
           <CardHeader>
-            <CardTitle>{unbalanced ? "Three-way unbalanced — do not certify" : "Three-way balanced"}</CardTitle>
+            <CardTitle>{unbalanced ? "Three-way unbalanced. Do not certify" : "Three-way balanced"}</CardTitle>
           </CardHeader>
           <CardBody className="grid gap-4 sm:grid-cols-3 text-sm">
             <div>

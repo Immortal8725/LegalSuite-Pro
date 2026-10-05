@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntegrationService {
     private static final List<Map<String, String>> CATALOG = List.of(
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
-                    "description", "Card payments on invoices. Connect in production with a restricted key — local demo stores the toggle only."),
+                    "description", "Card payments on invoices. Connect in production with a restricted key. The local demo stores the toggle only."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
                     "description", "Dial out on the public network. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. Credentials stay in the server environment. This toggle does not store a password."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",

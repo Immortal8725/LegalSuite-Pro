@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 /**
  * Party-aware conflict matching: clients, adverse parties, counsel, and related
- * last names — not a single substring on the display name.
+ * last names, not a single substring on the display name.
  */
 public final class ConflictEngine {
     private static final Pattern SPLIT = Pattern.compile("[^a-z0-9]+");

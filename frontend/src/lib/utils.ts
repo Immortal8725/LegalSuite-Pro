@@ -34,14 +34,14 @@ export function moneyExact(n: number | string | null | undefined, currency?: str
 }
 
 export function formatDate(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "None";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export function formatDateTime(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "None";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
   return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });

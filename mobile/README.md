@@ -1,4 +1,4 @@
-# LegalSuite Pro — Flutter client (Phase 6)
+# LegalSuite Pro Flutter client (Phase 6)
 
 Attorney mobile slice against the same Spring Boot API as the web app.
 
@@ -12,7 +12,7 @@ Attorney mobile slice against the same Spring Boot API as the web app.
 
 The Calls tab posts to `/api/v1/calls/pstn`. Twilio rings the phone you enter, then connects the other party and shows the automatic caller ID: a verified personal number, `TWILIO_VOICE_FROM`, or a number already on the Twilio account. Buying a local number is optional. Choose a matter, or mark the call as not on a matter. Emergency numbers are refused so they stay on the device dialer.
 
-In-app WebRTC, e-sign, and AI stay on the responsive web app (installable as a PWA).
+In-app WebRTC, e-sign, and draft help stay on the responsive web app (installable as a PWA). This client is the native docket.
 
 ## CallKit follow-up
 

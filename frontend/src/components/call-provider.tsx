@@ -199,7 +199,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         <div className="fixed bottom-6 right-6 z-[90] w-80 rounded-2xl bg-navy-dark p-5 text-white shadow-lift">
           <p className="text-xs uppercase tracking-wide text-gold">Incoming call</p>
           <p className="mt-1 text-lg font-bold">{incoming.name}</p>
-          <p className="text-sm text-white/70">In-app WebRTC — free for both sides</p>
+          <p className="text-sm text-white/70">In-app WebRTC, free for both sides</p>
           <div className="mt-4 flex gap-2">
             <Button variant="gold" className="flex-1" onClick={accept}>
               Answer

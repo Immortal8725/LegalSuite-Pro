@@ -6,6 +6,7 @@ export type DocketClock = {
   citation?: string;
   title?: string;
   date: string;
+  daysLeft?: number;
   reason?: string;
   assumption?: string;
 };
@@ -76,6 +77,7 @@ export type Matter = {
   accrualDate?: string;
   governmentalDefendant?: boolean;
   docketTrack?: string;
+  jurisdiction?: string;
   solCitation?: string;
   solReason?: string;
   docketClocks?: DocketClock[];
@@ -83,11 +85,13 @@ export type Matter = {
   appearanceAuthorized?: boolean;
   engagementSignatureId?: Id;
   pendingRetainerAmount?: number;
+  conflictWaiverSignatureId?: Id;
   conflictWaiverHash?: string;
   docketHold?: boolean;
   docketHoldReason?: string;
   noticeServed?: boolean;
   rafClaimLodged?: boolean;
+  rafLodgedDate?: string;
   notes?: Note[];
   documents?: Doc[];
 };

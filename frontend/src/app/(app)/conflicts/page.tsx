@@ -36,7 +36,7 @@ export default function ConflictsPage() {
 
   return (
     <div>
-      <PageHeader title="Conflict check" subtitle="Clients, related last names, adverse entities, and opposing counsel — not a substring on the file title." />
+      <PageHeader title="Conflict check" subtitle="Matches clients, related last names, adverse entities, and opposing counsel." />
       <ErrorBanner error={error} />
       <form onSubmit={run} className="mb-6 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Prospective client" required />
@@ -46,7 +46,7 @@ export default function ConflictsPage() {
       {last && (
         <div className={`mb-6 rounded-xl border p-4 text-sm ${last.matchCount ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}`}>
           <p className="font-semibold">
-            Latest: {last.searchName ?? name} — {last.matchCount} hit(s) · {last.status}
+            Latest: {last.searchName ?? name}. {last.matchCount} hit(s). {last.status}
           </p>
           <ul className="mt-2 list-disc pl-5">
             {(last.matches || []).map((m, i) => (
