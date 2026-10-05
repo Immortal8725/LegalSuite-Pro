@@ -9,13 +9,13 @@ import { ErrorBanner } from "@/components/ui/dialog";
 
 const DEMOS = [
   {
-    label: "South Africa — Ndlovu & Partners",
+    label: "South Africa: Ndlovu & Partners",
     slug: "ndlovu-partners",
     email: "thabo@ndlovulaw.co.za",
     note: "RAF, Act 40, LPA s 86 recon",
   },
   {
-    label: "Texas — Smith & Associates",
+    label: "Texas: Smith & Associates",
     slug: "smith-associates",
     email: "john@smithlaw.com",
     note: "SOL, TTCA, IOLTA",
@@ -42,11 +42,11 @@ export default function LoginPage() {
         <ul className="mt-10 space-y-3 text-white/85">
           {[
             "RAF, Act 40, CCMA, and Prescription Act clocks on the home screen",
-            "LPA s 86 three-way recon — bank, cashbook, client ledgers",
+            "LPA s 86 three-way recon: bank, cashbook, client ledgers",
             "RICA recording is opt-in even though the statute is one-party",
             "Hire is a gate: conflict, signed waiver, limited file, signed mandate",
           ].map((t) => (
-            <li key={t}>— {t}</li>
+            <li key={t}>{t}</li>
           ))}
         </ul>
       </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
                 placeholder="6-digit code"
                 required
               />
-              <p className="mt-1 text-xs text-slate-500">This account has 2FA on. Demo users do not — enrol from Settings if you want to try it.</p>
+              <p className="mt-1 text-xs text-slate-500">This account has 2FA on. Demo users do not. Enrol from Settings if you want to try it.</p>
             </div>
           )}
           <Button className="w-full" disabled={loading}>
