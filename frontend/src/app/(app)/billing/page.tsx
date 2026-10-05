@@ -25,7 +25,7 @@ export default function BillingPage() {
     <div>
       <PageHeader
         title="Billing & invoices"
-        subtitle="Generate a draft from unbilled time and expenses. Clients can pay from the portal."
+        subtitle="Client fee invoices from unbilled time and expenses. This is not the LegalSuite seat or the phone-minute charge."
         actions={<Button onClick={() => setOpen(true)}>Generate from unbilled time and expenses</Button>}
       />
       <TableWrap>

@@ -322,6 +322,19 @@ export default function SettingsPage() {
             )}
           </CardBody>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>LegalSuite product billing</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <p className="mb-3 text-sm text-slate-500">
+              The Light seat and phone minutes are billed to the firm through PayFast. That is separate from client invoices and from trust.
+            </p>
+            <Link href="/product-billing" className="text-sm font-semibold text-navy underline">
+              Open product billing
+            </Link>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );

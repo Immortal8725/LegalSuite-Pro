@@ -114,12 +114,13 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     slug: "merchant",
     title: "Merchant Services Agreement",
     section: "10.8",
-    body: `Applies if the operator (or a connected Stripe-class provider) takes card payments for subscriptions or usage invoices.
+    body: `Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
 
-- The firm is the merchant of record for client fee invoices unless an order form says otherwise. The operator is the merchant of record for LegalSuite Pro subscriptions.
+- The firm is the merchant of record for client fee invoices unless an order form says otherwise. The operator is the merchant of record for LegalSuite Pro subscriptions and minute charges.
 - Chargebacks: keep the engagement and invoice that support the debit.
-- PCI: this repository does not store raw card PAN. A production Stripe connection must use Stripe-hosted fields.
-- The in-app “connect Stripe” control is a stub until keys exist.
+- PCI: this repository does not store a raw card number. Checkout is hosted by PayFast. The server stores the PayFast token, not the card.
+- VAT: the operator issues its own tax invoice. PayFast is not asked to add VAT on top of the R1,199 seat.
+- The product billing page is not a live merchant until PAYFAST_MERCHANT_ID and PAYFAST_MERCHANT_KEY are set. Sandbox first.
 - Trust money is never mixed with subscription charges. Section 86 / IOLTA ledgers are not a payment gateway.`,
   },
   {
@@ -132,7 +133,7 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
 2. Instructions. Process only to provide the product, backups, and security. No secondary marketing.
 3. Confidentiality. Privilege is the firm’s to assert.
 4. Security. JWT + tenant_id, optional TOTP, audit log. Production must add TLS, PostgreSQL, backups. The demo’s H2 database is not that programme.
-5. Subprocessors. Only those listed under Service Providers, plus any the firm connects (Stripe, Twilio).
+5. Subprocessors. Only those listed under Service Providers, plus any the firm connects (PayFast, Twilio).
 6. Breach. Notify the firm without undue delay.
 7. Deletion. On written request after termination, delete or return tenant data except records kept by law.
 8. PAIA. The firm remains responsible for its s 51 manual. The product can generate a starting text.`,
@@ -147,7 +148,7 @@ Vercel (optional): web front end; request logs; UI can publish, API needs a JVM.
 
 PostgreSQL host (optional): all tenant rows; docker-compose / postgres profile; not the default.
 
-Stripe: subscriptions and invoices; connect stub.
+PayFast Aggregation: Light seat subscription and phone-minute charges. Keys stay in the server environment. Sandbox until live KYC.
 
 Twilio: PSTN, SMS, and WhatsApp metadata and caller ID when the firm connects it. Credentials stay in the server environment.
 

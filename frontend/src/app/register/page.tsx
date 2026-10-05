@@ -58,7 +58,7 @@ export default function RegisterPage() {
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
         <p className="text-sm text-slate-500">
-          You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing waits until Stripe is connected.
+          You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing for the seat uses PayFast once the operator sets sandbox or live keys.
         </p>
         <ErrorBanner error={error} />
         <div>

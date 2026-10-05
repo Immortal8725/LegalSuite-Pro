@@ -2,7 +2,7 @@
 
 Practice system for a solo South African attorney. Light is **R1,199 per month for one attorney** and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about **R79 per month**, or bundled when the operator includes it.
 
-This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md).
+This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or PayFast keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md). Product billing is [BILLING.md](BILLING.md).
 
 ## Demo (seeded on boot)
 
@@ -48,7 +48,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 
 ## Hosted deploy
 
-The demo boots on in-memory H2 and drops data when the process stops. A pilot host uses Postgres. TLS, the domain name, Stripe, and Twilio are still things a person does.
+The demo boots on in-memory H2 and drops data when the process stops. A pilot host uses Postgres. TLS, the domain name, PayFast, and Twilio are still things a person does.
 
 1. Copy the template and edit it on the host. Do not commit the result.
 
@@ -56,7 +56,7 @@ The demo boots on in-memory H2 and drops data when the process stops. A pilot ho
 cp .env.example .env
 ```
 
-Set `LEGALSUITE_JWT_SECRET` to a unique string of at least 32 characters, and set `DB_PASSWORD` to something other than the laptop default. Leave Twilio and Stripe blank until those accounts exist. Leave the per-minute rates blank until the carrier price is known. A blank rate records duration at zero cost. It is not a free minute bundle.
+Set `LEGALSUITE_JWT_SECRET` to a unique string of at least 32 characters, and set `DB_PASSWORD` to something other than the laptop default. Leave Twilio and PayFast blank until those accounts exist. Leave `PAYFAST_ENV=sandbox` until live KYC. Leave the per-minute rates blank until the carrier price is known. A blank rate records duration at zero cost. It is not a free minute bundle.
 
 2. Start Postgres and wait until it is healthy.
 
@@ -87,6 +87,10 @@ curl -fsS http://127.0.0.1:18081/api/v1/health
 ```
 
 `data.database` must be `postgres` and `data.databaseUp` must be true. Put TLS in front of both ports before any client uses the host. Do not expose the H2 console. The Postgres profile turns the H2 console off.
+
+## Product billing
+
+PayFast Aggregation bills the firm for the Light seat and for public-network minutes. Client fee invoices and trust receipts stay in the firm books. Setup, sandbox versus live, and the ITN checks are in [BILLING.md](BILLING.md).
 
 ### All-in Docker (optional)
 

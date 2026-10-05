@@ -20,6 +20,8 @@ JPA  →  H2 (dev) / PostgreSQL (prod)
 
 `modules` is a catalog. `tenant_modules` stores enabled flags. Core slugs cannot be disabled. Section 86 trust is in the Light seat and is not a month-end add-on. The Light subscription itself is a seat line on the usage preview. Public-network minutes are the usage. The demo tenants have the catalog enabled so the sample files can be opened.
 
+Product billing is a separate path. `PayFastCheckoutService` builds a signed seat subscription (or a card-token checkout). `PayFastItnService` checks the signature and asks PayFast to confirm the ITN before a seat becomes active. `MinutesChargeJob` is a manual trigger that invoices PSTN minutes and, when a token is on file, calls the adhoc API. `billing_accounts` holds seat status, the last payment, and the token. Those rows are not client `invoices` and not trust ledgers. See [BILLING.md](../BILLING.md).
+
 ## Voice
 
 In-app calls are included in the Light seat. `VoiceService` records duration and a `callType` of `webrtc` or `pstn_outbound` / `pstn_inbound`. Public-network cost uses `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`. If that rate is blank, cost stays zero and the minutes are still recorded. There is no included minute bundle. Recording is opt-in. `CallEthics` still decides the spoken-notice rule for the firm country.

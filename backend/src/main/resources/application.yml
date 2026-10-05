@@ -37,6 +37,14 @@ legalsuite:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
     publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  payfast:
+    merchant-id: ${PAYFAST_MERCHANT_ID:}
+    merchant-key: ${PAYFAST_MERCHANT_KEY:}
+    passphrase: ${PAYFAST_PASSPHRASE:}
+    env: ${PAYFAST_ENV:sandbox}
+    return-url: ${PAYFAST_RETURN_URL:}
+    cancel-url: ${PAYFAST_CANCEL_URL:}
+    notify-url: ${PAYFAST_NOTIFY_URL:}
   twilio:
     account-sid: ${TWILIO_ACCOUNT_SID:}
     auth-token: ${TWILIO_AUTH_TOKEN:}

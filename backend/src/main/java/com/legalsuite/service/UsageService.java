@@ -146,7 +146,7 @@ public class UsageService {
         m.put("whatsappCount", whatsappCount);
         m.put("total", total);
         m.put("lineItems", lines);
-        m.put("note", "Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email is not metered. A local number is optional at about R79 per month, or bundled. Card collection waits until Stripe keys are on the process. In-app calls are not billed.");
+        m.put("note", "Light is the monthly seat and includes section 86 trust. The seat is a PayFast subscription. Public-network minutes are a separate PayFast charge. SMS and WhatsApp stay on this preview. There is no minute bundle. Email is not metered. A local number is optional at about R79 per month, or bundled. In-app calls are not billed. Client invoices and trust are not this bill.");
         m.put("issued", existing == null ? null : view(existing));
         return m;
     }
