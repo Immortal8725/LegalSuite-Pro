@@ -4,36 +4,54 @@ import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
+import com.legalsuite.domain.DocumentFile;
 import com.legalsuite.domain.Expense;
 import com.legalsuite.domain.Invoice;
+import com.legalsuite.domain.InvoicePayment;
+import com.legalsuite.domain.InvoiceWriteOff;
 import com.legalsuite.domain.LegalCase;
+import com.legalsuite.domain.PaymentProof;
 import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.domain.TrustReconciliation;
 import com.legalsuite.domain.TrustTransaction;
 import com.legalsuite.repo.AppUserRepository;
+import com.legalsuite.repo.DocumentFileRepository;
 import com.legalsuite.repo.ExpenseRepository;
+import com.legalsuite.repo.InvoicePaymentRepository;
 import com.legalsuite.repo.InvoiceRepository;
+import com.legalsuite.repo.InvoiceWriteOffRepository;
 import com.legalsuite.repo.LegalCaseRepository;
+import com.legalsuite.repo.PaymentProofRepository;
 import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.TimeEntryRepository;
 import com.legalsuite.repo.TrustAccountRepository;
 import com.legalsuite.repo.TrustReconciliationRepository;
 import com.legalsuite.repo.TrustTransactionRepository;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FinanceService {
@@ -46,8 +64,17 @@ public class FinanceService {
     private final AppUserRepository users;
     private final LegalCaseRepository cases;
     private final TenantRepository tenants;
+    private final InvoicePaymentRepository payments;
+    private final InvoiceWriteOffRepository writeOffs;
+    private final PaymentProofRepository proofs;
+    private final DocumentFileRepository documents;
+    private final Path uploadRoot;
     private final Map<UUID, Instant> runningTimers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> timerCases = new ConcurrentHashMap<>();
+    private static final Set<String> CLIENT_METHODS = Set.of("cash", "eft", "card", "other");
+    private static final Set<String> PROOF_TYPES = Set.of("application/pdf", "image/jpeg", "image/png");
+    private static final Set<String> PROOF_EXT = Set.of("pdf", "jpg", "jpeg", "png");
+    private static final long PROOF_MAX_BYTES = 10L * 1024 * 1024;
 
     public FinanceService(
             TimeEntryRepository timeEntries,
@@ -58,7 +85,12 @@ public class FinanceService {
             TrustReconciliationRepository recons,
             AppUserRepository users,
             LegalCaseRepository cases,
-            TenantRepository tenants) {
+            TenantRepository tenants,
+            InvoicePaymentRepository payments,
+            InvoiceWriteOffRepository writeOffs,
+            PaymentProofRepository proofs,
+            DocumentFileRepository documents,
+            @Value("${legalsuite.upload-dir:./uploads}") String uploadDir) throws IOException {
         this.timeEntries = timeEntries;
         this.invoices = invoices;
         this.expenses = expenses;
@@ -68,6 +100,12 @@ public class FinanceService {
         this.users = users;
         this.cases = cases;
         this.tenants = tenants;
+        this.payments = payments;
+        this.writeOffs = writeOffs;
+        this.proofs = proofs;
+        this.documents = documents;
+        this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(this.uploadRoot);
     }
 
     public List<Map<String, Object>> timeEntries() {
@@ -225,14 +263,251 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> updateInvoice(UUID id, Map<String, Object> body) {
-        Invoice inv = invoices.findByIdAndTenantId(id, tid())
-                .orElseThrow(() -> ApiException.notFound("Invoice not found"));
-        if (body.get("status") != null) inv.setStatus(String.valueOf(body.get("status")));
-        if ("paid".equals(inv.getStatus())) {
-            inv.setAmountPaid(inv.getTotal());
+        Invoice inv = loadInvoice(id);
+        if (body.get("status") != null) {
+            String status = String.valueOf(body.get("status"));
+            if ("paid".equals(status)) {
+                return payInFull(id);
+            }
+            boolean moneyApplied = nz(inv.getAmountPaid()).signum() > 0 || nz(inv.getWriteOffAmount()).signum() > 0;
+            if ("sent".equals(status) && (moneyApplied || balanceDue(inv).signum() <= 0)) {
+                refreshStatus(inv);
+            } else {
+                inv.setStatus(status);
+            }
         }
         invoices.save(inv);
         return invoiceView(inv);
+    }
+
+    @Transactional
+    public Map<String, Object> payInFull(UUID id) {
+        requireStaff();
+        Invoice inv = loadInvoice(id);
+        BigDecimal due = balanceDue(inv);
+        if (due.signum() <= 0) {
+            throw ApiException.badRequest("Invoice has no balance due.");
+        }
+        return applyPayment(id, Map.of(
+                "amount", due.toPlainString(),
+                "method", "other",
+                "note", "Balance recorded as paid"), false, null);
+    }
+
+    @Transactional
+    public Map<String, Object> recordPayment(UUID id, Map<String, Object> body) {
+        requireStaff();
+        if (body == null || body.get("amount") == null || String.valueOf(body.get("amount")).isBlank()) {
+            throw ApiException.badRequest("amount is required");
+        }
+        return applyPayment(id, body, false, null);
+    }
+
+    @Transactional
+    public Map<String, Object> writeOff(UUID id, Map<String, Object> body) {
+        requireStaff();
+        if (body == null) body = Map.of();
+        Invoice inv = loadInvoice(id);
+        if ("void".equals(inv.getStatus())) {
+            throw ApiException.badRequest("A void invoice cannot be written off.");
+        }
+        BigDecimal due = balanceDue(inv);
+        if (due.signum() <= 0) {
+            throw ApiException.badRequest("Invoice has no balance due.");
+        }
+        BigDecimal amount = body.get("amount") == null || String.valueOf(body.get("amount")).isBlank()
+                ? due
+                : moneyAmount(body.get("amount"), "amount");
+        if (amount.compareTo(due) > 0) {
+            throw ApiException.badRequest("Write-off of " + amount.toPlainString()
+                    + " exceeds the balance due of " + due.toPlainString() + ".");
+        }
+        String reason = text(body.get("reason") != null ? body.get("reason") : body.get("note"));
+        if (reason.length() < 3) {
+            throw ApiException.badRequest("A write-off reason is required.");
+        }
+        InvoiceWriteOff row = new InvoiceWriteOff();
+        row.setTenantId(tid());
+        row.setInvoiceId(inv.getId());
+        row.setAmount(amount);
+        row.setReason(reason);
+        row.setCreatedBy(TenantContext.getUserId());
+        writeOffs.save(row);
+        inv.setWriteOffAmount(nz(inv.getWriteOffAmount()).add(amount).setScale(2, RoundingMode.HALF_UP));
+        inv.setWriteOffNote(reason);
+        inv.setWriteOffAt(row.getCreatedAt() == null ? Instant.now() : row.getCreatedAt());
+        inv.setWriteOffBy(row.getCreatedBy());
+        refreshStatus(inv);
+        invoices.save(inv);
+        return invoiceView(inv);
+    }
+
+    @Transactional
+    public Map<String, Object> applyTrustToInvoice(UUID id, Map<String, Object> body) {
+        requireStaff();
+        if (body == null || body.get("accountId") == null || String.valueOf(body.get("accountId")).isBlank()) {
+            throw ApiException.badRequest("Trust account is required.");
+        }
+        try {
+            UUID.fromString(String.valueOf(body.get("accountId")));
+        } catch (IllegalArgumentException e) {
+            throw ApiException.badRequest("Trust account is required.");
+        }
+        Invoice inv = loadInvoice(id);
+        if (inv.getClientId() == null) {
+            throw ApiException.badRequest("Invoice has no client, so trust cannot be applied.");
+        }
+        if ("void".equals(inv.getStatus())) {
+            throw ApiException.badRequest("A void invoice cannot take a trust transfer.");
+        }
+        BigDecimal due = balanceDue(inv);
+        if (due.signum() <= 0) {
+            throw ApiException.badRequest("Invoice has no balance due.");
+        }
+        BigDecimal amount = moneyAmount(body.get("amount"), "amount");
+        if (amount.compareTo(due) > 0) {
+            throw ApiException.badRequest("Payment of " + amount.toPlainString()
+                    + " exceeds the balance due of " + due.toPlainString() + ".");
+        }
+        Map<String, Object> move = new HashMap<>();
+        move.put("accountId", String.valueOf(body.get("accountId")));
+        move.put("type", "withdrawal");
+        move.put("amount", amount.toPlainString());
+        move.put("clientId", inv.getClientId().toString());
+        if (inv.getCaseId() != null) move.put("caseId", inv.getCaseId().toString());
+        String number = inv.getInvoiceNumber() == null ? inv.getId().toString() : inv.getInvoiceNumber();
+        move.put("description", "Trust applied to fee invoice " + number);
+        Map<String, Object> trust = trustMove(move, false);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> tx = (Map<String, Object>) trust.get("transaction");
+        Map<String, Object> pay = new HashMap<>();
+        pay.put("amount", amount.toPlainString());
+        pay.put("method", "trust");
+        pay.put("note", body.get("note") == null ? "Trust applied to fees" : body.get("note"));
+        pay.put("reference", tx.get("id"));
+        pay.put("trustTransactionId", tx.get("id"));
+        Map<String, Object> view = applyPayment(id, pay, true, null);
+        view.put("trustTransactionId", tx.get("id"));
+        return view;
+    }
+
+    @Transactional
+    public Map<String, Object> submitProof(UUID invoiceId, MultipartFile file, String amountRaw, String reference, String note) {
+        Invoice inv = loadInvoice(invoiceId);
+        assertCanSubmitProof(inv);
+        if ("void".equals(inv.getStatus())) {
+            throw ApiException.badRequest("A void invoice cannot take proof of payment.");
+        }
+        checkProofFile(file);
+        BigDecimal due = balanceDue(inv);
+        if (due.signum() <= 0) {
+            throw ApiException.badRequest("Invoice has no balance due.");
+        }
+        BigDecimal amount = amountRaw == null || amountRaw.isBlank() ? due : moneyAmount(amountRaw, "amount");
+        if (amount.compareTo(due) > 0) {
+            throw ApiException.badRequest("Amount claimed exceeds the balance due of " + due.toPlainString() + ".");
+        }
+        DocumentFile doc;
+        try {
+            doc = storeProof(inv, file);
+        } catch (IOException e) {
+            throw ApiException.badRequest("Could not store the proof of payment.");
+        }
+        PaymentProof proof = new PaymentProof();
+        proof.setTenantId(tid());
+        proof.setInvoiceId(inv.getId());
+        proof.setDocumentId(doc.getId());
+        proof.setAmountClaimed(amount);
+        proof.setReference(blankToNull(reference));
+        proof.setNote(blankToNull(note));
+        proof.setStatus("pending_review");
+        proof.setSubmittedBy(TenantContext.getUserId());
+        proofs.save(proof);
+        return proofView(proof, inv);
+    }
+
+    public List<Map<String, Object>> listProofs(String status) {
+        requireStaff();
+        List<PaymentProof> rows = status == null || status.isBlank()
+                ? proofs.findByTenantIdOrderBySubmittedAtDesc(tid())
+                : proofs.findByTenantIdAndStatusOrderBySubmittedAtAsc(tid(), status);
+        return rows.stream()
+                .map(p -> proofView(p, invoices.findByIdAndTenantId(p.getInvoiceId(), tid()).orElse(null)))
+                .toList();
+    }
+
+    @Transactional
+    public Map<String, Object> acceptProof(UUID proofId, Map<String, Object> body) {
+        requireStaff();
+        if (body == null) body = Map.of();
+        PaymentProof proof = loadProof(proofId);
+        if ("accepted".equals(proof.getStatus()) && proof.getPaymentId() != null) {
+            return getInvoice(proof.getInvoiceId());
+        }
+        if (!"pending_review".equals(proof.getStatus())) {
+            throw ApiException.badRequest("Only a proof waiting for review can be accepted.");
+        }
+        Invoice inv = loadInvoice(proof.getInvoiceId());
+        BigDecimal due = balanceDue(inv);
+        BigDecimal amount = body.get("amount") == null || String.valueOf(body.get("amount")).isBlank()
+                ? nz(proof.getAmountClaimed()).setScale(2, RoundingMode.HALF_UP)
+                : moneyAmount(body.get("amount"), "amount");
+        if (due.signum() <= 0 || amount.compareTo(due) > 0) {
+            throw ApiException.badRequest("Payment of " + amount.toPlainString()
+                    + " exceeds the balance due of " + due.toPlainString() + ".");
+        }
+        String method = String.valueOf(body.getOrDefault("method", "eft")).trim().toLowerCase(Locale.ROOT);
+        if (!CLIENT_METHODS.contains(method)) {
+            throw ApiException.badRequest("Method must be cash, eft, card, or other.");
+        }
+        Map<String, Object> pay = new HashMap<>();
+        pay.put("amount", amount.toPlainString());
+        pay.put("method", method);
+        pay.put("note", body.get("note") == null ? "Proof of payment accepted" : body.get("note"));
+        if (proof.getReference() != null) pay.put("reference", proof.getReference());
+        applyPayment(inv.getId(), pay, false, proof.getId());
+        proof.setStatus("accepted");
+        proof.setReviewedBy(TenantContext.getUserId());
+        proof.setReviewedAt(Instant.now());
+        if (body.get("note") != null && !String.valueOf(body.get("note")).isBlank()) {
+            proof.setReviewNote(String.valueOf(body.get("note")).trim());
+        }
+        payments.findByTenantIdAndProofId(tid(), proof.getId()).ifPresent(p -> proof.setPaymentId(p.getId()));
+        proofs.save(proof);
+        return invoiceView(loadInvoice(inv.getId()));
+    }
+
+    @Transactional
+    public Map<String, Object> rejectProof(UUID proofId, Map<String, Object> body) {
+        requireStaff();
+        PaymentProof proof = loadProof(proofId);
+        if (!"pending_review".equals(proof.getStatus())) {
+            throw ApiException.badRequest("Only a proof waiting for review can be rejected.");
+        }
+        String note = body == null ? "" : text(body.get("note"));
+        if (note.length() < 3) {
+            throw ApiException.badRequest("A rejection note is required.");
+        }
+        proof.setStatus("rejected");
+        proof.setReviewNote(note);
+        proof.setReviewedBy(TenantContext.getUserId());
+        proof.setReviewedAt(Instant.now());
+        proofs.save(proof);
+        return proofView(proof, loadInvoice(proof.getInvoiceId()));
+    }
+
+    public DocumentFile proofDocument(UUID id) {
+        PaymentProof proof = loadProofForRead(id);
+        return documents.findByIdAndTenantId(proof.getDocumentId(), tid())
+                .orElseThrow(() -> ApiException.notFound("Proof file not found"));
+    }
+
+    public Resource openProof(UUID id) {
+        DocumentFile doc = proofDocument(id);
+        if (doc.getStoragePath() == null || doc.getStoragePath().startsWith("seed://")) {
+            throw ApiException.notFound("Proof file not found");
+        }
+        return new FileSystemResource(doc.getStoragePath());
     }
 
     public List<Map<String, Object>> expenses() {
@@ -524,13 +799,293 @@ public class FinanceService {
         m.put("subtotal", i.getSubtotal());
         m.put("taxAmount", i.getTaxAmount());
         m.put("total", i.getTotal());
-        m.put("amountPaid", i.getAmountPaid());
-        m.put("balanceDue", i.getTotal().subtract(i.getAmountPaid() == null ? BigDecimal.ZERO : i.getAmountPaid()));
+        m.put("amountPaid", nz(i.getAmountPaid()));
+        m.put("writeOffAmount", nz(i.getWriteOffAmount()));
+        m.put("writeOffNote", i.getWriteOffNote());
+        m.put("writeOffAt", i.getWriteOffAt());
+        m.put("writeOffBy", i.getWriteOffBy());
+        m.put("balanceDue", balanceDue(i));
         m.put("lineItems", JsonLists.strings(i.getLineItemsJson()).isEmpty()
                 ? JsonLists.map("{\"items\":" + (i.getLineItemsJson() == null ? "[]" : i.getLineItemsJson()) + "}")
                 : List.of());
         m.put("rawLineItems", i.getLineItemsJson());
         m.put("notes", i.getNotes());
+        m.put("payments", payments.findByTenantIdAndInvoiceIdOrderByPaidAtAscCreatedAtAsc(tid(), i.getId()).stream()
+                .map(this::paymentView).toList());
+        m.put("writeOffs", writeOffs.findByTenantIdAndInvoiceIdOrderByCreatedAtAsc(tid(), i.getId()).stream()
+                .map(this::writeOffView).toList());
+        m.put("proofs", proofs.findByTenantIdAndInvoiceIdOrderBySubmittedAtDesc(tid(), i.getId()).stream()
+                .map(p -> proofView(p, i)).toList());
+        if (i.getClientId() != null && !"client".equalsIgnoreCase(TenantContext.getRole())) {
+            List<Map<String, Object>> accounts = new ArrayList<>();
+            BigDecimal available = BigDecimal.ZERO;
+            for (TrustAccount acct : trusts.findByTenantId(tid())) {
+                BigDecimal ledger = clientLedger(acct.getId(), i.getClientId());
+                Map<String, Object> row = new HashMap<>();
+                row.put("accountId", acct.getId());
+                row.put("accountName", acct.getAccountName());
+                row.put("clientLedger", ledger);
+                accounts.add(row);
+                available = available.add(ledger);
+            }
+            m.put("trustAccounts", accounts);
+            m.put("clientTrustAvailable", available);
+        }
+        return m;
+    }
+
+    private Map<String, Object> applyPayment(UUID id, Map<String, Object> body, boolean fromTrust, UUID proofId) {
+        Invoice inv = loadInvoice(id);
+        if ("void".equals(inv.getStatus())) {
+            throw ApiException.badRequest("A void invoice cannot take a payment.");
+        }
+        BigDecimal amount = moneyAmount(body.get("amount"), "amount");
+        BigDecimal due = balanceDue(inv);
+        if (due.signum() <= 0) {
+            throw ApiException.badRequest("Invoice has no balance due.");
+        }
+        if (amount.compareTo(due) > 0) {
+            throw ApiException.badRequest("Payment of " + amount.toPlainString()
+                    + " exceeds the balance due of " + due.toPlainString() + ".");
+        }
+        String method = String.valueOf(body.getOrDefault("method", "")).trim().toLowerCase(Locale.ROOT);
+        if (fromTrust) {
+            method = "trust";
+        } else if (!CLIENT_METHODS.contains(method)) {
+            throw ApiException.badRequest("Method must be cash, eft, card, or other.");
+        }
+        InvoicePayment payment = new InvoicePayment();
+        payment.setTenantId(tid());
+        payment.setInvoiceId(inv.getId());
+        payment.setAmount(amount);
+        payment.setMethod(method);
+        payment.setPaidAt(parsePaidAt(body.get("paidAt") != null ? body.get("paidAt") : body.get("date")));
+        payment.setNote(blankToNull(body.get("note")));
+        payment.setReference(blankToNull(body.get("reference")));
+        payment.setRecordedBy(TenantContext.getUserId());
+        if (body.get("trustTransactionId") != null && !String.valueOf(body.get("trustTransactionId")).isBlank()) {
+            payment.setTrustTransactionId(UUID.fromString(String.valueOf(body.get("trustTransactionId"))));
+        }
+        payment.setProofId(proofId);
+        payments.save(payment);
+        inv.setAmountPaid(nz(inv.getAmountPaid()).add(amount).setScale(2, RoundingMode.HALF_UP));
+        refreshStatus(inv);
+        invoices.save(inv);
+        return invoiceView(inv);
+    }
+
+    private void refreshStatus(Invoice inv) {
+        BigDecimal due = balanceDue(inv);
+        BigDecimal paid = nz(inv.getAmountPaid());
+        BigDecimal written = nz(inv.getWriteOffAmount());
+        if (due.signum() <= 0) {
+            inv.setStatus(written.signum() > 0 ? "write_off" : "paid");
+            return;
+        }
+        if (paid.signum() > 0 || written.signum() > 0) {
+            inv.setStatus("partial");
+            return;
+        }
+        if ("draft".equals(inv.getStatus()) || "void".equals(inv.getStatus())) {
+            return;
+        }
+        if (inv.getDateDue() != null && inv.getDateDue().isBefore(LocalDate.now())) {
+            inv.setStatus("overdue");
+            return;
+        }
+        inv.setStatus("sent");
+    }
+
+    private BigDecimal balanceDue(Invoice inv) {
+        BigDecimal due = nz(inv.getTotal()).subtract(nz(inv.getAmountPaid())).subtract(nz(inv.getWriteOffAmount()));
+        if (due.signum() < 0) due = BigDecimal.ZERO;
+        return due.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private Invoice loadInvoice(UUID id) {
+        return invoices.findByIdAndTenantId(id, tid())
+                .orElseThrow(() -> ApiException.notFound("Invoice not found"));
+    }
+
+    private PaymentProof loadProof(UUID id) {
+        return proofs.findByIdAndTenantId(id, tid())
+                .orElseThrow(() -> ApiException.notFound("Proof of payment not found"));
+    }
+
+    private PaymentProof loadProofForRead(UUID id) {
+        PaymentProof proof = loadProof(id);
+        if ("client".equalsIgnoreCase(TenantContext.getRole())) {
+            Invoice inv = loadInvoice(proof.getInvoiceId());
+            if (inv.getClientId() == null || !inv.getClientId().equals(TenantContext.requireUser())) {
+                throw ApiException.forbidden("You can only open proof on your own invoice.");
+            }
+        }
+        return proof;
+    }
+
+    private void assertCanSubmitProof(Invoice inv) {
+        if ("client".equalsIgnoreCase(TenantContext.getRole())) {
+            if (inv.getClientId() == null || !inv.getClientId().equals(TenantContext.requireUser())) {
+                throw ApiException.forbidden("You can only submit proof on your own invoice.");
+            }
+        }
+    }
+
+    private void requireStaff() {
+        if ("client".equalsIgnoreCase(TenantContext.getRole())) {
+            throw ApiException.forbidden("Client portal users cannot change fee invoices.");
+        }
+    }
+
+    private DocumentFile storeProof(Invoice inv, MultipartFile file) throws IOException {
+        Path dir = uploadRoot.resolve(tid().toString());
+        Files.createDirectories(dir);
+        String stored = UUID.randomUUID() + "-" + safeName(file.getOriginalFilename());
+        Path dest = dir.resolve(stored).normalize();
+        if (!dest.startsWith(uploadRoot)) {
+            throw ApiException.badRequest("Invalid file name.");
+        }
+        file.transferTo(dest.toFile());
+        DocumentFile doc = new DocumentFile();
+        doc.setTenantId(tid());
+        doc.setCaseId(inv.getCaseId());
+        doc.setClientId(inv.getClientId());
+        doc.setUploadedBy(TenantContext.getUserId());
+        doc.setName(safeName(file.getOriginalFilename()));
+        doc.setOriginalName(file.getOriginalFilename());
+        doc.setCategory("proof_of_payment");
+        String mime = file.getContentType() == null ? "application/octet-stream" : file.getContentType();
+        doc.setMimeType(mime);
+        doc.setSizeBytes(file.getSize());
+        doc.setStoragePath(dest.toString());
+        return documents.save(doc);
+    }
+
+    private void checkProofFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw ApiException.badRequest("Choose a PDF, JPEG, or PNG to upload.");
+        }
+        if (file.getSize() > PROOF_MAX_BYTES) {
+            throw ApiException.badRequest("Proof of payment must be 10 MB or smaller.");
+        }
+        String ext = extension(file.getOriginalFilename());
+        String mime = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT).trim();
+        int semi = mime.indexOf(';');
+        if (semi >= 0) mime = mime.substring(0, semi).trim();
+        boolean typeOk = PROOF_TYPES.contains(mime);
+        boolean extOk = PROOF_EXT.contains(ext);
+        if (!extOk || (!typeOk && !mime.isBlank() && !"application/octet-stream".equals(mime))) {
+            throw ApiException.badRequest("Proof of payment must be a PDF, JPEG, or PNG.");
+        }
+    }
+
+    private static String extension(String name) {
+        String safe = safeName(name);
+        int dot = safe.lastIndexOf('.');
+        if (dot < 0 || dot == safe.length() - 1) return "";
+        return safe.substring(dot + 1).toLowerCase(Locale.ROOT);
+    }
+
+    private static String safeName(String original) {
+        String name = original == null ? "proof" : original;
+        int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+        if (slash >= 0) name = name.substring(slash + 1);
+        name = name.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (name.isBlank() || ".".equals(name) || "..".equals(name)) name = "proof";
+        if (name.length() > 120) name = name.substring(name.length() - 120);
+        return name;
+    }
+
+    private BigDecimal moneyAmount(Object raw, String field) {
+        if (raw == null || String.valueOf(raw).isBlank()) {
+            throw ApiException.badRequest(field + " is required");
+        }
+        BigDecimal value;
+        try {
+            value = new BigDecimal(String.valueOf(raw).trim());
+        } catch (NumberFormatException e) {
+            throw ApiException.badRequest(field + " must be a number");
+        }
+        value = value.setScale(2, RoundingMode.HALF_UP);
+        if (value.signum() <= 0) {
+            throw ApiException.badRequest(field + " must be greater than zero");
+        }
+        return value;
+    }
+
+    private LocalDate parsePaidAt(Object raw) {
+        if (raw == null || String.valueOf(raw).isBlank()) return LocalDate.now();
+        try {
+            String text = String.valueOf(raw).trim();
+            return LocalDate.parse(text.length() >= 10 ? text.substring(0, 10) : text);
+        } catch (Exception e) {
+            throw ApiException.badRequest("Payment date must be YYYY-MM-DD.");
+        }
+    }
+
+    private static String text(Object raw) {
+        return raw == null ? "" : String.valueOf(raw).trim();
+    }
+
+    private static String blankToNull(Object raw) {
+        if (raw == null) return null;
+        String value = String.valueOf(raw).trim();
+        return value.isEmpty() ? null : value;
+    }
+
+    private Map<String, Object> paymentView(InvoicePayment p) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", p.getId());
+        m.put("invoiceId", p.getInvoiceId());
+        m.put("amount", p.getAmount());
+        m.put("method", p.getMethod());
+        m.put("paidAt", p.getPaidAt());
+        m.put("note", p.getNote());
+        m.put("reference", p.getReference());
+        m.put("recordedBy", p.getRecordedBy());
+        m.put("trustTransactionId", p.getTrustTransactionId());
+        m.put("proofId", p.getProofId());
+        m.put("createdAt", p.getCreatedAt());
+        return m;
+    }
+
+    private Map<String, Object> writeOffView(InvoiceWriteOff row) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", row.getId());
+        m.put("invoiceId", row.getInvoiceId());
+        m.put("amount", row.getAmount());
+        m.put("reason", row.getReason());
+        m.put("createdBy", row.getCreatedBy());
+        m.put("createdAt", row.getCreatedAt());
+        return m;
+    }
+
+    private Map<String, Object> proofView(PaymentProof proof, Invoice inv) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", proof.getId());
+        m.put("invoiceId", proof.getInvoiceId());
+        m.put("documentId", proof.getDocumentId());
+        m.put("amountClaimed", proof.getAmountClaimed());
+        m.put("reference", proof.getReference());
+        m.put("note", proof.getNote());
+        m.put("status", proof.getStatus());
+        m.put("submittedBy", proof.getSubmittedBy());
+        m.put("submittedAt", proof.getSubmittedAt());
+        m.put("reviewedBy", proof.getReviewedBy());
+        m.put("reviewedAt", proof.getReviewedAt());
+        m.put("reviewNote", proof.getReviewNote());
+        m.put("paymentId", proof.getPaymentId());
+        if (inv != null) {
+            m.put("invoiceNumber", inv.getInvoiceNumber());
+            m.put("clientId", inv.getClientId());
+            m.put("balanceDue", balanceDue(inv));
+            m.put("invoiceStatus", inv.getStatus());
+        }
+        documents.findByIdAndTenantId(proof.getDocumentId(), tid()).ifPresent(doc -> {
+            m.put("fileName", doc.getOriginalName() == null ? doc.getName() : doc.getOriginalName());
+            m.put("mimeType", doc.getMimeType());
+            m.put("sizeBytes", doc.getSizeBytes());
+        });
         return m;
     }
 

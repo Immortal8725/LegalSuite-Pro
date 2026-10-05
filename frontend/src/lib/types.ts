@@ -177,6 +177,52 @@ export type TimeRow = {
   source?: string;
 };
 
+export type InvoicePayment = {
+  id: Id;
+  amount: number;
+  method: string;
+  paidAt?: string;
+  note?: string;
+  reference?: string;
+  recordedBy?: Id;
+  trustTransactionId?: Id;
+  proofId?: Id;
+  createdAt?: string;
+};
+
+export type InvoiceWriteOff = {
+  id: Id;
+  amount: number;
+  reason: string;
+  createdBy?: Id;
+  createdAt?: string;
+};
+
+export type PaymentProof = {
+  id: Id;
+  invoiceId: Id;
+  documentId?: Id;
+  amountClaimed: number;
+  reference?: string;
+  note?: string;
+  status: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+  paymentId?: Id;
+  invoiceNumber?: string;
+  clientId?: Id;
+  balanceDue?: number;
+  fileName?: string;
+  mimeType?: string;
+};
+
+export type InvoiceTrustAccount = {
+  accountId: Id;
+  accountName?: string;
+  clientLedger: number;
+};
+
 export type Invoice = {
   id: Id;
   invoiceNumber: string;
@@ -189,9 +235,16 @@ export type Invoice = {
   taxAmount?: number;
   total: number;
   amountPaid?: number;
+  writeOffAmount?: number;
+  writeOffNote?: string;
   balanceDue?: number;
   rawLineItems?: string;
   notes?: string;
+  payments?: InvoicePayment[];
+  writeOffs?: InvoiceWriteOff[];
+  proofs?: PaymentProof[];
+  clientTrustAvailable?: number;
+  trustAccounts?: InvoiceTrustAccount[];
 };
 
 export type Expense = {
