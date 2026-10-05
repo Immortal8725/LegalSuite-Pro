@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "LegalSuite Pro",
-  description: "Cases, clients, billing, trust accounting, voice calling, and a live firm website.",
+  description: "Practice desk for a solo South African attorney. Light is R1,199 per month. The phone is pay-what-you-use.",
   manifest: "/manifest.json",
   themeColor: "#1a365d",
   appleWebApp: {

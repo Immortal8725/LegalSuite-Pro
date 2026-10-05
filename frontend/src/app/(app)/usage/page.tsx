@@ -10,9 +10,11 @@ import { moneyExact } from "@/lib/utils";
 type Line = { kind: string; description: string; amount: number };
 type Preview = {
   period: string;
+  seatSubtotal?: number;
   modulesSubtotal: number;
   pstnSubtotal: number;
   pstnMinutes: number;
+  didMonthly?: number;
   total: number;
   lineItems: Line[];
   note: string;
@@ -49,7 +51,7 @@ export default function UsagePage() {
     <div>
       <PageHeader
         title="Month-end usage"
-        subtitle="The desk is cheap. Add-on modules and PSTN minutes invoice when the month closes. In-app WebRTC is always $0."
+        subtitle="Light is the monthly seat and includes section 86 trust. This page adds public-network minutes, which are pay-what-you-use. There is no minute bundle."
       />
       <ErrorBanner error={error} />
       {preview && (
@@ -71,13 +73,17 @@ export default function UsagePage() {
           </CardHeader>
           <CardBody>
             <p className="mb-4 text-sm text-slate-500">{preview.note}</p>
-            <div className="mb-4 grid gap-4 sm:grid-cols-3">
+            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <p className="text-xs text-slate-400">Add-on modules</p>
+                <p className="text-xs text-slate-400">Light seat</p>
+                <p className="text-xl font-extrabold text-navy">{moneyExact(preview.seatSubtotal ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Add-ons outside the seat</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.modulesSubtotal)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">PSTN ({preview.pstnMinutes} min)</p>
+                <p className="text-xs text-slate-400">Phone ({preview.pstnMinutes} min, no bundle)</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.pstnSubtotal)}</p>
               </div>
               <div>
@@ -110,7 +116,7 @@ export default function UsagePage() {
         </CardHeader>
         <CardBody className="p-0">
           {history.length === 0 ? (
-            <p className="p-5 text-sm text-slate-500">None issued yet. Preview above is live from toggled modules and PSTN this month.</p>
+            <p className="p-5 text-sm text-slate-500">None issued yet. The preview is the Light seat plus public-network minutes used this month. A local number is about R79 if you take one, or bundled if the operator includes it.</p>
           ) : (
             <TableWrap>
               <thead>

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,8 @@ public class VoiceService {
     private final TwilioProperties twilioProps;
     private final AuditService audit;
     private final SecureRandom random = new SecureRandom();
+    private final BigDecimal outboundPerMinute;
+    private final BigDecimal inboundPerMinute;
     private final Map<String, List<Map<String, Object>>> inbox = new ConcurrentHashMap<>();
 
     public VoiceService(
@@ -63,7 +66,9 @@ public class VoiceService {
             LegalCaseRepository cases,
             TwilioGateway twilio,
             TwilioProperties twilioProps,
-            AuditService audit) {
+            AuditService audit,
+            @Value("${legalsuite.pstn.outbound-per-minute:}") String outboundPerMinute,
+            @Value("${legalsuite.pstn.inbound-per-minute:}") String inboundPerMinute) {
         this.calls = calls;
         this.timeEntries = timeEntries;
         this.users = users;
@@ -74,6 +79,8 @@ public class VoiceService {
         this.twilio = twilio;
         this.twilioProps = twilioProps;
         this.audit = audit;
+        this.outboundPerMinute = rateOrZero(outboundPerMinute);
+        this.inboundPerMinute = rateOrZero(inboundPerMinute);
     }
 
     public List<Map<String, Object>> history() {
@@ -132,7 +139,7 @@ public class VoiceService {
             n.setUserId(rec.getCallerUserId());
             n.setTitle(rec.isRecordingEnabled() ? "Call recording (opt-in)" : "Call on the matter");
             StringBuilder bodyText = new StringBuilder();
-            bodyText.append("Duration ").append(seconds).append("s. WebRTC is free; PSTN invoices at month end.");
+            bodyText.append("Duration ").append(seconds).append("s. In-app calls are not billed. Public-network minutes are pay-what-you-use.");
             if (rec.isRecordingEnabled()) {
                 bodyText.append(" Recording: opt-in, consent logged.");
             }
@@ -173,23 +180,35 @@ public class VoiceService {
         List<CallRecord> all = calls.findByTenantIdOrderByStartedAtDesc(tid());
         int webrtc = 0;
         int pstn = 0;
+        int pstnSeconds = 0;
         int seconds = 0;
         BigDecimal cost = BigDecimal.ZERO;
         for (CallRecord c : all) {
             seconds += c.getDurationSeconds();
             cost = cost.add(c.getTotalCost() == null ? BigDecimal.ZERO : c.getTotalCost());
             if ("webrtc".equals(c.getCallType())) webrtc++;
-            else pstn++;
+            else {
+                pstn++;
+                pstnSeconds += Math.max(0, c.getDurationSeconds());
+            }
         }
-        return Map.of(
-                "totalCalls", all.size(),
-                "webrtcCalls", webrtc,
-                "pstnCalls", pstn,
-                "totalMinutes", Math.round(seconds / 60.0),
-                "totalCost", cost,
-                "includedMinutes", 1000,
-                "overageMinutes", 0,
-                "note", "In-app WebRTC calls are free. PSTN minutes invoice at month end.");
+        int pstnMinutes = Math.max(0, pstnSeconds) / 60;
+        boolean rateSet = outboundPerMinute.signum() > 0 || inboundPerMinute.signum() > 0;
+        String note = rateSet
+                ? "Public-network minutes are pay-what-you-use at the rate configured on this process. No minute bundle is included. In-app calls are not billed."
+                : "Public-network minutes are pay-what-you-use. No minute bundle is included. The per-minute rate is not set, so new public-network calls record duration at zero cost until LEGALSUITE_PSTN_OUTBOUND_PER_MIN and LEGALSUITE_PSTN_INBOUND_PER_MIN are set from the carrier price. In-app calls are not billed.";
+        Map<String, Object> m = new HashMap<>();
+        m.put("totalCalls", all.size());
+        m.put("webrtcCalls", webrtc);
+        m.put("pstnCalls", pstn);
+        m.put("totalMinutes", Math.round(seconds / 60.0));
+        m.put("totalCost", cost);
+        m.put("includedMinutes", Pricing.INCLUDED_PSTN_MINUTES);
+        m.put("billablePstnMinutes", pstnMinutes);
+        m.put("rateConfigured", rateSet);
+        m.put("didMonthly", Pricing.DID_MONTHLY_ZAR);
+        m.put("note", note);
+        return m;
     }
 
     public Map<String, Object> ethics() {
@@ -417,10 +436,20 @@ public class VoiceService {
         return queued == null ? List.of() : new ArrayList<>(queued);
     }
 
+    static BigDecimal rateOrZero(String raw) {
+        if (raw == null || raw.isBlank()) return BigDecimal.ZERO;
+        try {
+            BigDecimal parsed = new BigDecimal(raw.trim());
+            return parsed.signum() < 0 ? BigDecimal.ZERO : parsed;
+        } catch (NumberFormatException ex) {
+            return BigDecimal.ZERO;
+        }
+    }
+
     private BigDecimal costFor(String type) {
         return switch (type) {
-            case "pstn_outbound" -> new BigDecimal("0.02");
-            case "pstn_inbound" -> new BigDecimal("0.01");
+            case "pstn_outbound" -> outboundPerMinute;
+            case "pstn_inbound" -> inboundPerMinute;
             default -> BigDecimal.ZERO;
         };
     }

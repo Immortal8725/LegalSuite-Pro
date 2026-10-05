@@ -66,7 +66,7 @@ class VoicePstnTest {
         props.setAccountSid("AC1234567890");
         props.setAuthToken("test-auth-token");
         props.setPublicBaseUrl("https://example.com");
-        voice = new VoiceService(calls, timeEntries, users, tenants, notes, firmNumbers, cases, twilio, props, audit);
+        voice = new VoiceService(calls, timeEntries, users, tenants, notes, firmNumbers, cases, twilio, props, audit, "", "");
         TenantContext.setTenantId(tenantId);
         TenantContext.setUserId(userId);
         TenantContext.setRole("attorney");

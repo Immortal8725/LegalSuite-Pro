@@ -1,6 +1,6 @@
 # LegalSuite Pro
 
-Multi-tenant practice platform for law firms. A firm registers once, receives a public website and intake form, then turns modules on as the docket grows. In-app WebRTC voice is free. PSTN minutes and add-on modules invoice at month end.
+Practice system for a solo South African attorney. Light is **R1,199 per month for one attorney** and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about **R79 per month**, or bundled when the operator includes it.
 
 This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md).
 
@@ -42,13 +42,61 @@ cd frontend && npm install && npm run dev -- -p 43123 -H 0.0.0.0
 
 H2 console: `http://127.0.0.1:18081/h2-console` (JDBC URL `jdbc:h2:mem:legalsuite`).
 
+Health: `GET http://127.0.0.1:18081/api/v1/health` returns `{ success, data: { status, database, databaseUp } }`. It does not include secrets or the JDBC URL.
+
 The Next.js dev server rewrites `/api/*` to the Spring Boot process.
+
+## Hosted deploy
+
+The demo boots on in-memory H2 and drops data when the process stops. A pilot host uses Postgres. TLS, the domain name, Stripe, and Twilio are still things a person does.
+
+1. Copy the template and edit it on the host. Do not commit the result.
+
+```bash
+cp .env.example .env
+```
+
+Set `LEGALSUITE_JWT_SECRET` to a unique string of at least 32 characters, and set `DB_PASSWORD` to something other than the laptop default. Leave Twilio and Stripe blank until those accounts exist. Leave the per-minute rates blank until the carrier price is known. A blank rate records duration at zero cost. It is not a free minute bundle.
+
+2. Start Postgres and wait until it is healthy.
+
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+3. Run the API on the Postgres profile. The profile refuses to start if the JWT secret is missing or still the development value from `application.yml`.
+
+```bash
+set -a && source .env && set +a
+cd backend && ./mvnw -DskipTests spring-boot:run
+```
+
+`DATABASE_URL` defaults to `jdbc:postgresql://127.0.0.1:5432/legalsuite` when `SPRING_PROFILES_ACTIVE=postgres`.
+
+4. Run the web app with the API origin the browser should use.
+
+```bash
+cd frontend && npm install && NEXT_PUBLIC_API_URL=http://127.0.0.1:18081 npm run build && npm start
+```
+
+5. Check the process.
+
+```bash
+curl -fsS http://127.0.0.1:18081/api/v1/health
+```
+
+`data.database` must be `postgres` and `data.databaseUp` must be true. Put TLS in front of both ports before any client uses the host. Do not expose the H2 console. The Postgres profile turns the H2 console off.
+
+### All-in Docker (optional)
+
+`docker compose --profile hosted up --build` builds the API and the web image and starts them with Postgres. It requires `LEGALSUITE_JWT_SECRET` in `.env`. The web container rewrites `/api` to `http://api:18081`. Publish that through your TLS proxy on port 3000. This path is for a single host. It is not a multi-region deploy.
 
 ## What shipped (all eight phases)
 
 1. **Foundation.** JWT auth, tenant isolation, firm registration, onboarding, and the app shell.
 2. **Landing and practice.** Public site, intake, cases, clients, contacts, documents, calendar, and tasks.
-3. **Financial.** Timers, invoices, IOLTA trust (no overdraw), and expenses. Usage add-ons stay on the month-end invoice.
+3. **Financial.** Timers, invoices, section 86 / IOLTA trust (no overdraw), and expenses. Trust is in the Light seat. Public-network minutes are the usage bill.
 4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), call registry, and recording opt-in. PSTN minutes are recorded for invoicing. Emergency numbers stay on the device dialer.
 5. **Advanced.** Conflicts, reports, module toggles, team, settings, and global search.
 6. **Mobile.** Responsive web and a PWA. Flutter client in `mobile/` (`flutter run` after `flutter create .`).
@@ -72,7 +120,7 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 - Voice: WebSocket `/ws/signal` for in-app WebRTC. Public-network calls use a Twilio callback bridge. See [Public network calls](#public-network-calls). Do not commit Twilio secrets.
 - Mobile: Flutter (Dart) against `/api/v1`
 
-Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) and put the API behind TLS. TOTP 2FA is in Settings; demo users stay without it so `password` still works. The UI can publish to Vercel; the Java API needs a JVM host.
+The hosted path is Postgres (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) behind TLS that you terminate. TOTP is in Settings. Demo users stay without it so `password` still works. Do not treat that as forced 2FA.
 
 ## Public network calls
 
@@ -86,6 +134,8 @@ Set these on the API process. Names and an empty template are in `backend/.env.e
 | `TWILIO_AUTH_TOKEN` | yes | API auth. Never stored in the app |
 | `TWILIO_PUBLIC_BASE_URL` | yes | Public https origin Twilio uses for the bridge and status webhooks |
 | `TWILIO_VOICE_FROM` | no | E.164 number this account already owns or has verified, used when the firm has no saved caller ID |
+| `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` | no | Carrier rate per outbound minute. Blank records duration at zero cost. It is not a free bundle. |
+| `LEGALSUITE_PSTN_INBOUND_PER_MIN` | no | Carrier rate per inbound minute. Same blank-rate rule. |
 
 No IncomingPhoneNumber purchase is required. No South Africa End-User or regulatory bundle is required for this path.
 

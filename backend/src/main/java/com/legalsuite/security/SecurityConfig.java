@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/intake/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/sign/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sign/**").permitAll()
-                        .requestMatchers("/api/v1/plans", "/api/v1/modules")
+                        .requestMatchers("/api/v1/plans", "/api/v1/modules", "/api/v1/health")
                         .permitAll()
                         .requestMatchers("/api/v1/portal/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/voice/twilio/**").permitAll()

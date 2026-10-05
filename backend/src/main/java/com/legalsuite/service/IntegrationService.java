@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntegrationService {
     private static final List<Map<String, String>> CATALOG = List.of(
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
-                    "description", "Card payments on invoices. Connect in production with a restricted key. The local demo stores the toggle only."),
+                    "description", "Subscriptions and usage invoices. The toggle does not store a card or a secret. Live keys belong in the environment."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
                     "description", "Dial out on the public network. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. Credentials stay in the server environment. This toggle does not store a password."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",
@@ -32,11 +32,17 @@ public class IntegrationService {
     private final ConnectedIntegrationRepository integrations;
     private final AuditService audit;
     private final TwilioProperties twilio;
+    private final OperatorCredentials credentials;
 
-    public IntegrationService(ConnectedIntegrationRepository integrations, AuditService audit, TwilioProperties twilio) {
+    public IntegrationService(
+            ConnectedIntegrationRepository integrations,
+            AuditService audit,
+            TwilioProperties twilio,
+            OperatorCredentials credentials) {
         this.integrations = integrations;
         this.audit = audit;
         this.twilio = twilio;
+        this.credentials = credentials;
     }
 
     public boolean isConnected(String provider) {
@@ -55,6 +61,7 @@ public class IntegrationService {
             ConnectedIntegration saved = byProvider.get(item.get("provider"));
             boolean connected = saved != null && saved.isConnected();
             row.put("connected", connected);
+            row.put("liveCredentialsPresent", credentials.live(item.get("provider")));
             row.put("statusNote", saved == null ? "Not connected" : saved.getStatusNote());
             row.put("connectedAt", saved == null ? null : saved.getConnectedAt());
             if ("twilio".equals(item.get("provider"))) {
@@ -88,6 +95,8 @@ public class IntegrationService {
                 row.setStatusNote(twilio.configured()
                         ? "Connected. Credentials stay in the server environment, not in this database."
                         : "Toggle saved. Add TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN on the server before a real call can leave the firm.");
+            } else if ("stripe".equals(slug) && !credentials.stripeLive()) {
+                row.setStatusNote("Preference saved. Live keys are not on this process. Set them in the environment. Do not paste secrets into the app.");
             } else {
                 row.setStatusNote("Connected in this workspace. Live credentials are not required for the local demo.");
             }

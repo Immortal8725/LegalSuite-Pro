@@ -55,8 +55,8 @@ export default function DashboardPage() {
         title="Docket"
         subtitle={
           za
-            ? `${user?.firstName}, South African clocks first: RAF, Act 40 notice, CCMA, prescription, and consults not yet mandated.`
-            : `${user?.firstName}, Texas clocks first. SOL, TTCA notice, and consults that have not been retained yet.`
+            ? `${user?.firstName}, South African clocks first. RAF, Act 40 notice, CCMA, prescription, and consults not yet mandated. The attorney remains responsible.`
+            : `${user?.firstName}, Texas clocks first. Limitations, governmental notice, and consults that have not been retained yet. The attorney remains responsible.`
         }
         actions={
           <div className="flex gap-2">

@@ -217,7 +217,11 @@ public class TenantService {
         m.put("priceMonthly", p.getPriceMonthly());
         m.put("maxUsers", p.getMaxUsers());
         m.put("maxCases", p.getMaxCases());
-        m.put("includedVoiceMinutes", p.getIncludedVoiceMinutes());
+        m.put("includedVoiceMinutes", Pricing.capIncludedMinutes(p.getIncludedVoiceMinutes()));
+        m.put("currency", "ZAR");
+        m.put("phoneBilling", "pay-what-you-use");
+        m.put("didMonthly", Pricing.DID_MONTHLY_ZAR);
+        m.put("trustIncluded", true);
         m.put("features", JsonLists.map(p.getFeaturesJson()));
         return m;
     }

@@ -88,7 +88,9 @@ Accounts. One tenant per firm slug. You keep credentials confidential. TOTP is a
 
 Your data. You own the matter files. You licence us to host them to provide the service.
 
-No legal advice. Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. Fitness scores are a checklist, not an LPC audit.
+No legal advice. Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. The attorney remains responsible. Fitness scores are a checklist, not an LPC audit.
+
+Fees. Light is R1,199 per month for one attorney and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled.
 
 Liability. To the extent permitted by the CPA and other mandatory law, liability is capped at fees paid in the three months before the claim. We are not liable for missed prescription, an uncertified recon, or a claim the Fund rejects.
 
