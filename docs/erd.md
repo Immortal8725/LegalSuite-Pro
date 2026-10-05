@@ -21,6 +21,7 @@ erDiagram
     TENANT ||--o{ EXPENSE : advances
     TENANT ||--o{ CONVERSATION : threads
     TENANT ||--o{ CALL_RECORD : records
+    TENANT ||--o{ OUTBOUND_MESSAGE : sends
     TENANT ||--o{ FIRM_PHONE_NUMBER : presents
     TENANT ||--o{ LEAD : intakes
     TENANT ||--o{ CONFLICT_CHECK : searches
@@ -109,6 +110,14 @@ erDiagram
         string kind
         string status
     }
+    OUTBOUND_MESSAGE {
+        uuid id PK
+        uuid tenant_id FK
+        uuid case_id FK
+        string channel
+        string status
+        decimal unit_cost
+    }
     SIGNATURE_REQUEST {
         uuid id PK
         uuid tenant_id FK
@@ -128,4 +137,4 @@ erDiagram
 - `RefreshToken` is omitted from the diagram; it is an auth satellite of `APP_USER`.
 - Seed documents may use a `seed://` storage key and are not downloadable until a real file is uploaded.
 - Landing pages are 1:1 with tenant (`LANDING_PAGE.tenant_id` unique in practice).
-- `USAGE_INVOICE` is the month-end bill to LegalSuite (modules + PSTN), separate from client `INVOICE` rows.
+- `USAGE_INVOICE` is the month-end bill to LegalSuite (modules + PSTN + SMS + WhatsApp), separate from client `INVOICE` rows.

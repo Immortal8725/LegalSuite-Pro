@@ -18,7 +18,7 @@ public class IntegrationService {
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
                     "description", "Subscriptions and usage invoices. The toggle does not store a card or a secret. Live keys belong in the environment."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
-                    "description", "Dial out on the public network. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. Credentials stay in the server environment. This toggle does not store a password."),
+                    "description", "Public-network calls, SMS, and WhatsApp. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. A verified landline cannot send SMS. Credentials stay in the server environment. This toggle does not store a password."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",
                     "description", "Two-way hearings and deadlines. OAuth is mocked locally."),
             Map.of("provider", "dropbox", "name", "Dropbox", "category", "documents",

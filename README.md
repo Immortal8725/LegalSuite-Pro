@@ -97,7 +97,7 @@ curl -fsS http://127.0.0.1:18081/api/v1/health
 1. **Foundation.** JWT auth, tenant isolation, firm registration, onboarding, and the app shell.
 2. **Landing and practice.** Public site, intake, cases, clients, contacts, documents, calendar, and tasks.
 3. **Financial.** Timers, invoices, section 86 / IOLTA trust (no overdraw), and expenses. Trust is in the Light seat. Public-network minutes are the usage bill.
-4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), call registry, and recording opt-in. PSTN minutes are recorded for invoicing. Emergency numbers stay on the device dialer.
+4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), SMS, WhatsApp, and email, call registry, and recording opt-in. PSTN minutes, SMS, and WhatsApp are recorded for invoicing. Email through the firm's SMTP server is not metered. Emergency numbers stay on the device dialer and are refused for SMS.
 5. **Advanced.** Conflicts, reports, module toggles, team, settings, and global search.
 6. **Mobile.** Responsive web and a PWA. Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **Assistant and integrations.** Staff draft help on the matter workspace and on `/ai` (summarize, draft, intake screen, and questions about the file). Answers are drafts. The attorney remains responsible. The default stays on the tenant. `LEGALSUITE_AI_PROVIDER=openai|anthropic` plus `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` opts into a model vendor for a single matter. A missing key falls back on the tenant. Also includes document merge templates, built-in e-sign, the connect/disconnect hub, and the audit log.
@@ -117,7 +117,7 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 
 - Frontend: Next.js 15, React 19, Tailwind, shadcn-style primitives
 - Backend: Spring Boot 3.4, Java 21, JPA, H2 (local), JWT (jjwt)
-- Voice: WebSocket `/ws/signal` for in-app WebRTC. Public-network calls use a Twilio callback bridge. See [Public network calls](#public-network-calls). Do not commit Twilio secrets.
+- Voice and messages: WebSocket `/ws/signal` for in-app WebRTC. Public-network calls use a Twilio callback bridge. See [Public network calls](#public-network-calls). SMS and WhatsApp use the same Twilio client (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`). Email uses SMTP. Do not commit those values. See [Test SMS, WhatsApp, and email](#test-sms-whatsapp-and-email).
 - Mobile: Flutter (Dart) against `/api/v1`
 
 The hosted path is Postgres (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) behind TLS that you terminate. TOTP is in Settings. Demo users stay without it so `password` still works. Do not treat that as forced 2FA.
@@ -151,6 +151,40 @@ When Place call leaves caller ID on Automatic, resolution order is:
 An upgraded Twilio account no longer has the free trial From number. Verify a personal mobile or landline in Voice Calls, or set `TWILIO_VOICE_FROM`. A trial account, if one is still in use, can only call destinations Twilio has already verified. An upgraded account can call any number the account's geo permissions allow.
 
 Also connect the Twilio toggle on Integrations. That toggle does not store a password. Emergency numbers stay on the device dialer. Recording stays opt-in. Matter calls still write a time entry and PSTN minutes still roll into the usage invoice.
+
+## Test SMS, WhatsApp, and email
+
+Copy `.env.example` to a file the process can read, or export the variables in the shell. Do not commit real values.
+
+Connect Twilio on Integrations. That toggle does not store a password.
+
+### SMS
+
+1. Set `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN`.
+2. Set `TWILIO_SMS_FROM` to a Twilio number that can send SMS, or rent a local number on Voice calls. A verified landline cannot send SMS. A trial account can only text verified destination numbers.
+3. Sign in as `thabo@ndlovulaw.co.za` / `password` on firm `ndlovu-partners`.
+4. Open Voice calls, or matter C-2001, or Message on Nomsa Khumalo's client row.
+5. Send a short SMS to a verified mobile. The attempt is on the firm audit log and, if Twilio accepts it, on the month-end usage invoice.
+
+Without those variables the form shows the missing-credential error beside Send SMS. `10111` and other emergency numbers are refused.
+
+### WhatsApp
+
+Uses the same Twilio account.
+
+1. Leave `TWILIO_WHATSAPP_FROM` blank to use the sandbox sender `+1 415 523 8886`, or set it to your WhatsApp-enabled sender (`whatsapp:+E164` or `+E164`).
+2. In the Twilio console, open Messaging, try WhatsApp, and copy the sandbox join phrase (it looks like `join two-words`).
+3. From the handset that should receive the test, send that phrase to `+1 415 523 8886` on WhatsApp. Wait for the sandbox confirmation.
+4. Send a freeform message from the same form. Freeform works for 24 hours after the recipient messages the sandbox. After that, send an approved template: paste the content SID (`HX` plus 32 hex characters) and optional variables JSON such as `{"1":"Nomsa"}`.
+5. A trial account still only reaches numbers you have verified, and the recipient must have joined the sandbox.
+
+### Email
+
+1. Set `SMTP_HOST`, `SMTP_PORT` (587 for STARTTLS, 465 for SSL), `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`.
+2. Send from the matter or the client row. The message leaves through that server.
+3. With `SMTP_HOST` empty, Send becomes Log email. The row is stored as a dry run, the API log prints the recipient, subject, and a short body, and nothing is delivered. The amber note beside the button says so.
+
+`LEGALSUITE_SMS_UNIT_COST` and `LEGALSUITE_WHATSAPP_UNIT_COST` are the pay-what-you-use prices on the usage invoice. A blank price records the send at zero. It is not a free bundle.
 
 ## Inspection pack (in product)
 

@@ -94,6 +94,8 @@ export type Matter = {
   rafLodgedDate?: string;
   notes?: Note[];
   documents?: Doc[];
+  clientPhone?: string;
+  clientEmail?: string;
 };
 
 export type Party = {
@@ -305,6 +307,40 @@ export type PstnReadiness = {
   automaticCallerId?: string | null;
   automaticSource?: string | null;
   message: string;
+};
+
+export type OutboundReadiness = {
+  twilioConnected: boolean;
+  twilioConfigured: boolean;
+  smsReady: boolean;
+  whatsappReady: boolean;
+  emailReady: boolean;
+  emailMode: string;
+  whatsappSandbox: boolean;
+  whatsappFrom?: string;
+  attorneyNotice: string;
+  smsHint: string;
+  whatsappHint: string;
+  emailHint: string;
+};
+
+export type OutboundMessage = {
+  id: Id;
+  channel: string;
+  status: string;
+  to?: string;
+  from?: string;
+  subject?: string;
+  body?: string;
+  caseId?: Id;
+  clientId?: Id;
+  contactId?: Id;
+  provider?: string;
+  providerSid?: string;
+  unitCost?: number;
+  errorMessage?: string;
+  notice?: string;
+  createdAt?: string;
 };
 
 export type Conversation = {

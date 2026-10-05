@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { useCalls } from "@/components/call-provider";
+import { OutboundPanel } from "@/components/outbound-panel";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
@@ -447,6 +448,10 @@ export default function VoicePage() {
           </div>
         </CardBody>
       </Card>
+
+      <div className="mb-6">
+        <OutboundPanel spread />
+      </div>
 
       <TableWrap>
         <thead>

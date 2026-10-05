@@ -31,6 +31,7 @@ public class UsageInvoice {
     private LocalDate dateIssued = LocalDate.now();
     private BigDecimal modulesSubtotal = BigDecimal.ZERO;
     private BigDecimal pstnSubtotal = BigDecimal.ZERO;
+    private BigDecimal messagingSubtotal = BigDecimal.ZERO;
     private BigDecimal total = BigDecimal.ZERO;
     @Column(length = 8000)
     private String lineItemsJson;

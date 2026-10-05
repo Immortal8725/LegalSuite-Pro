@@ -135,6 +135,39 @@ public class TwilioRestGateway implements TwilioGateway {
         return sid;
     }
 
+    @Override
+    public String sendMessage(TwilioMessage message) {
+        List<String[]> fields = new ArrayList<>();
+        fields.add(pair("To", message.to()));
+        if (notBlank(message.messagingServiceSid())) {
+            fields.add(pair("MessagingServiceSid", message.messagingServiceSid()));
+        } else {
+            fields.add(pair("From", message.from()));
+        }
+        if (notBlank(message.contentSid())) {
+            fields.add(pair("ContentSid", message.contentSid()));
+            if (notBlank(message.contentVariables())) {
+                fields.add(pair("ContentVariables", message.contentVariables()));
+            }
+        }
+        if (notBlank(message.body())) {
+            fields.add(pair("Body", message.body()));
+        }
+        if (notBlank(message.statusCallback())) {
+            fields.add(pair("StatusCallback", message.statusCallback()));
+        }
+        JsonNode body = postForm("/Messages.json", fields);
+        String sid = text(body, "sid");
+        if (sid.isBlank()) {
+            throw ApiException.badRequest("Twilio did not return a message id.");
+        }
+        return sid;
+    }
+
+    private static boolean notBlank(String value) {
+        return value != null && !value.isBlank();
+    }
+
     private JsonNode get(String pathAndQuery) {
         HttpRequest request = base(pathAndQuery).GET().build();
         return send(request);

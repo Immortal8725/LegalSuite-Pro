@@ -42,6 +42,9 @@ legalsuite:
     auth-token: ${TWILIO_AUTH_TOKEN:}
     public-base-url: ${TWILIO_PUBLIC_BASE_URL:}
     voice-from: ${TWILIO_VOICE_FROM:}
+    sms-from: ${TWILIO_SMS_FROM:}
+    whatsapp-from: ${TWILIO_WHATSAPP_FROM:}
+    messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
   ai:
     # local (default) never sends a prompt off the tenant.
     # openai or anthropic run only when the matching key is set.
@@ -52,6 +55,15 @@ legalsuite:
     anthropic-model: ${ANTHROPIC_MODEL:claude-3-5-haiku-latest}
     openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
     anthropic-base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com/v1}
+  smtp:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    user: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    from: ${SMTP_FROM:}
+  messaging:
+    sms-unit-cost: ${LEGALSUITE_SMS_UNIT_COST:0.08}
+    whatsapp-unit-cost: ${LEGALSUITE_WHATSAPP_UNIT_COST:0.05}
 
 logging:
   level:

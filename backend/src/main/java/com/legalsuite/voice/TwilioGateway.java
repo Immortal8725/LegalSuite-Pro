@@ -28,4 +28,7 @@ public interface TwilioGateway {
 
     /** Places the first leg to the attorney's phone. Returns the call SID. */
     String createCall(String to, String from, String url, String statusCallback);
+
+    /** Sends one SMS or WhatsApp message through the Messages API. Returns the message SID. */
+    String sendMessage(TwilioMessage message);
 }

@@ -495,6 +495,12 @@ public class PracticeService {
         m.put("conflictWaiverSignatureId", c.getConflictWaiverSignatureId());
         m.put("conflictWaiverHash", c.getConflictWaiverHash());
         clients.findById(c.getClientId()).ifPresent(cl -> m.put("clientName", cl.displayName()));
+        if (c.getClientId() != null) {
+            clients.findByIdAndTenantId(c.getClientId(), c.getTenantId()).ifPresent(cl -> {
+                m.put("clientPhone", cl.getPhone());
+                m.put("clientEmail", cl.getEmail());
+            });
+        }
         return m;
     }
 

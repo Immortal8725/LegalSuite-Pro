@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
+import { OutboundPanel } from "@/components/outbound-panel";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
-import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { Input, Label, Select } from "@/components/ui/input";
 import type { Party } from "@/lib/types";
 
 export default function ClientsPage() {
   const [rows, setRows] = useState<Party[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [messaging, setMessaging] = useState<Party | null>(null);
   const [form, setForm] = useState({ type: "individual", firstName: "", lastName: "", companyName: "", email: "", phone: "", source: "website" });
 
   const load = () => apiGet<Party[]>("/api/v1/clients").then(setRows).catch((e) => setError(e.message));
@@ -35,6 +37,7 @@ export default function ClientsPage() {
               <Th>Source</Th>
               <Th>Status</Th>
               <Th>Portal</Th>
+              <Th></Th>
             </tr>
           </thead>
           <tbody>
@@ -49,6 +52,11 @@ export default function ClientsPage() {
                   <StatusBadge status={c.status} />
                 </Td>
                 <Td>{c.portalEnabled ? "On" : "Off"}</Td>
+                <Td>
+                  <Button size="sm" variant="outline" onClick={() => setMessaging(c)}>
+                    Message
+                  </Button>
+                </Td>
               </tr>
             ))}
           </tbody>
@@ -92,6 +100,15 @@ export default function ClientsPage() {
           <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </div>
+      </Dialog>
+      <Dialog open={!!messaging} onClose={() => setMessaging(null)} title={messaging ? `Message ${messaging.displayName}` : "Message"} wide>
+        {messaging && (
+          <OutboundPanel
+            clientId={messaging.id}
+            defaultPhone={messaging.phone || ""}
+            defaultEmail={messaging.email || ""}
+          />
+        )}
       </Dialog>
     </div>
   );

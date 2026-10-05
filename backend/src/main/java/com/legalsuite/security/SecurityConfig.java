@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/v1/portal/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/voice/twilio/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/outbound/twilio/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
