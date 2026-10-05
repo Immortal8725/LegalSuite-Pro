@@ -261,6 +261,43 @@ export type CallRow = {
   caseId?: Id;
   clientId?: Id;
   notes?: string;
+  fromNumber?: string;
+  toNumber?: string;
+  staffCallbackNumber?: string;
+  callerIdKind?: string;
+  firmPhoneNumberId?: Id;
+  nonMatter?: boolean;
+  twilioCallSid?: string;
+};
+
+export type FirmNumber = {
+  id: Id;
+  e164: string;
+  kind: string;
+  status: string;
+  locality?: string;
+  region?: string;
+  country?: string;
+  friendlyName?: string;
+  defaultOutbound: boolean;
+  verifiedAt?: string;
+  validationCode?: string;
+};
+
+export type AvailableNumber = {
+  phoneNumber: string;
+  friendlyName?: string;
+  locality?: string;
+  region?: string;
+  country?: string;
+};
+
+export type PstnReadiness = {
+  twilioConnected: boolean;
+  credentialsPresent: boolean;
+  publicBaseUrlSet: boolean;
+  callerIds: FirmNumber[];
+  message: string;
 };
 
 export type Conversation = {
@@ -381,6 +418,8 @@ export type Integration = {
   connected: boolean;
   statusNote?: string;
   connectedAt?: string;
+  credentialsPresent?: boolean;
+  publicBaseUrlSet?: boolean;
 };
 
 export type Landing = {

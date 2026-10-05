@@ -49,7 +49,7 @@ The Next.js dev server rewrites `/api/*` to the Spring Boot process.
 1. **Foundation** — JWT auth, tenant isolation, firm registration, onboarding, app shell.
 2. **Landing + practice** — Auto-generated public site, intake, cases, clients, contacts, documents, calendar, tasks.
 3. **Financial** — Timers, invoices, IOLTA trust (no overdraw), expenses. Usage add-ons stay on the month-end invoice.
-4. **Communication** — Internal messages, WebRTC voice (in-app free; PSTN recorded for invoicing), call registry, recording opt-in.
+4. **Communication** — Internal messages, WebRTC voice (in-app free), PSTN callback bridge with a rented local number or a verified landline as caller ID, call registry, recording opt-in. Emergency numbers stay on the device dialer.
 5. **Advanced** — Conflicts, reports, module toggles, team, settings, global search.
 6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
@@ -69,7 +69,7 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 
 - Frontend: Next.js 15, React 19, Tailwind, shadcn-style primitives
 - Backend: Spring Boot 3.4, Java 21, JPA, H2 (local), JWT (jjwt)
-- Voice: WebSocket `/ws/signal` plus HTTP inbox fallback
+- Voice: WebSocket `/ws/signal` for in-app WebRTC. Public-network calls use a Twilio callback bridge (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`). Do not commit those values.
 - Mobile: Flutter (Dart) against `/api/v1`
 
 Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) and put the API behind TLS. TOTP 2FA is in Settings; demo users stay without it so `password` still works. The UI can publish to Vercel; the Java API needs a JVM host.

@@ -22,7 +22,19 @@ JPA  →  H2 (dev) / PostgreSQL (prod)
 
 ## Voice
 
-In-app WebRTC is free. `VoiceService` records duration and a `callType` of `webrtc` or `pstn`. PSTN cost is stored on `CallRecord.totalCost` for the usage invoice. Recording is opt-in on hangup.
+In-app WebRTC is free. `VoiceService` records duration and a `callType` of `webrtc` or `pstn_outbound` / `pstn_inbound`. PSTN cost is stored on `CallRecord.totalCost` for the usage invoice. Recording is opt-in. `CallEthics` still decides the spoken-notice rule for the firm country.
+
+Public-network dialing is a callback bridge, not a browser softphone:
+
+1. The firm rents a local DID or verifies a physical landline (`FirmPhoneNumber`, one row per firm).
+2. Staff choose a matter, or explicitly mark the call as not on a matter.
+3. Emergency numbers are refused. They stay on the device dialer.
+4. Twilio rings the attorney's own phone, then dials the destination with the firm number as caller ID.
+5. Hangup updates the same `CallRecord`. A matter call still writes a time entry.
+
+Twilio credentials are environment variables only: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` (the public API address Twilio uses for the bridge and status callbacks). The Integrations toggle does not store a password. Webhooks require a valid `X-Twilio-Signature`.
+
+Native CallKit (iOS) and ConnectionService (Android) are not in this slice. The Flutter client starts the same bridge. The cellular dialer is what rings. An in-app incoming-call UI would need a VoIP push entitlement and is a follow-up.
 
 ## AI
 

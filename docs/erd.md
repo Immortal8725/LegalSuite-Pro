@@ -21,6 +21,7 @@ erDiagram
     TENANT ||--o{ EXPENSE : advances
     TENANT ||--o{ CONVERSATION : threads
     TENANT ||--o{ CALL_RECORD : records
+    TENANT ||--o{ FIRM_PHONE_NUMBER : presents
     TENANT ||--o{ LEAD : intakes
     TENANT ||--o{ CONFLICT_CHECK : searches
     TENANT ||--o{ CONNECTED_INTEGRATION : connects
@@ -98,6 +99,15 @@ erDiagram
         string call_type
         int duration_seconds
         decimal total_cost
+        string from_number
+        string to_number
+    }
+    FIRM_PHONE_NUMBER {
+        uuid id PK
+        uuid tenant_id FK
+        string e164
+        string kind
+        string status
     }
     SIGNATURE_REQUEST {
         uuid id PK

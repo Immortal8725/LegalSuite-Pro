@@ -8,8 +8,15 @@ Attorney mobile slice against the same Spring Boot API as the web app.
 - Dashboard counts
 - Matter list
 - Time entries
+- Start a public-network call (Calls tab)
 
-Voice calling, e-sign, and AI stay on the responsive web app (installable as a PWA). This client is the native docket.
+The Calls tab posts to `/api/v1/calls/pstn`. Twilio rings the phone you enter, then connects the other party and shows the firm's rented number or verified landline. Rent or verify that caller ID on the web app first. Choose a matter, or mark the call as not on a matter. Emergency numbers are refused so they stay on the device dialer.
+
+In-app WebRTC, e-sign, and AI stay on the responsive web app (installable as a PWA).
+
+## CallKit follow-up
+
+This client does not register CallKit (iOS) or ConnectionService (Android). The cellular dialer is the ringing UI. A later native project can add an in-app incoming call screen, which needs a VoIP push entitlement and a push provider. The bridge itself stays on the server.
 
 ## Run
 

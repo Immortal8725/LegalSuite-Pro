@@ -30,7 +30,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 
 1. **Hire is a gate.** Website consult → party-aware conflict → signed waiver instrument if needed → **limited file** → signed mandate → appearance authorised and the pledged retainer posts to trust. Billable time and trust movements wait until the mandate is signed.
 2. **The clock is the home screen.** RAF Act s 23, Prescription Act ss 11–13, Act 40 of 2002 s 3, LRA s 191 (ZA). Texas CPRC ch. 16, 74, 101 and Estates Code on the other tenant. Overdue lodge/notice/referral clocks spawn a task and **block trial status**.
-3. **The phone is on the file.** In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
+3. **The phone is on the file.** In-app WebRTC is free. Outbound PSTN is a callback bridge: the attorney's phone rings, then the other party sees the firm's rented local number or a verified landline. A matter (or an explicit non-matter) is required before dial. Emergency numbers stay on the device dialer. Hangup writes a time entry when the call is on a matter. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
 5. **Metered, not seated.** Core modules stay on. Add-ons and PSTN minutes roll into the month-end usage invoice.
 6. **Privilege-shaped AI.** Summaries, drafts, and intake screening stay on the tenant row. No vendor key. No training corpus.
@@ -122,7 +122,7 @@ Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), 
 
 - **Web:** Next.js 15, React 19, Tailwind, shadcn-style primitives.
 - **API:** Spring Boot 3.4, Java 21, JPA, JWT. Default H2 (`ddl-auto: create-drop`). `SPRING_PROFILES_ACTIVE=postgres` + `docker compose up postgres` for PostgreSQL.
-- **Voice:** `/ws/signal` plus HTTP inbox fallback.
+- **Voice:** `/ws/signal` plus HTTP inbox fallback for in-app WebRTC. PSTN uses Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`). Those values stay in the server environment.
 - **Mobile:** Flutter against `/api/v1`.
 
 Firms are the security boundary. Every row carries `tenant_id`. JWT writes `TenantContext`. Public routes (`landing`, `intake`, `sign`, login, register) never leak another firm’s rows. Prompts and documents stay on the tenant.
@@ -135,7 +135,7 @@ Firms are the security boundary. Every row carries `tenant_id`. JWT writes `Tena
 - Live bank feed (Open Banking / Plaid).
 - SANAS-accredited electronic signatures or DocuSign/Adobe with a certificate.
 - CaseLines / RAF e-lodgement / court e-filing.
-- Real Stripe / Twilio keys (connect hub is a stub).
+- Real Stripe keys (connect hub is a stub). Twilio calls are real when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` are set on the server. Native CallKit is not built yet.
 
 ---
 
@@ -304,7 +304,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
 | PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
 | Stripe | Subscriptions / invoices | Billing details | Connect stub |
-| Twilio | PSTN | Call metadata, numbers | Connect stub |
+| Twilio | PSTN | Call metadata, numbers, caller ID | Real calls when server env vars are set. No keys in the repo. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
 | No LLM vendor | — | — | Heuristic only |
 

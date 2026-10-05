@@ -35,6 +35,14 @@ export default function IntegrationsPage() {
             <CardBody>
               <p className="mb-3 text-sm text-slate-500">{row.description}</p>
               <p className="mb-4 text-xs text-slate-400">{row.statusNote}</p>
+              {row.provider === "twilio" && (
+                <p className="mb-4 text-xs text-slate-500">
+                  {row.credentialsPresent
+                    ? "Server credentials are present. They are not shown here."
+                    : "No Twilio credentials on this server yet. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in the environment."}
+                  {row.publicBaseUrlSet ? " Public callback address is set." : " TWILIO_PUBLIC_BASE_URL is still empty."}
+                </p>
+              )}
               {row.connected ? (
                 <Button
                   variant="outline"
