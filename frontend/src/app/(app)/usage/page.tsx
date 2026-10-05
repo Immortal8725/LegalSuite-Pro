@@ -15,6 +15,9 @@ type Preview = {
   pstnSubtotal: number;
   pstnMinutes: number;
   didMonthly?: number;
+  messagingSubtotal?: number;
+  smsCount?: number;
+  whatsappCount?: number;
   total: number;
   lineItems: Line[];
   note: string;
@@ -51,7 +54,7 @@ export default function UsagePage() {
     <div>
       <PageHeader
         title="Month-end usage"
-        subtitle="Light is the monthly seat and includes section 86 trust. This page adds public-network minutes, which are pay-what-you-use. There is no minute bundle."
+        subtitle="Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
       />
       <ErrorBanner error={error} />
       {preview && (
@@ -73,7 +76,7 @@ export default function UsagePage() {
           </CardHeader>
           <CardBody>
             <p className="mb-4 text-sm text-slate-500">{preview.note}</p>
-            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div>
                 <p className="text-xs text-slate-400">Light seat</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.seatSubtotal ?? 0)}</p>
@@ -85,6 +88,10 @@ export default function UsagePage() {
               <div>
                 <p className="text-xs text-slate-400">Phone ({preview.pstnMinutes} min, no bundle)</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.pstnSubtotal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">SMS and WhatsApp ({(preview.smsCount || 0) + (preview.whatsappCount || 0)})</p>
+                <p className="text-xl font-extrabold text-navy">{moneyExact(preview.messagingSubtotal || 0)}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400">Due</p>

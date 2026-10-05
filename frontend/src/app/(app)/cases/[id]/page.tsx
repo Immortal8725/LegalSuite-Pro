@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { apiGet, apiPatch, apiPost, apiPut, getToken } from "@/lib/api";
 import { daysLeftLabel, daysUntil, todayIso } from "@/lib/docket";
 import { formatDate, formatDateTime, moneyExact } from "@/lib/utils";
+import { OutboundPanel } from "@/components/outbound-panel";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
@@ -436,6 +437,17 @@ export default function CaseDetailPage() {
       </div>
       <div className="mt-6">
         <MatterAssistant caseId={c.id} matterLabel={`${c.caseNumber} · ${c.title}`} />
+        <div className="mt-6">
+          <OutboundPanel
+            spread
+            lockMatter
+            matterId={c.id}
+            matterLabel={`${c.caseNumber} ${c.title}`}
+            clientId={c.clientId}
+            defaultPhone={c.clientPhone || ""}
+            defaultEmail={c.clientEmail || ""}
+          />
+        </div>
       </div>
       <Card className="mt-6">
         <CardHeader>

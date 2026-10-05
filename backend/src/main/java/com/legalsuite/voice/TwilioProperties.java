@@ -17,6 +17,12 @@ public class TwilioProperties {
     private String voiceFrom = "";
     /** Override in tests. Production stays on the Twilio API host. */
     private String apiRoot = "https://api.twilio.com";
+    /** E.164 sender for SMS. Optional when a rented local number or a messaging service is set. */
+    private String smsFrom = "";
+    /** WhatsApp sender. Blank uses the Twilio sandbox number +14155238886. */
+    private String whatsappFrom = "";
+    /** Optional MG SID. Used for SMS when TWILIO_SMS_FROM is blank. */
+    private String messagingServiceSid = "";
 
     public boolean configured() {
         return !accountSid.isBlank() && !authToken.isBlank();
@@ -55,5 +61,26 @@ public class TwilioProperties {
     public String getApiRoot() { return apiRoot; }
     public void setApiRoot(String apiRoot) {
         if (apiRoot != null && !apiRoot.isBlank()) this.apiRoot = apiRoot;
+    }
+    public String getSmsFrom() { return smsFrom; }
+    public void setSmsFrom(String smsFrom) { this.smsFrom = smsFrom == null ? "" : smsFrom; }
+    public String getWhatsappFrom() { return whatsappFrom; }
+    public void setWhatsappFrom(String whatsappFrom) { this.whatsappFrom = whatsappFrom == null ? "" : whatsappFrom; }
+    public String getMessagingServiceSid() { return messagingServiceSid; }
+    public void setMessagingServiceSid(String messagingServiceSid) {
+        this.messagingServiceSid = messagingServiceSid == null ? "" : messagingServiceSid;
+    }
+
+    /** Sender passed to Twilio for WhatsApp. The sandbox number is the default. */
+    public String whatsappSenderRaw() {
+        String raw = whatsappFrom == null ? "" : whatsappFrom.trim();
+        if (raw.toLowerCase().startsWith("whatsapp:")) {
+            raw = raw.substring("whatsapp:".length()).trim();
+        }
+        return raw.isBlank() ? "+14155238886" : raw;
+    }
+
+    public boolean whatsappSandbox() {
+        return "14155238886".equals(whatsappSenderRaw().replaceAll("[^0-9]", ""));
     }
 }

@@ -36,6 +36,16 @@ class TwilioRestGatewayTest {
             exchange.getResponseBody().write(resp);
             exchange.close();
         });
+        server.createContext("/2010-04-01/Accounts/AC1234567890/Messages.json", exchange -> {
+            auth.set(exchange.getRequestHeaders().getFirst("Authorization"));
+            path.set(exchange.getRequestURI().getPath());
+            form.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            byte[] resp = "{\"sid\":\"SM999\",\"status\":\"queued\"}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(201, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
         server.createContext("/2010-04-01/Accounts/AC1234567890/IncomingPhoneNumbers.json", exchange -> {
             if ("GET".equals(exchange.getRequestMethod())) {
                 byte[] resp = "{\"incoming_phone_numbers\":[{\"phone_number\":\"+14155550111\",\"sid\":\"PN1234567890\"}]}"
@@ -83,6 +93,36 @@ class TwilioRestGatewayTest {
         assertTrue(form.get().contains("Url=https%3A%2F%2Fexample.com%2Fbridge%2Fabc"));
         assertTrue(form.get().contains("StatusCallbackEvent=answered"));
         assertTrue(form.get().contains("StatusCallbackEvent=completed"));
+    }
+
+    @Test
+    void sendMessagePostsToTheMessagesApiWithoutTheToken() {
+        String sid = gateway.sendMessage(new TwilioMessage(
+                "whatsapp:+27825550144",
+                "whatsapp:+14155238886",
+                "",
+                "Hearing is on Tuesday.",
+                "",
+                "",
+                "https://example.com/api/v1/outbound/twilio/status/abc"));
+        assertEquals("SM999", sid);
+        assertTrue(path.get().endsWith("/Messages.json"));
+        assertFalse(path.get().contains("super-secret-token"));
+        assertFalse(form.get().contains("super-secret-token"));
+        assertTrue(form.get().contains("To=whatsapp%3A%2B27825550144"));
+        assertTrue(form.get().contains("From=whatsapp%3A%2B14155238886"));
+        assertTrue(form.get().contains("Body=Hearing+is+on+Tuesday."));
+        assertFalse(auth.get().isBlank());
+    }
+
+    @Test
+    void sendMessageRequiresCredentials() {
+        TwilioProperties blank = new TwilioProperties();
+        TwilioRestGateway unconfigured = new TwilioRestGateway(blank, new ObjectMapper());
+        ApiException ex = assertThrows(ApiException.class, () -> unconfigured.sendMessage(
+                new TwilioMessage("+27825550144", "+27115550100", "", "Hello", "", "", "")));
+        assertTrue(ex.getMessage().contains("TWILIO_ACCOUNT_SID"));
+        assertFalse(ex.getMessage().contains("super-secret-token"));
     }
 
     @Test

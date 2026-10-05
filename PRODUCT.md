@@ -30,9 +30,9 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 
 1. **Hire is a gate.** Website consult → party-aware conflict → signed waiver instrument if needed → **limited file** → signed mandate → appearance authorised and the pledged retainer posts to trust. Billable time and trust movements wait until the mandate is signed.
 2. **The clock is the home screen.** RAF Act s 23, Prescription Act ss 11–13, Act 40 of 2002 s 3, LRA s 191 (ZA). Texas CPRC ch. 16, 74, 101 and Estates Code on the other tenant. Overdue lodge/notice/referral clocks spawn a task and **block trial status**.
-3. **The phone is on the file.** In-app WebRTC is free. Outbound PSTN is a callback bridge: the attorney's phone rings, then the other party sees a verified personal number (mobile or landline), `TWILIO_VOICE_FROM`, or a rented local number if the firm already has one. Buying a number is optional. No South Africa regulatory bundle is required for this path. A matter (or an explicit non-matter) is required before dial. Emergency numbers stay on the device dialer. Hangup writes a time entry when the call is on a matter. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
+3. **The phone is on the file.** In-app WebRTC is free. Outbound PSTN is a callback bridge: the attorney's phone rings, then the other party sees a verified personal number (mobile or landline), `TWILIO_VOICE_FROM`, or a rented local number if the firm already has one. Buying a number is optional. No South Africa regulatory bundle is required for this path. A matter (or an explicit non-matter) is required before dial. Emergency numbers stay on the device dialer. Hangup writes a time entry when the call is on a matter. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA). SMS and WhatsApp use the same Twilio account. Email uses the firm's SMTP server, or is logged on the firm when SMTP is not set. The attorney remains responsible for outbound client contact.
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
-5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. There is no included minute bundle and no unlimited voice tier. A local number is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
+5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. SMS and WhatsApp also roll onto the usage invoice. Email through the firm's SMTP server is not metered. There is no included minute bundle and no unlimited voice tier. A local number is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
 6. **Draft help on the file.** Summaries, drafts, and intake screening stay on the tenant row unless the operator sets a model-vendor key. Tenant files are not used to train a shared model. The attorney remains responsible.
 
 ---
@@ -44,7 +44,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | 1 | Foundation | JWT, tenant isolation, register, onboarding, app shell |
 | 2 | Landing + practice | Public `/firm/{slug}`, intake, cases, clients, contacts, documents, calendar, tasks |
 | 3 | Financial | Timers, fee invoices (ZA VAT 15%), s 86 / IOLTA trust, expenses |
-| 4 | Communication | Internal messages, WebRTC voice, call registry, leads |
+| 4 | Communication | Internal messages, WebRTC voice, PSTN caller ID, SMS, WhatsApp, email, call registry, leads |
 | 5 | Advanced | Conflicts, reports, modules, team, settings, search |
 | 6 | Mobile | Responsive web + PWA; Flutter client in `mobile/` |
 | 7 | Assistant and integrations | On-tenant draft help, merge templates, in-app e-sign, connect hub, audit log |
@@ -122,7 +122,7 @@ Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), 
 
 - **Web:** Next.js 15, React 19, Tailwind, shadcn-style primitives.
 - **API:** Spring Boot 3.4, Java 21, JPA, JWT. Default H2 (`ddl-auto: create-drop`) for the demo. Hosted path: `SPRING_PROFILES_ACTIVE=postgres`, `docker compose up postgres`, and `GET /api/v1/health`. The Postgres profile refuses the checked-in development JWT secret.
-- **Voice:** `/ws/signal` plus HTTP inbox fallback for in-app WebRTC. PSTN uses Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`, optional `TWILIO_VOICE_FROM`). Those values stay in the server environment. A purchased number is not required.
+- **Voice and messages:** `/ws/signal` plus HTTP inbox fallback for in-app WebRTC. PSTN uses Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`, optional `TWILIO_VOICE_FROM`). SMS and WhatsApp use the same account (`TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM`, optional `TWILIO_MESSAGING_SERVICE_SID`). Email uses `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`. Those values stay in the server environment. A purchased number is not required. With no SMTP host, email is logged on the firm and is not delivered.
 - **Mobile:** Flutter against `/api/v1`.
 
 Firms are the security boundary. Every row carries `tenant_id`. JWT writes `TenantContext`. Public routes (`landing`, `intake`, `sign`, login, register) never leak another firm’s rows. Prompts and documents stay on the tenant.
@@ -131,11 +131,11 @@ Firms are the security boundary. Every row carries `tenant_id`. JWT writes `Tena
 
 ## 9. Still needs a person
 
-Coded in this repo: Postgres via Docker, `.env.example` for Twilio and Stripe with no secrets, `GET /api/v1/health`, and the hosted runbook in [README.md](README.md).
+Coded in this repo: Postgres via Docker, `.env.example` for Twilio, Stripe, SMS, WhatsApp, and SMTP with no secrets, `GET /api/v1/health`, and the hosted runbook in [README.md](README.md).
 
 A person still has to:
 
-- Approve Twilio and finish KYC before a public number or outbound PSTN call can be real. Calls are real when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` are set, plus a caller ID the account already owns or has verified (`TWILIO_VOICE_FROM`, an in-app verified personal number, or a number already on the account). Upgraded accounts no longer have the free trial From number. Trial accounts, if any remain, can only call verified destinations. Native CallKit is not built yet.
+- Approve Twilio and finish KYC before a public number or outbound PSTN call can be real. Calls are real when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` are set, plus a caller ID the account already owns or has verified (`TWILIO_VOICE_FROM`, an in-app verified personal number, or a number already on the account). Upgraded accounts no longer have the free trial From number. Trial accounts, if any remain, can only call verified destinations. SMS is real when `TWILIO_SMS_FROM` or a rented SMS-capable number is set. A verified landline cannot send SMS. WhatsApp sandbox recipients must join the sandbox first (`TWILIO_WHATSAPP_FROM` blank uses `+14155238886`). Email is real when SMTP is set; otherwise it is a dry run. Native CallKit is not built yet.
 - Create the Stripe account and put keys in the environment. Do not commit them. Card fields must be Stripe-hosted.
 - Choose a domain, put TLS in front of the web and API processes, and point `TWILIO_PUBLIC_BASE_URL` at the public HTTPS origin.
 - Set `LEGALSUITE_JWT_SECRET` and a non-default `DB_PASSWORD` on that host.
@@ -311,7 +311,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
 | PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
 | Stripe | Light subscription and usage invoices | Billing details | Keys via environment. Toggle is not a live account. |
-| Twilio | PSTN | Call metadata, numbers, caller ID | Real calls when server env vars are set. No keys in the repo. |
+| Twilio | PSTN, SMS, WhatsApp | Call and message metadata, numbers, caller ID | Real sends when server env vars are set. No keys in the repo. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
 | OpenAI or Anthropic (optional) | Model answers for one matter | Prompt and staff-visible matter context, not file bytes | Off unless `LEGALSUITE_AI_PROVIDER` and a key are set |
 
@@ -328,6 +328,7 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | 1.0 | 16 September 2026 | All twelve phases recorded. Legal pack added to match the public policy set. |
 | 1.1 | 5 October 2026 | Matter-scoped staff assistant. Model vendor stays off unless an operator sets a key. |
 | 1.2 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
+| 1.3 | 5 October 2026 | SMS, WhatsApp, and email from a matter or contact. Messaging is pay-what-you-use. Email via SMTP is not metered. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

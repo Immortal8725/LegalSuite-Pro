@@ -653,7 +653,7 @@ public class DemoDataLoader implements CommandLineRunner {
         commercial.setAccrualDate(LocalDate.now().plusDays(24).minusYears(3));
         stampDocket(commercial, "ZA");
 
-        contact(firm.getId(), "opposing_counsel", "Naledi", "Botha", "Botha Inc", "n.botha@bothainc.co.za");
+        contact(firm.getId(), "opposing_counsel", "Naledi", "Botha", "Botha Inc", "n.botha@bothainc.co.za", "011 555 0191");
         contact(firm.getId(), "judge", "T.", "Mabena", "Johannesburg High Court", null);
         note(firm.getId(), raf, thabo, "RAF 1 pack", "Hospital records requested. Do not let s 23 run.");
         time(firm.getId(), raf, thabo, 120, "RAF 1 compilation and hospital follow-up", true, false);
@@ -871,6 +871,10 @@ public class DemoDataLoader implements CommandLineRunner {
     }
 
     private void contact(java.util.UUID tenant, String type, String first, String last, String company, String email) {
+        contact(tenant, type, first, last, company, email, null);
+    }
+
+    private void contact(java.util.UUID tenant, String type, String first, String last, String company, String email, String phone) {
         Contact c = new Contact();
         c.setTenantId(tenant);
         c.setType(type);
@@ -878,6 +882,7 @@ public class DemoDataLoader implements CommandLineRunner {
         c.setLastName(last);
         c.setCompany(company);
         c.setEmail(email);
+        c.setPhone(phone);
         contacts.save(c);
     }
 

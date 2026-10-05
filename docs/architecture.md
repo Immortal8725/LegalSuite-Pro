@@ -36,6 +36,14 @@ Twilio credentials are environment variables only: `TWILIO_ACCOUNT_SID`, `TWILIO
 
 Native CallKit (iOS) and ConnectionService (Android) are not in this slice. The Flutter client starts the same bridge. The cellular dialer is what rings. An in-app incoming-call UI would need a VoIP push entitlement and is a follow-up.
 
+## SMS, WhatsApp, and email
+
+`OutboundMessageService` sends from the voice page, a matter, a client, or a contact. The matter id is stored when staff choose one. Every attempt is an `outbound_messages` row and an audit event on that tenant.
+
+SMS and WhatsApp use the same `TwilioGateway` as the call bridge (`sendMessage`). There is not a second Twilio client. Emergency numbers are refused. SMS comes from `TWILIO_SMS_FROM`, a messaging service SID, or a rented local number. WhatsApp comes from `TWILIO_WHATSAPP_FROM`, or the Twilio sandbox number `+14155238886` when that variable is blank. A recipient must join the sandbox before a sandbox message will arrive. Outside the 24 hour session, send an approved template content SID.
+
+Email uses `SmtpMailer` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`). When the host or from address is missing, the send is a dry run: the row is kept, the API log records it, and nothing is delivered. Successful SMS and WhatsApp unit costs land on the month-end usage invoice. Email is not metered.
+
 ## Staff assistant
 
 Staff ask from the matter workspace (`/cases/{id}`) or from the existing `/ai` page. The assistant is not a separate product surface.

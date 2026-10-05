@@ -5,12 +5,14 @@ import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppModule;
 import com.legalsuite.domain.CallRecord;
+import com.legalsuite.domain.OutboundMessage;
 import com.legalsuite.domain.Plan;
 import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TenantModule;
 import com.legalsuite.domain.UsageInvoice;
 import com.legalsuite.repo.AppModuleRepository;
 import com.legalsuite.repo.CallRecordRepository;
+import com.legalsuite.repo.OutboundMessageRepository;
 import com.legalsuite.repo.PlanRepository;
 import com.legalsuite.repo.TenantModuleRepository;
 import com.legalsuite.repo.TenantRepository;
@@ -33,6 +35,7 @@ public class UsageService {
     private final TenantModuleRepository tenantModules;
     private final AppModuleRepository modules;
     private final CallRecordRepository calls;
+    private final OutboundMessageRepository outbound;
     private final AuditService audit;
     private final TenantRepository tenants;
     private final PlanRepository plans;
@@ -42,6 +45,7 @@ public class UsageService {
             TenantModuleRepository tenantModules,
             AppModuleRepository modules,
             CallRecordRepository calls,
+            OutboundMessageRepository outbound,
             AuditService audit,
             TenantRepository tenants,
             PlanRepository plans) {
@@ -49,6 +53,7 @@ public class UsageService {
         this.tenantModules = tenantModules;
         this.modules = modules;
         this.calls = calls;
+        this.outbound = outbound;
         this.audit = audit;
         this.tenants = tenants;
         this.plans = plans;
@@ -102,7 +107,30 @@ public class UsageService {
                     "description", "Public-network minutes (" + pstnMinutes + " min, pay-what-you-use)",
                     "amount", pstn));
         }
-        BigDecimal total = seat.add(modulesTotal).add(pstn);
+        BigDecimal smsCost = BigDecimal.ZERO;
+        BigDecimal whatsappCost = BigDecimal.ZERO;
+        int smsCount = 0;
+        int whatsappCount = 0;
+        for (OutboundMessage message : outbound.findByTenantIdOrderByCreatedAtDesc(tid)) {
+            if (message.getCreatedAt() == null || message.getCreatedAt().isBefore(from) || !message.getCreatedAt().isBefore(to)) continue;
+            if (!"sent".equals(message.getStatus()) && !"delivered".equals(message.getStatus())) continue;
+            BigDecimal cost = message.getUnitCost() == null ? BigDecimal.ZERO : message.getUnitCost();
+            if ("sms".equals(message.getChannel())) {
+                smsCount++;
+                smsCost = smsCost.add(cost);
+            } else if ("whatsapp".equals(message.getChannel())) {
+                whatsappCount++;
+                whatsappCost = whatsappCost.add(cost);
+            }
+        }
+        if (smsCount > 0) {
+            lines.add(Map.of("kind", "sms", "description", "SMS (" + smsCount + ")", "amount", smsCost));
+        }
+        if (whatsappCount > 0) {
+            lines.add(Map.of("kind", "whatsapp", "description", "WhatsApp (" + whatsappCount + ")", "amount", whatsappCost));
+        }
+        BigDecimal messaging = smsCost.add(whatsappCost);
+        BigDecimal total = seat.add(modulesTotal).add(pstn).add(messaging);
         String period = month.toString();
         UsageInvoice existing = invoices.findByTenantIdAndPeriod(tid, period).orElse(null);
         Map<String, Object> m = new HashMap<>();
@@ -113,9 +141,12 @@ public class UsageService {
         m.put("pstnMinutes", pstnMinutes);
         m.put("includedPstnMinutes", Pricing.INCLUDED_PSTN_MINUTES);
         m.put("didMonthly", Pricing.DID_MONTHLY_ZAR);
+        m.put("messagingSubtotal", messaging);
+        m.put("smsCount", smsCount);
+        m.put("whatsappCount", whatsappCount);
         m.put("total", total);
         m.put("lineItems", lines);
-        m.put("note", "Light is the monthly seat and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled. Card collection waits until Stripe keys are on the process. In-app calls are not billed.");
+        m.put("note", "Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email is not metered. A local number is optional at about R79 per month, or bundled. Card collection waits until Stripe keys are on the process. In-app calls are not billed.");
         m.put("issued", existing == null ? null : view(existing));
         return m;
     }
@@ -140,6 +171,7 @@ public class UsageService {
         inv.setDateIssued(LocalDate.now());
         inv.setModulesSubtotal(new BigDecimal(String.valueOf(snap.get("modulesSubtotal"))));
         inv.setPstnSubtotal(new BigDecimal(String.valueOf(snap.get("pstnSubtotal"))));
+        inv.setMessagingSubtotal(new BigDecimal(String.valueOf(snap.get("messagingSubtotal"))));
         inv.setTotal(new BigDecimal(String.valueOf(snap.get("total"))));
         inv.setLineItemsJson(JsonLists.toJson(snap.get("lineItems")));
         invoices.save(inv);
@@ -167,6 +199,7 @@ public class UsageService {
         m.put("dateIssued", inv.getDateIssued());
         m.put("modulesSubtotal", inv.getModulesSubtotal());
         m.put("pstnSubtotal", inv.getPstnSubtotal());
+        m.put("messagingSubtotal", inv.getMessagingSubtotal());
         m.put("total", inv.getTotal());
         m.put("lineItems", JsonLists.objects(inv.getLineItemsJson()));
         return m;

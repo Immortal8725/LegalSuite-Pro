@@ -113,7 +113,17 @@ classDiagram
         +startVerification()
         +requireForDial()
     }
-    class TwilioGateway
+    class TwilioGateway {
+        +createCall()
+        +sendMessage()
+    }
+    class OutboundMessageService {
+        +sendSms()
+        +sendWhatsapp()
+        +sendEmail()
+    }
+    class OutboundMessage
+    class MailGateway
     class CommsService {
         +conversations()
         +sendMessage()
@@ -130,6 +140,9 @@ classDiagram
     VoiceService --> CallRecord
     VoiceService --> FirmNumberService
     FirmNumberService --> TwilioGateway
+    OutboundMessageService --> TwilioGateway
+    OutboundMessageService --> MailGateway
+    OutboundMessageService --> OutboundMessage
     SignalingHandler --> VoiceService
     CommsService --> Conversation
     CommsService --> Lead

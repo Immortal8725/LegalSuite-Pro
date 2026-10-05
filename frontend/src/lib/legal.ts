@@ -149,7 +149,7 @@ PostgreSQL host (optional): all tenant rows; docker-compose / postgres profile; 
 
 Stripe: subscriptions and invoices; connect stub.
 
-Twilio: PSTN metadata and caller ID when the firm connects it. Credentials stay in the server environment.
+Twilio: PSTN, SMS, and WhatsApp metadata and caller ID when the firm connects it. Credentials stay in the server environment.
 
 Authenticator apps: TOTP; shared secret stays on the user row.
 

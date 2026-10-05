@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
     List<Contact> findByTenantIdOrderByLastNameAsc(UUID tenantId);
+    Optional<Contact> findByIdAndTenantId(UUID id, UUID tenantId);
 }
