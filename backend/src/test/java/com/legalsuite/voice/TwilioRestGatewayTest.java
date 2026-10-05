@@ -37,8 +37,24 @@ class TwilioRestGatewayTest {
             exchange.close();
         });
         server.createContext("/2010-04-01/Accounts/AC1234567890/IncomingPhoneNumbers.json", exchange -> {
+            if ("GET".equals(exchange.getRequestMethod())) {
+                byte[] resp = "{\"incoming_phone_numbers\":[{\"phone_number\":\"+14155550111\",\"sid\":\"PN1234567890\"}]}"
+                        .getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, resp.length);
+                exchange.getResponseBody().write(resp);
+                exchange.close();
+                return;
+            }
             byte[] resp = "{\"message\":\"The phone number is unavailable\",\"code\":21422}".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(400, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
+        server.createContext("/2010-04-01/Accounts/AC1234567890/OutgoingCallerIds.json", exchange -> {
+            byte[] resp = "{\"outgoing_caller_ids\":[]}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, resp.length);
             exchange.getResponseBody().write(resp);
             exchange.close();
         });
@@ -74,5 +90,11 @@ class TwilioRestGatewayTest {
         ApiException ex = assertThrows(ApiException.class, () -> gateway.buyLocal("+27110000000", "Firm", "https://example.com/in", "https://example.com/st"));
         assertEquals("The phone number is unavailable", ex.getMessage());
         assertFalse(ex.getMessage().contains("super-secret-token"));
+    }
+
+    @Test
+    void listsAnExistingAccountNumberWithoutRequiringAPurchase() {
+        assertEquals("+14155550111", gateway.firstIncomingNumber());
+        assertEquals(null, gateway.firstOutgoingCallerId());
     }
 }

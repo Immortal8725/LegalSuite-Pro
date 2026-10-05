@@ -12,11 +12,17 @@ public interface TwilioGateway {
 
     void releaseIncoming(String sid);
 
-    /** Starts landline verification. Returns validationCode and callSid. */
+    /** Starts Outgoing Caller ID verification for a mobile or landline. Returns validationCode and callSid. */
     Map<String, String> startCallerIdVerification(String e164, String friendlyName, String statusCallback);
 
     /** SID of a verified outgoing caller ID, or null when Twilio has not confirmed it yet. */
     String findVerifiedCallerIdSid(String e164);
+
+    /** First IncomingPhoneNumber on the account, or null when the account owns none. */
+    String firstIncomingNumber();
+
+    /** First verified Outgoing Caller ID on the account, or null when none is verified. */
+    String firstOutgoingCallerId();
 
     void releaseCallerId(String sid);
 

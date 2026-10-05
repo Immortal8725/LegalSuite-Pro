@@ -41,6 +41,7 @@ export default function IntegrationsPage() {
                     ? "Server credentials are present. They are not shown here."
                     : "No Twilio credentials on this server yet. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in the environment."}
                   {row.publicBaseUrlSet ? " Public callback address is set." : " TWILIO_PUBLIC_BASE_URL is still empty."}
+                  {" Optional: TWILIO_VOICE_FROM when no personal number is verified yet. Buying a number is optional."}
                 </p>
               )}
               {row.connected ? (

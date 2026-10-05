@@ -91,7 +91,7 @@ class _CallsScreenState extends State<CallsScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Your mobile rings first. The person you call sees the firm number. This is not an in-app softphone. Emergency numbers stay on the phone dialer. An in-app CallKit screen is a later step.',
+          'Your mobile rings first. The person you call sees a verified personal number or TWILIO_VOICE_FROM. Buying a number is optional. Emergency numbers stay on the phone dialer. An in-app CallKit screen is a later step.',
           style: TextStyle(color: Colors.black54),
         ),
         if (message != null) ...[
@@ -122,7 +122,7 @@ class _CallsScreenState extends State<CallsScreen> {
               isExpanded: true,
               value: callerId ?? '',
               items: [
-                const DropdownMenuItem(value: '', child: Text('Default caller ID')),
+                const DropdownMenuItem(value: '', child: Text('Automatic caller ID')),
                 ...numbers.map((n) {
                   final row = n as Map;
                   return DropdownMenuItem(value: row['id']?.toString(), child: Text('${row['e164']} (${row['kind']})'));
@@ -168,13 +168,13 @@ class _CallsScreenState extends State<CallsScreen> {
         ),
         const SizedBox(height: 8),
         FilledButton(
-          onPressed: busy || numbers.isEmpty ? null : _dial,
+          onPressed: busy ? null : _dial,
           child: Text(busy ? 'Placing call' : 'Place call'),
         ),
         if (numbers.isEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 12),
-            child: Text('Rent or verify a caller ID on the web app before dialing from here.'),
+            child: Text('No number is saved on this firm. Verify a personal mobile or landline on the web app, or set TWILIO_VOICE_FROM. Buying a number is optional.'),
           ),
       ],
     );

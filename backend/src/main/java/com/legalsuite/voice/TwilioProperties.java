@@ -13,6 +13,8 @@ public class TwilioProperties {
     private String accountSid = "";
     private String authToken = "";
     private String publicBaseUrl = "";
+    /** Optional E.164 From when the firm has not rented a DID or verified a number in the app. */
+    private String voiceFrom = "";
     /** Override in tests. Production stays on the Twilio API host. */
     private String apiRoot = "https://api.twilio.com";
 
@@ -22,6 +24,10 @@ public class TwilioProperties {
 
     public boolean hasPublicBaseUrl() {
         return publicBaseUrl != null && !publicBaseUrl.isBlank();
+    }
+
+    public boolean hasVoiceFrom() {
+        return voiceFrom != null && !voiceFrom.isBlank();
     }
 
     public String callback(String path) {
@@ -44,6 +50,8 @@ public class TwilioProperties {
     public void setAuthToken(String authToken) { this.authToken = authToken == null ? "" : authToken; }
     public String getPublicBaseUrl() { return publicBaseUrl; }
     public void setPublicBaseUrl(String publicBaseUrl) { this.publicBaseUrl = publicBaseUrl == null ? "" : publicBaseUrl; }
+    public String getVoiceFrom() { return voiceFrom; }
+    public void setVoiceFrom(String voiceFrom) { this.voiceFrom = voiceFrom == null ? "" : voiceFrom.trim(); }
     public String getApiRoot() { return apiRoot; }
     public void setApiRoot(String apiRoot) {
         if (apiRoot != null && !apiRoot.isBlank()) this.apiRoot = apiRoot;

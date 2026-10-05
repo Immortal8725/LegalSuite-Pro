@@ -34,6 +34,7 @@ legalsuite:
     account-sid: ${TWILIO_ACCOUNT_SID:}
     auth-token: ${TWILIO_AUTH_TOKEN:}
     public-base-url: ${TWILIO_PUBLIC_BASE_URL:}
+    voice-from: ${TWILIO_VOICE_FROM:}
 
 logging:
   level:

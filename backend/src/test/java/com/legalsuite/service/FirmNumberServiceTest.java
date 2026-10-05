@@ -41,10 +41,11 @@ class FirmNumberServiceTest {
 
     private final UUID tenantId = UUID.randomUUID();
     private FirmNumberService service;
+    private TwilioProperties props;
 
     @BeforeEach
     void setUp() {
-        TwilioProperties props = new TwilioProperties();
+        props = new TwilioProperties();
         props.setAccountSid("AC1234567890");
         props.setAuthToken("secret-token");
         props.setPublicBaseUrl("https://pbx.example.com");
@@ -148,6 +149,90 @@ class FirmNumberServiceTest {
         ApiException ex = assertThrows(ApiException.class, () -> service.buy(Map.of("phoneNumber", "10111")));
         assertTrue(ex.getMessage().toLowerCase().contains("device dialer"));
         verify(twilio, never()).buyLocal(any(), any(), any(), any());
+    }
+
+    @Test
+    void rentedDidWinsOverAVerifiedPersonalNumber() {
+        FirmPhoneNumber personal = landline(FirmPhoneNumber.STATUS_ACTIVE);
+        personal.setDefaultOutbound(true);
+        FirmPhoneNumber did = new FirmPhoneNumber();
+        did.setId(UUID.randomUUID());
+        did.setTenantId(tenantId);
+        did.setE164("+27115550999");
+        did.setKind(FirmPhoneNumber.KIND_DID);
+        did.setStatus(FirmPhoneNumber.STATUS_ACTIVE);
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of(personal, did));
+
+        FirmPhoneNumber chosen = service.requireForDial(null);
+
+        assertEquals("+27115550999", chosen.getE164());
+        verify(twilio, never()).firstIncomingNumber();
+        verify(twilio, never()).buyLocal(any(), any(), any(), any());
+    }
+
+    @Test
+    void verifiedPersonalNumberIsEnoughWithoutARentedDid() {
+        FirmPhoneNumber personal = landline(FirmPhoneNumber.STATUS_ACTIVE);
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of(personal));
+
+        FirmPhoneNumber chosen = service.requireForDial(null);
+
+        assertEquals("+27115550123", chosen.getE164());
+        assertEquals(FirmPhoneNumber.KIND_LANDLINE, chosen.getKind());
+        verify(twilio, never()).firstIncomingNumber();
+        verify(twilio, never()).buyLocal(any(), any(), any(), any());
+    }
+
+    @Test
+    void voiceFromIsUsedWhenTheFirmHasNoSavedNumber() {
+        props.setVoiceFrom("+14155550100");
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of());
+
+        FirmPhoneNumber chosen = service.requireForDial(null);
+
+        assertEquals("+14155550100", chosen.getE164());
+        assertEquals(FirmPhoneNumber.KIND_VOICE_FROM, chosen.getKind());
+        assertEquals(null, chosen.getId());
+        verify(twilio, never()).firstIncomingNumber();
+        verify(twilio, never()).buyLocal(any(), any(), any(), any());
+    }
+
+    @Test
+    void accountIncomingIsUsedWhenVoiceFromIsUnset() {
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of());
+        when(twilio.firstIncomingNumber()).thenReturn("+14155550111");
+
+        FirmPhoneNumber chosen = service.requireForDial(null);
+
+        assertEquals("+14155550111", chosen.getE164());
+        assertEquals(FirmPhoneNumber.KIND_ACCOUNT_INCOMING, chosen.getKind());
+        verify(twilio, never()).firstOutgoingCallerId();
+    }
+
+    @Test
+    void accountOutgoingCallerIdIsTheLastAutomaticSource() {
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of());
+        when(twilio.firstIncomingNumber()).thenReturn(null);
+        when(twilio.firstOutgoingCallerId()).thenReturn("+14155550122");
+
+        assertEquals(FirmPhoneNumber.KIND_ACCOUNT_OUTGOING, service.requireForDial(null).getKind());
+        assertEquals("+14155550122", service.requireForDial(null).getE164());
+    }
+
+    @Test
+    void missingCallerIdDoesNotAskForAPurchaseOrABundle() {
+        when(numbers.findByTenantIdOrderByCreatedAtDesc(tenantId)).thenReturn(List.of());
+        when(twilio.firstIncomingNumber()).thenReturn("");
+        when(twilio.firstOutgoingCallerId()).thenReturn(null);
+
+        ApiException ex = assertThrows(ApiException.class, () -> service.requireForDial(null));
+        String msg = ex.getMessage().toLowerCase();
+        assertTrue(msg.contains("twilio_voice_from"));
+        assertTrue(msg.contains("personal"));
+        assertFalse(msg.contains("bundle"));
+        assertFalse(msg.contains("regulatory"));
+        assertFalse(msg.contains("buy"));
+        assertFalse(msg.contains("rent"));
     }
 
     private FirmPhoneNumber landline(String status) {

@@ -226,4 +226,26 @@ class VoicePstnTest {
         assertEquals("completed", rec.getStatus());
         assertEquals(125, rec.getDurationSeconds());
     }
+
+    @Test
+    void placeCallWithoutARentedDidUsesTheResolvedCallerId() {
+        FirmPhoneNumber fromEnv = new FirmPhoneNumber();
+        fromEnv.setTenantId(tenantId);
+        fromEnv.setE164("+14155550100");
+        fromEnv.setKind(FirmPhoneNumber.KIND_VOICE_FROM);
+        fromEnv.setStatus(FirmPhoneNumber.STATUS_ACTIVE);
+        when(firmNumbers.requireForDial(null)).thenReturn(fromEnv);
+        when(twilio.createCall(any(), any(), any(), any())).thenReturn("CA200");
+
+        Map<String, Object> view = voice.placePstn(Map.of(
+                "to", "0825550199",
+                "staffCallback", "0835550100",
+                "nonMatter", true));
+
+        verify(twilio).createCall(eq("+27835550100"), eq("+14155550100"), contains("/bridge/"), contains("/status/"));
+        assertEquals("+14155550100", view.get("fromNumber"));
+        assertEquals("voice_from", view.get("callerIdKind"));
+        assertEquals(null, view.get("firmPhoneNumberId"));
+        assertEquals(true, view.get("nonMatter"));
+    }
 }

@@ -19,7 +19,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FirmPhoneNumber {
     public static final String KIND_DID = "did";
+    /** Verified Outgoing Caller ID. Mobile and landline both use this kind. */
     public static final String KIND_LANDLINE = "verified_landline";
+    public static final String KIND_VOICE_FROM = "voice_from";
+    public static final String KIND_ACCOUNT_INCOMING = "account_incoming";
+    public static final String KIND_ACCOUNT_OUTGOING = "account_outgoing";
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ACTIVE = "active";
     public static final String STATUS_RELEASED = "released";
@@ -31,7 +35,7 @@ public class FirmPhoneNumber {
     private UUID tenantId;
     @Column(nullable = false, length = 20)
     private String e164;
-    /** did (rented local number) or verified_landline (outgoing caller ID). */
+    /** did, verified_landline, or an external source used only for one call (voice_from, account_incoming, account_outgoing). */
     @Column(nullable = false, length = 32)
     private String kind;
     @Column(nullable = false, length = 32)

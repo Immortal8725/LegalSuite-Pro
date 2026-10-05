@@ -26,13 +26,13 @@ In-app WebRTC is free. `VoiceService` records duration and a `callType` of `webr
 
 Public-network dialing is a callback bridge, not a browser softphone:
 
-1. The firm rents a local DID or verifies a physical landline (`FirmPhoneNumber`, one row per firm).
+1. Caller ID is resolved without requiring a purchase. Order: the firm's active rented DID, else a verified personal number saved in the app (mobile or landline), else `TWILIO_VOICE_FROM`, else the first IncomingPhoneNumber already on the Twilio account, else the first verified Outgoing Caller ID on that account. If none exist, the API tells staff to verify a personal number or set `TWILIO_VOICE_FROM`.
 2. Staff choose a matter, or explicitly mark the call as not on a matter.
 3. Emergency numbers are refused. They stay on the device dialer.
-4. Twilio rings the attorney's own phone, then dials the destination with the firm number as caller ID.
+4. Twilio rings the attorney's own phone, then dials the destination with that caller ID.
 5. Hangup updates the same `CallRecord`. A matter call still writes a time entry.
 
-Twilio credentials are environment variables only: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` (the public API address Twilio uses for the bridge and status callbacks). The Integrations toggle does not store a password. Webhooks require a valid `X-Twilio-Signature`.
+Twilio credentials are environment variables only: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL` (the public API address Twilio uses for the bridge and status callbacks), and optional `TWILIO_VOICE_FROM`. The Integrations toggle does not store a password. Webhooks require a valid `X-Twilio-Signature`. No South Africa End-User bundle is part of this path. After an account leaves trial, the free trial From number is gone.
 
 Native CallKit (iOS) and ConnectionService (Android) are not in this slice. The Flutter client starts the same bridge. The cellular dialer is what rings. An in-app incoming-call UI would need a VoIP push entitlement and is a follow-up.
 

@@ -297,6 +297,9 @@ export type PstnReadiness = {
   credentialsPresent: boolean;
   publicBaseUrlSet: boolean;
   callerIds: FirmNumber[];
+  canDial?: boolean;
+  automaticCallerId?: string | null;
+  automaticSource?: string | null;
   message: string;
 };
 

@@ -26,7 +26,8 @@ class CallEthicsTest {
     @Test
     void pstnNoticeKeepsEmergencyOnTheHandset() {
         String notice = CallEthics.pstnNotice();
-        assertTrue(notice.contains("verified landline"));
+        assertTrue(notice.contains("verified personal number"));
+        assertTrue(notice.toLowerCase().contains("optional"));
         assertTrue(notice.toLowerCase().contains("emergency"));
         assertTrue(notice.contains("opt-in"));
         assertFalse(notice.contains("—"));

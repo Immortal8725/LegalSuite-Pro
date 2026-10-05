@@ -60,7 +60,14 @@ public class FirmNumberService {
                 .filter(row -> !FirmPhoneNumber.STATUS_RELEASED.equals(row.getStatus()))
                 .map(this::view)
                 .toList();
-        boolean anyActive = callerIds.stream().anyMatch(row -> FirmPhoneNumber.STATUS_ACTIVE.equals(row.get("status")));
+        FirmPhoneNumber automatic = null;
+        if (connected && credentials && publicBase) {
+            try {
+                automatic = resolveCallerId(null);
+            } catch (ApiException ex) {
+                automatic = null;
+            }
+        }
         String message;
         if (!connected) {
             message = "Connect Twilio on the Integrations page. The toggle does not store a password.";
@@ -68,16 +75,20 @@ public class FirmNumberService {
             message = "Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in the server environment. Do not paste them into the app.";
         } else if (!publicBase) {
             message = "Set TWILIO_PUBLIC_BASE_URL to the public https address of this API so Twilio can reach the bridge.";
-        } else if (!anyActive) {
-            message = "Rent a local number or verify the office landline. Then you can dial out with that caller ID.";
+        } else if (automatic != null) {
+            message = "Ready. Your phone rings first. Automatic caller ID is " + automatic.getE164()
+                    + ". Buying a number is optional.";
         } else {
-            message = "Ready. Your phone rings first. The other party sees the caller ID you select.";
+            message = NO_CALLER_ID;
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("twilioConnected", connected);
         out.put("credentialsPresent", credentials);
         out.put("publicBaseUrlSet", publicBase);
         out.put("callerIds", callerIds);
+        out.put("canDial", automatic != null);
+        out.put("automaticCallerId", automatic == null ? null : automatic.getE164());
+        out.put("automaticSource", automatic == null ? null : automatic.getKind());
         out.put("message", message);
         return out;
     }
@@ -136,7 +147,7 @@ public class FirmNumberService {
         String e164 = E164.normalize(raw, tenant.getCountry());
         EmergencyNumbers.rejectIfEmergency(e164);
         ensureFree(e164);
-        String friendly = label(text(body, "friendlyName"), tenant.getFirmName() + " landline");
+        String friendly = label(text(body, "friendlyName"), tenant.getFirmName() + " personal");
         Map<String, String> started = twilio.startCallerIdVerification(
                 e164,
                 friendly,
@@ -145,7 +156,7 @@ public class FirmNumberService {
         if (canonical.isBlank()) canonical = e164;
         String code = started.getOrDefault("validationCode", "");
         if (code.isBlank()) {
-            throw ApiException.badRequest("Twilio did not return a verification code. Try the landline again.");
+            throw ApiException.badRequest("Twilio did not return a verification code. Try that phone again.");
         }
         FirmPhoneNumber row = new FirmPhoneNumber();
         row.setTenantId(tid());
@@ -242,22 +253,69 @@ public class FirmNumberService {
 
     public FirmPhoneNumber requireForDial(UUID id) {
         requireReady(true);
-        FirmPhoneNumber row;
-        if (id == null) {
-            row = numbers.findFirstByTenantIdAndDefaultOutboundTrueAndStatus(tid(), FirmPhoneNumber.STATUS_ACTIVE)
-                    .orElseThrow(() -> ApiException.badRequest(
-                            "Choose a caller ID. Rent a local number or verify the office line first."));
-        } else {
-            row = numbers.findByIdAndTenantId(id, tid())
+        return resolveCallerId(id);
+    }
+
+    /**
+     * Caller ID for an outbound bridge.
+     * Rented DID, then a verified personal number saved on the firm, then TWILIO_VOICE_FROM,
+     * then the first number already on the Twilio account. No purchase and no regulatory bundle.
+     */
+    FirmPhoneNumber resolveCallerId(UUID id) {
+        if (id != null) {
+            FirmPhoneNumber row = numbers.findByIdAndTenantId(id, tid())
                     .orElseThrow(() -> ApiException.notFound("That caller ID is not on this firm."));
+            if (!FirmPhoneNumber.STATUS_ACTIVE.equals(row.getStatus())) {
+                throw ApiException.badRequest(
+                        "That caller ID is not verified yet. Answer Twilio's call and enter the code. A mobile phone works the same way as a landline.");
+            }
+            if (!FirmPhoneNumber.KIND_DID.equals(row.getKind()) && !FirmPhoneNumber.KIND_LANDLINE.equals(row.getKind())) {
+                throw ApiException.badRequest("That caller ID cannot be used for outbound calls.");
+            }
+            return row;
         }
-        if (!FirmPhoneNumber.STATUS_ACTIVE.equals(row.getStatus())) {
-            throw ApiException.badRequest(
-                    "That caller ID is not ready. A landline has to be verified before it can be shown to the other party.");
+        List<FirmPhoneNumber> active = numbers.findByTenantIdOrderByCreatedAtDesc(tid()).stream()
+                .filter(row -> FirmPhoneNumber.STATUS_ACTIVE.equals(row.getStatus()))
+                .toList();
+        FirmPhoneNumber did = prefer(active, FirmPhoneNumber.KIND_DID);
+        if (did != null) return did;
+        FirmPhoneNumber personal = prefer(active, FirmPhoneNumber.KIND_LANDLINE);
+        if (personal != null) return personal;
+        if (props.hasVoiceFrom()) {
+            String from = E164.normalize(props.getVoiceFrom(), tenant().getCountry());
+            EmergencyNumbers.rejectIfEmergency(from);
+            return external(from, FirmPhoneNumber.KIND_VOICE_FROM);
         }
-        if (!FirmPhoneNumber.KIND_DID.equals(row.getKind()) && !FirmPhoneNumber.KIND_LANDLINE.equals(row.getKind())) {
-            throw ApiException.badRequest("That caller ID cannot be used for outbound calls.");
+        String incoming = twilio.firstIncomingNumber();
+        if (incoming != null && !incoming.isBlank()) {
+            return external(incoming, FirmPhoneNumber.KIND_ACCOUNT_INCOMING);
         }
+        String outgoing = twilio.firstOutgoingCallerId();
+        if (outgoing != null && !outgoing.isBlank()) {
+            return external(outgoing, FirmPhoneNumber.KIND_ACCOUNT_OUTGOING);
+        }
+        throw ApiException.badRequest(NO_CALLER_ID);
+    }
+
+    static final String NO_CALLER_ID =
+            "No caller ID is available. Verify a personal mobile or landline in the app, or set TWILIO_VOICE_FROM to a number this Twilio account already owns or has verified.";
+
+    private FirmPhoneNumber prefer(List<FirmPhoneNumber> active, String kind) {
+        FirmPhoneNumber fallback = null;
+        for (FirmPhoneNumber row : active) {
+            if (!kind.equals(row.getKind())) continue;
+            if (row.isDefaultOutbound()) return row;
+            if (fallback == null) fallback = row;
+        }
+        return fallback;
+    }
+
+    private FirmPhoneNumber external(String e164, String kind) {
+        FirmPhoneNumber row = new FirmPhoneNumber();
+        row.setTenantId(tid());
+        row.setE164(e164);
+        row.setKind(kind);
+        row.setStatus(FirmPhoneNumber.STATUS_ACTIVE);
         return row;
     }
 

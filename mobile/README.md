@@ -10,7 +10,7 @@ Attorney mobile slice against the same Spring Boot API as the web app.
 - Time entries
 - Start a public-network call (Calls tab)
 
-The Calls tab posts to `/api/v1/calls/pstn`. Twilio rings the phone you enter, then connects the other party and shows the firm's rented number or verified landline. Rent or verify that caller ID on the web app first. Choose a matter, or mark the call as not on a matter. Emergency numbers are refused so they stay on the device dialer.
+The Calls tab posts to `/api/v1/calls/pstn`. Twilio rings the phone you enter, then connects the other party and shows the automatic caller ID: a verified personal number, `TWILIO_VOICE_FROM`, or a number already on the Twilio account. Buying a local number is optional. Choose a matter, or mark the call as not on a matter. Emergency numbers are refused so they stay on the device dialer.
 
 In-app WebRTC, e-sign, and AI stay on the responsive web app (installable as a PWA).
 

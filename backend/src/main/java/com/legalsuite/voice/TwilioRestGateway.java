@@ -103,6 +103,16 @@ public class TwilioRestGateway implements TwilioGateway {
     }
 
     @Override
+    public String firstIncomingNumber() {
+        return firstPhone(get("/IncomingPhoneNumbers.json?PageSize=1"), "incoming_phone_numbers");
+    }
+
+    @Override
+    public String firstOutgoingCallerId() {
+        return firstPhone(get("/OutgoingCallerIds.json?PageSize=1"), "outgoing_caller_ids");
+    }
+
+    @Override
     public void releaseCallerId(String sid) {
         delete("/OutgoingCallerIds/" + requireSid(sid) + ".json");
     }
@@ -223,6 +233,13 @@ public class TwilioRestGateway implements TwilioGateway {
 
     private static String enc(String value) {
         return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+    }
+
+    private static String firstPhone(JsonNode body, String field) {
+        JsonNode rows = body.path(field);
+        if (!rows.isArray() || rows.isEmpty()) return null;
+        String phone = text(rows.get(0), "phone_number");
+        return phone.isBlank() ? null : phone;
     }
 
     private static String text(JsonNode node, String field) {

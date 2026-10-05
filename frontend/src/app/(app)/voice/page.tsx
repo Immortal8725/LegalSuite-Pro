@@ -25,7 +25,10 @@ type Registry = {
 
 function kindLabel(kind?: string) {
   if (kind === "did") return "Local number";
-  if (kind === "verified_landline") return "Verified landline";
+  if (kind === "verified_landline") return "Verified personal number";
+  if (kind === "voice_from") return "Server caller ID";
+  if (kind === "account_incoming") return "Twilio account number";
+  if (kind === "account_outgoing") return "Verified caller ID on the account";
   return kind || "";
 }
 
@@ -50,7 +53,7 @@ export default function VoicePage() {
   const [searching, setSearching] = useState(false);
 
   const [landline, setLandline] = useState("");
-  const [landlineName, setLandlineName] = useState("Office line");
+  const [landlineName, setLandlineName] = useState("Personal phone");
 
   const [destination, setDestination] = useState("");
   const [callback, setCallback] = useState("");
@@ -178,8 +181,15 @@ export default function VoicePage() {
 
           <div>
             <h3 className="mb-2 text-sm font-bold text-navy">Caller IDs</h3>
+            {readiness?.automaticCallerId && (
+              <p className="mb-2 text-sm text-slate-600">
+                Automatic caller ID: <span className="font-mono">{readiness.automaticCallerId}</span> ({kindLabel(readiness.automaticSource || undefined)}). Buying a number is optional.
+              </p>
+            )}
             {(readiness?.callerIds || []).length === 0 ? (
-              <p className="text-sm text-slate-500">No caller ID yet. Rent a local number or verify the office line.</p>
+              <p className="text-sm text-slate-500">
+                No number is saved on this firm yet. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a local number is optional.
+              </p>
             ) : (
               <TableWrap>
                 <thead>
@@ -200,7 +210,7 @@ export default function VoicePage() {
                         {n.friendlyName && <div className="text-xs text-slate-500">{n.friendlyName}</div>}
                         {n.validationCode && (
                           <div className="mt-1 text-xs text-amber-800">
-                            Enter {n.validationCode} when Twilio calls this landline.
+                            Enter {n.validationCode} when Twilio calls this phone.
                           </div>
                         )}
                       </Td>
@@ -225,7 +235,7 @@ export default function VoicePage() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              if (!window.confirm("Release this caller ID? A rented number is given back to Twilio.")) return;
+                              if (!window.confirm("Release this caller ID? A rented number goes back to Twilio. A verified personal number is removed as caller ID.")) return;
                               run(() => apiPost(`/api/v1/voice/numbers/${n.id}/release`, {}), "Caller ID released.");
                             }}
                           >
@@ -242,8 +252,39 @@ export default function VoicePage() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <h3 className="mb-2 text-sm font-bold text-navy">Rent a local number</h3>
-              <p className="mb-3 text-xs text-slate-500">Twilio searches available local numbers. Buying one rents it for this firm and sets it as a caller ID.</p>
+              <h3 className="mb-2 text-sm font-bold text-navy">Verify a personal number</h3>
+              <p className="mb-3 text-xs text-slate-500">
+                Use a mobile or a landline you can answer. Twilio calls that phone and asks for a code. After you enter it, that number is the caller ID. You do not need to buy a number.
+              </p>
+              <div className="grid gap-3">
+                <div>
+                  <Label>Mobile or landline</Label>
+                  <Input value={landline} onChange={(e) => setLandline(e.target.value)} placeholder="082 555 0100" />
+                </div>
+                <div>
+                  <Label>Label</Label>
+                  <Input value={landlineName} onChange={(e) => setLandlineName(e.target.value)} />
+                </div>
+              </div>
+              <Button
+                className="mt-3"
+                variant="outline"
+                onClick={() =>
+                  run(
+                    () => apiPost<FirmNumber>("/api/v1/voice/numbers/verify", { phoneNumber: landline, friendlyName: landlineName }),
+                    "Twilio is calling that phone. Enter the code shown on the row above."
+                  )
+                }
+              >
+                Start verification
+              </Button>
+              {pending.length > 0 && (
+                <p className="mt-2 text-xs text-amber-800">A verification call is still waiting. Use Check verification after you enter the code.</p>
+              )}
+            </div>
+            <div>
+              <h3 className="mb-2 text-sm font-bold text-navy">Rent a local number (optional)</h3>
+              <p className="mb-3 text-xs text-slate-500">Optional. Search Twilio if you want a separate local number. Dialing does not require a purchase.</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <Label>Country</Label>
@@ -310,44 +351,12 @@ export default function VoicePage() {
                 </ul>
               )}
             </div>
-
-            <div>
-              <h3 className="mb-2 text-sm font-bold text-navy">Verify a landline</h3>
-              <p className="mb-3 text-xs text-slate-500">
-                Twilio calls the physical line and asks for a code. Pick up that phone and enter the code. Until then, the number cannot be used as caller ID.
-              </p>
-              <div className="grid gap-3">
-                <div>
-                  <Label>Landline</Label>
-                  <Input value={landline} onChange={(e) => setLandline(e.target.value)} placeholder="011 555 0100" />
-                </div>
-                <div>
-                  <Label>Label</Label>
-                  <Input value={landlineName} onChange={(e) => setLandlineName(e.target.value)} />
-                </div>
-              </div>
-              <Button
-                className="mt-3"
-                variant="outline"
-                onClick={() =>
-                  run(
-                    () => apiPost<FirmNumber>("/api/v1/voice/numbers/verify", { phoneNumber: landline, friendlyName: landlineName }),
-                    "Twilio is calling that landline. Enter the code shown on the row above."
-                  )
-                }
-              >
-                Start verification
-              </Button>
-              {pending.length > 0 && (
-                <p className="mt-2 text-xs text-amber-800">A verification call is still waiting. Use Check verification after you enter the code.</p>
-              )}
-            </div>
           </div>
 
           <div>
             <h3 className="mb-2 text-sm font-bold text-navy">Dial out</h3>
             <p className="mb-3 text-xs text-slate-500">
-              Your mobile rings first. When you answer, we connect the other party and they see the caller ID you picked. This is not a browser softphone. Emergency numbers stay on the handset dialer.
+              Your mobile rings first. When you answer, we connect the other party and they see the automatic caller ID, or the one you pick. This is not a browser softphone. Emergency numbers stay on the handset dialer. Buying a number is optional.
             </p>
             <div className="grid gap-3 md:grid-cols-2">
               <div>
@@ -361,7 +370,7 @@ export default function VoicePage() {
               <div>
                 <Label>Caller ID</Label>
                 <Select value={callerId} onChange={(e) => setCallerId(e.target.value)}>
-                  <option value="">Default caller ID</option>
+                  <option value="">Automatic caller ID</option>
                   {activeIds.map((n) => (
                     <option key={n.id} value={n.id}>
                       {n.e164} ({kindLabel(n.kind)})
