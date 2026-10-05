@@ -37,7 +37,7 @@ export default function ClientsPage() {
               <Th>Source</Th>
               <Th>Status</Th>
               <Th>Portal</Th>
-              <Th></Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>

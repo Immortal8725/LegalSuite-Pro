@@ -32,7 +32,7 @@ export default function ContactsPage() {
               <Th>Organization</Th>
               <Th>Email</Th>
               <Th>Phone</Th>
-              <Th></Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
