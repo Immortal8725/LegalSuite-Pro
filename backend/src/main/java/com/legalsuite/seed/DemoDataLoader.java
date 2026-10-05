@@ -28,6 +28,7 @@ import com.legalsuite.domain.TenantModule;
 import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.domain.TrustReconciliation;
+import com.legalsuite.service.Pricing;
 import com.legalsuite.domain.TrustTransaction;
 import com.legalsuite.service.DocketEngine;
 import com.legalsuite.service.PracticeService;
@@ -170,31 +171,39 @@ public class DemoDataLoader implements CommandLineRunner {
     public void run(String... args) {
         if (plans.count() > 0) return;
 
-        Plan free = plan("Free", "free", "Landing page, intake, and a starter docket.", 0, 2, 25, 30, 1);
-        Plan ess = plan("Essentials", "essentials", "Solo and small firms ready to bill and file.", 49, 5, -1, 200, 2);
-        Plan pro = plan("Professional", "professional", "Growing firms with trust accounting and voice.", 99, 25, -1, 1000, 3);
-        plan("Enterprise", "enterprise", "Multi-office firms that need every module on.", 149, -1, -1, -1, 4);
+        Plan light = plan(
+                "Light",
+                Pricing.LIGHT_SLUG,
+                "R1,199 per month for one attorney. The practice desk and section 86 trust are in the seat. Public-network minutes are pay-what-you-use. A local number is optional at about R79, or bundled.",
+                Pricing.LIGHT_MONTHLY_ZAR.intValue(),
+                Pricing.LIGHT_ATTORNEYS,
+                -1,
+                Pricing.INCLUDED_PSTN_MINUTES,
+                1);
+        light.setFeaturesJson(
+                "{\"currency\":\"ZAR\",\"seats\":1,\"trustIncluded\":true,\"includedPstnMinutes\":0,\"phone\":\"pay-what-you-use\",\"didMonthlyZar\":79,\"did\":\"Optional local number about R79 per month, or bundled with the seat.\"}");
+        plans.save(light);
 
-        AppModule mCases = module("Case Management", "cases", "Matters, status, courts, and parties.", "practice", "⚖️", 0, true, "free", 1);
-        module("Client CRM", "clients", "Every relationship the firm is responsible for.", "practice", "👥", 0, true, "free", 2);
-        module("Contacts", "contacts", "Opposing counsel, judges, vendors.", "practice", "📇", 0, true, "free", 3);
-        module("Calendar", "calendar", "Hearings, depositions, and filing deadlines.", "practice", "📅", 0, true, "free", 4);
-        module("Tasks", "tasks", "Work that has an owner and a due date.", "practice", "✅", 0, true, "free", 5);
-        module("Documents", "documents", "Case files with privilege flags.", "documents", "📄", 0, true, "free", 6);
-        module("Time Tracking", "timetracking", "Timers and 6-minute increments.", "financial", "⏱️", 0, true, "essentials", 7);
-        module("Billing & Invoices", "billing", "Draft, send, and record payment.", "financial", "💰", 0, true, "essentials", 8);
-        module("Messaging", "messages", "Internal threads tied to matters.", "communication", "💬", 0, true, "essentials", 9);
-        AppModule mTrust = module("Trust Accounting", "trust", "IOLTA / LPA s 86 ledgers that cannot spend another client's money.", "financial", "🏦", 29, false, "professional", 10);
-        module("Expenses", "expenses", "Costs advanced and billed back.", "financial", "🧾", 10, false, "essentials", 11);
-        module("Client Portal", "clientportal", "Clients see their case, files, and invoices.", "communication", "🌐", 19, false, "essentials", 12);
-        module("E-Signatures", "esignatures", "Send retainers out for in-app signature. No DocuSign key required.", "documents", "✍️", 15, false, "professional", 13);
-        module("Conflict Check", "conflicts", "Search clients, parties, and counsel.", "compliance", "🔍", 0, true, "essentials", 14);
-        module("Reports", "reports", "Realization, pipeline, and aging.", "analytics", "📈", 0, true, "essentials", 15);
-        module("AI Assistant", "ai", "Local summaries, intake screening, and drafts. No API key.", "analytics", "✨", 19, false, "professional", 16);
-        AppModule mVoice = module("Voice Calling", "voice", "In-app WebRTC. Pay only for PSTN minutes.", "communication", "📞", 0, true, "essentials", 17);
-        module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 10, false, "essentials", 18);
-        module("Integrations", "integrations", "Connect Stripe, Twilio, Calendar, and import tools.", "platform", "🔌", 0, false, "professional", 19);
-        module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "essentials", 20);
+        AppModule mCases = module("Case Management", "cases", "Matters, status, courts, and parties.", "practice", "⚖️", 0, true, "light", 1);
+        module("Client CRM", "clients", "Every relationship the firm is responsible for.", "practice", "👥", 0, true, "light", 2);
+        module("Contacts", "contacts", "Opposing counsel, judges, vendors.", "practice", "📇", 0, true, "light", 3);
+        module("Calendar", "calendar", "Hearings, depositions, and filing deadlines.", "practice", "📅", 0, true, "light", 4);
+        module("Tasks", "tasks", "Work that has an owner and a due date.", "practice", "✅", 0, true, "light", 5);
+        module("Documents", "documents", "Case files with privilege flags.", "documents", "📄", 0, true, "light", 6);
+        module("Time Tracking", "timetracking", "Timers and 6-minute increments.", "financial", "⏱️", 0, true, "light", 7);
+        module("Billing & Invoices", "billing", "Draft, send, and record payment.", "financial", "💰", 0, true, "light", 8);
+        module("Messaging", "messages", "Internal threads tied to matters.", "communication", "💬", 0, true, "light", 9);
+        AppModule mTrust = module("Trust Accounting", "trust", "Included in Light. Per-client section 86 or IOLTA ledgers. Not a separate month-end charge.", "financial", "🏦", 0, true, "light", 10);
+        module("Expenses", "expenses", "Costs advanced and billed back.", "financial", "🧾", 0, false, "light", 11);
+        module("Client Portal", "clientportal", "Clients see their case, files, and invoices.", "communication", "🌐", 0, false, "light", 12);
+        module("E-Signatures", "esignatures", "Send retainers out for in-app signature. No DocuSign key required.", "documents", "✍️", 0, false, "light", 13);
+        module("Conflict Check", "conflicts", "Search clients, parties, and counsel.", "compliance", "🔍", 0, true, "light", 14);
+        module("Reports", "reports", "Realization, pipeline, and aging.", "analytics", "📈", 0, true, "light", 15);
+        module("AI Assistant", "ai", "Draft help on this tenant. The attorney remains responsible. No vendor key in the default build.", "analytics", "✨", 0, false, "light", 16);
+        AppModule mVoice = module("Voice Calling", "voice", "In-app calls are included. Public-network minutes are pay-what-you-use. No minute bundle and no unlimited voice.", "communication", "📞", 0, true, "light", 17);
+        module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 0, false, "light", 18);
+        module("Integrations", "integrations", "Stripe and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "light", 19);
+        module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "light", 20);
 
         Tenant firm = new Tenant();
         firm.setFirmName("Smith & Associates");
@@ -207,7 +216,7 @@ public class DemoDataLoader implements CommandLineRunner {
         firm.setState("TX");
         firm.setZip("78701");
         firm.setCountry("US");
-        firm.setPlanId(pro.getId());
+        firm.setPlanId(light.getId());
         firm.setStatus("active");
         firm.setOnboardingCompleted(true);
         firm.setTagline("Justice with a steady hand.");
@@ -333,8 +342,8 @@ public class DemoDataLoader implements CommandLineRunner {
         pstn.setStartedAt(Instant.now().minus(26, ChronoUnit.HOURS));
         pstn.setEndedAt(Instant.now().minus(26, ChronoUnit.HOURS).plusSeconds(480));
         pstn.setDurationSeconds(480);
-        pstn.setCostPerMinute(new BigDecimal("0.02"));
-        pstn.setTotalCost(new BigDecimal("0.16"));
+        pstn.setCostPerMinute(BigDecimal.ZERO);
+        pstn.setTotalCost(BigDecimal.ZERO);
         pstn.setRecordingEnabled(false);
         calls.save(pstn);
 
@@ -549,15 +558,14 @@ public class DemoDataLoader implements CommandLineRunner {
         conflictLead.setStatus("consultation");
         leads.save(conflictLead);
 
-        seedSouthAfrica(pro);
+        seedSouthAfrica(light);
 
-        // unused vars to keep compiler happy if modules referenced
-        if (free.getSlug() == null || ess.getSlug() == null || mCases == null || mTrust == null || mVoice == null || c2 == null || c4 == null) {
+        if (light.getSlug() == null || mCases == null || mTrust == null || mVoice == null || c2 == null || c4 == null) {
             throw new IllegalStateException("seed failed");
         }
     }
 
-    private void seedSouthAfrica(Plan pro) {
+    private void seedSouthAfrica(Plan light) {
         Tenant firm = new Tenant();
         firm.setFirmName("Ndlovu & Partners");
         firm.setSlug("ndlovu-partners");
@@ -569,7 +577,7 @@ public class DemoDataLoader implements CommandLineRunner {
         firm.setState("GP");
         firm.setZip("2196");
         firm.setCountry("ZA");
-        firm.setPlanId(pro.getId());
+        firm.setPlanId(light.getId());
         firm.setStatus("active");
         firm.setOnboardingCompleted(true);
         firm.setTagline("Gauteng trial lawyers. RAF, delict, and the files that cannot wait.");
@@ -732,7 +740,7 @@ public class DemoDataLoader implements CommandLineRunner {
         templates.save(mandate);
 
         notify(firm.getId(), thabo.getId(), "Trust recon is short", "Section 86 three-way is unbalanced by R11,750. Do not certify.", "trust", "/trust");
-        notify(firm.getId(), thabo.getId(), "Act 40 notice overdue", "Van der Merwe v City of Johannesburg — s 3 notice is overdue. Condonation before you issue.", "docket", "/cases");
+        notify(firm.getId(), thabo.getId(), "Act 40 notice overdue", "Van der Merwe v City of Johannesburg. The s 3 notice is overdue. Condonation before you issue.", "docket", "/cases");
         notify(firm.getId(), lindiwe.getId(), "New website consult", "A RAF consult is waiting on the hire pipeline.", "intake", "/leads");
 
         Lead hot = new Lead();
@@ -742,7 +750,7 @@ public class DemoDataLoader implements CommandLineRunner {
         hot.setPhone("073 555 0190");
         hot.setCaseType("RAF");
         hot.setOpposingParty("Road Accident Fund");
-        hot.setDescription("Taxi collision on the N1 yesterday. Identified driver. Urgent — the other insurer already called.");
+        hot.setDescription("Taxi collision on the N1 yesterday. Identified driver. Urgent. The other insurer already called.");
         hot.setAccrualDate(LocalDate.now().minusDays(1));
         hot.setStatus("new");
         leads.save(hot);
@@ -783,7 +791,7 @@ public class DemoDataLoader implements CommandLineRunner {
         p.setPriceMonthly(BigDecimal.valueOf(price));
         p.setMaxUsers(users);
         p.setMaxCases(cases);
-        p.setIncludedVoiceMinutes(mins);
+        p.setIncludedVoiceMinutes(Pricing.capIncludedMinutes(mins));
         p.setSortOrder(order);
         p.setActive(true);
         p.setFeaturesJson("{}");

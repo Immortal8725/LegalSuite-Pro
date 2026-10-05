@@ -166,8 +166,11 @@ public class AuthService {
         if (tenants.existsBySlug(slug)) {
             throw ApiException.conflict("Firm slug '" + slug + "' is already taken");
         }
-        Plan plan = plans.findBySlug(req.planSlug() == null ? "free" : req.planSlug())
-                .orElseGet(() -> plans.findBySlug("free").orElseThrow());
+        String requested = req.planSlug() == null || req.planSlug().isBlank()
+                ? Pricing.LIGHT_SLUG
+                : req.planSlug().trim();
+        Plan plan = plans.findBySlug(requested)
+                .orElseGet(() -> plans.findBySlug(Pricing.LIGHT_SLUG).orElseThrow());
         Tenant tenant = new Tenant();
         tenant.setFirmName(req.firmName());
         tenant.setSlug(slug);
@@ -344,7 +347,7 @@ public class AuthService {
         m.put("firmName", tenant.getFirmName());
         m.put("slug", tenant.getSlug());
         m.put("logoUrl", tenant.getLogoUrl());
-        m.put("planSlug", plan == null ? "free" : plan.getSlug());
+        m.put("planSlug", plan == null ? Pricing.LIGHT_SLUG : plan.getSlug());
         m.put("status", tenant.getStatus());
         m.put("onboardingCompleted", tenant.isOnboardingCompleted());
         m.put("enabledModules", enabled);

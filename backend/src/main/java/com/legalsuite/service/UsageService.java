@@ -5,11 +5,15 @@ import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppModule;
 import com.legalsuite.domain.CallRecord;
+import com.legalsuite.domain.Plan;
+import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TenantModule;
 import com.legalsuite.domain.UsageInvoice;
 import com.legalsuite.repo.AppModuleRepository;
 import com.legalsuite.repo.CallRecordRepository;
+import com.legalsuite.repo.PlanRepository;
 import com.legalsuite.repo.TenantModuleRepository;
+import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.repo.UsageInvoiceRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,18 +34,24 @@ public class UsageService {
     private final AppModuleRepository modules;
     private final CallRecordRepository calls;
     private final AuditService audit;
+    private final TenantRepository tenants;
+    private final PlanRepository plans;
 
     public UsageService(
             UsageInvoiceRepository invoices,
             TenantModuleRepository tenantModules,
             AppModuleRepository modules,
             CallRecordRepository calls,
-            AuditService audit) {
+            AuditService audit,
+            TenantRepository tenants,
+            PlanRepository plans) {
         this.invoices = invoices;
         this.tenantModules = tenantModules;
         this.modules = modules;
         this.calls = calls;
         this.audit = audit;
+        this.tenants = tenants;
+        this.plans = plans;
     }
 
     public Map<String, Object> preview() {
@@ -51,6 +61,18 @@ public class UsageService {
     public Map<String, Object> preview(YearMonth month) {
         UUID tid = TenantContext.requireTenant();
         List<Map<String, Object>> lines = new ArrayList<>();
+        BigDecimal seat = BigDecimal.ZERO;
+        Tenant tenant = tenants.findById(tid).orElse(null);
+        if (tenant != null && tenant.getPlanId() != null) {
+            Plan plan = plans.findById(tenant.getPlanId()).orElse(null);
+            if (plan != null && plan.getPriceMonthly() != null && plan.getPriceMonthly().signum() > 0) {
+                seat = plan.getPriceMonthly();
+                lines.add(Map.of(
+                        "kind", "seat",
+                        "description", plan.getName() + " seat (1 attorney, trust included)",
+                        "amount", seat));
+            }
+        }
         BigDecimal modulesTotal = BigDecimal.ZERO;
         for (TenantModule tm : tenantModules.findByTenantId(tid)) {
             if (!tm.isEnabled()) continue;
@@ -77,20 +99,23 @@ public class UsageService {
         if (pstn.signum() > 0 || pstnMinutes > 0) {
             lines.add(Map.of(
                     "kind", "pstn",
-                    "description", "PSTN minutes (" + pstnMinutes + " min)",
+                    "description", "Public-network minutes (" + pstnMinutes + " min, pay-what-you-use)",
                     "amount", pstn));
         }
-        BigDecimal total = modulesTotal.add(pstn);
+        BigDecimal total = seat.add(modulesTotal).add(pstn);
         String period = month.toString();
         UsageInvoice existing = invoices.findByTenantIdAndPeriod(tid, period).orElse(null);
         Map<String, Object> m = new HashMap<>();
         m.put("period", period);
+        m.put("seatSubtotal", seat);
         m.put("modulesSubtotal", modulesTotal);
         m.put("pstnSubtotal", pstn);
         m.put("pstnMinutes", pstnMinutes);
+        m.put("includedPstnMinutes", Pricing.INCLUDED_PSTN_MINUTES);
+        m.put("didMonthly", Pricing.DID_MONTHLY_ZAR);
         m.put("total", total);
         m.put("lineItems", lines);
-        m.put("note", "In-app WebRTC is $0. You pay add-on modules and public-network minutes at month end — no prepaid bucket.");
+        m.put("note", "Light is the monthly seat and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled. Card collection waits until Stripe keys are on the process. In-app calls are not billed.");
         m.put("issued", existing == null ? null : view(existing));
         return m;
     }

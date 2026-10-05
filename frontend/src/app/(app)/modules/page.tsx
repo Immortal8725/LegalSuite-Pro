@@ -41,7 +41,7 @@ export default function ModulesPage() {
     <div>
       <PageHeader
         title="Manage modules"
-        subtitle={`Click what the firm needs. Core practice tools stay on. Add-ons this month: ${money(addOnCost)}.`}
+        subtitle={`Light includes the practice desk and section 86 trust. Add-ons outside the seat this month: ${money(addOnCost)}. Public-network minutes are pay-what-you-use and are not a module price.`}
       />
       <ErrorBanner error={error} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

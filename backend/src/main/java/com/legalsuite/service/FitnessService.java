@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,16 +18,19 @@ public class FitnessService {
     private final LegalCaseRepository cases;
     private final FinanceService finance;
     private final DashboardService dashboard;
+    private final Environment env;
 
     public FitnessService(
             TenantRepository tenants,
             LegalCaseRepository cases,
             FinanceService finance,
-            DashboardService dashboard) {
+            DashboardService dashboard,
+            Environment env) {
         this.tenants = tenants;
         this.cases = cases;
         this.finance = finance;
         this.dashboard = dashboard;
+        this.env = env;
     }
 
     public Map<String, Object> snapshot() {
@@ -73,7 +77,7 @@ public class FitnessService {
         items.add(item("bank-feed", tenant.getBankFeedImportedAt() != null, "you",
                 "Bank statement CSV import",
                 tenant.getBankFeedImportedAt() != null
-                        ? "Last import " + tenant.getLastBankFeedSource() + " at " + tenant.getBankFeedImportedAt() + ". Not Open Banking — paste FNB / Standard / ABSA CSV."
+                        ? "Last import " + tenant.getLastBankFeedSource() + " at " + tenant.getBankFeedImportedAt() + ". Not Open Banking. Paste an FNB, Standard Bank, or ABSA CSV."
                         : "Import FNB / Standard Bank / ABSA CSV so the bank leg is not typed in."));
         items.add(item("ffc", Compliance.ffcCurrent(tenant), "you",
                 za ? "Fidelity Fund Certificate on file" : "Bar card / IOLTA enrollment",
@@ -92,9 +96,17 @@ public class FitnessService {
         items.add(item("esign-cert", true, "product",
                 "ECT Act s 13 identity-bound signature",
                 "The hash includes the signer's identity number (ECT Act 25 of 2002 s 13 advanced-signature analogue). Not a SANAS-accredited CSP certificate."));
-        items.add(item("production-db", false, "you",
-                "PostgreSQL, forced 2FA, TLS",
-                "H2 create-drop is the demo. TOTP 2FA is in Settings. Inspectors still want PostgreSQL and TLS in production. A postgres Spring profile and docker-compose are in the repo."));
+        boolean postgresProfile = false;
+        for (String profile : env.getActiveProfiles()) {
+            if ("postgres".equals(profile)) postgresProfile = true;
+        }
+        String jdbc = env.getProperty("spring.datasource.url", "");
+        boolean onPostgres = postgresProfile && jdbc.startsWith("jdbc:postgresql:");
+        items.add(item("production-db", onPostgres, onPostgres ? "product" : "you",
+                "PostgreSQL for the practice database",
+                onPostgres
+                        ? "This process is on PostgreSQL. TLS, a public domain, Stripe keys, and Twilio KYC are still operator work. Forced 2FA is not on for demo users."
+                        : "This process is on H2. For a hosted pilot, start Postgres and set SPRING_PROFILES_ACTIVE=postgres. See the README hosted runbook. TLS and a real domain stay with the operator."));
         items.add(item("caselines", true, "product",
                 za ? "RAF 1 lodge pack" : "E-filing pack",
                 za
@@ -113,7 +125,7 @@ public class FitnessService {
         m.put("docket", dashboard.docket(tid));
         m.put("items", items);
         m.put("next", za
-                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Postgres and TLS remain for production."
+                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Hosted Postgres is in the README. TLS, the domain, Stripe, and Twilio KYC remain operator work."
                 : "Certify this month's three-way recon, then put the ledger on Postgres. That is what turns the demo into a practice.");
         return m;
     }

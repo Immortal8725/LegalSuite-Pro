@@ -88,7 +88,9 @@ Accounts. One tenant per firm slug. You keep credentials confidential. TOTP is a
 
 Your data. You own the matter files. You licence us to host them to provide the service.
 
-No legal advice. Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. Fitness scores are a checklist, not an LPC audit.
+No legal advice. Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. The attorney remains responsible. Fitness scores are a checklist, not an LPC audit.
+
+Fees. Light is R1,199 per month for one attorney and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled.
 
 Liability. To the extent permitted by the CPA and other mandatory law, liability is capped at fees paid in the three months before the claim. We are not liable for missed prescription, an uncertified recon, or a claim the Fund rejects.
 
@@ -145,11 +147,11 @@ If a future build adds a vendor model, that build will require a separate operat
 
 Vercel (optional) — web front end; request logs; UI can publish, API needs a JVM.
 
-PostgreSQL host (optional) — all tenant rows; docker-compose / postgres profile; not the default.
+PostgreSQL host: all tenant rows. docker compose and the postgres profile. The demo default is still H2.
 
-Stripe — subscriptions / invoices; connect stub.
+Stripe: Light subscription and usage invoices. Keys come from the environment. A toggle is not a live account.
 
-Twilio — PSTN metadata; connect stub.
+Twilio: public-network calls and an optional local number. Keys come from the environment. KYC is operator work.
 
 Authenticator apps — TOTP; shared secret stays on the user row.
 

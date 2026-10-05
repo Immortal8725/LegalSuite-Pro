@@ -104,8 +104,8 @@ public final class TexasDocketRules {
             m.put("clocks", clocks.stream().map(Clock::asMap).toList());
             m.put("caveats", caveats);
             m.put("disclaimer", "ZA".equals(jurisdiction)
-                    ? "South African docket clocks from filed facts. Confirm interruptions, condonation, RAF lodging, and the latest LPC practice notes before you rely on a date. This is not legal advice."
-                    : "Texas docket clocks from filed facts. Confirm exceptions, tolling, and local rules before you rely on a date.");
+                    ? "South African docket clocks from filed facts. Confirm interruptions, condonation, RAF lodging, and the latest LPC practice notes before you rely on a date. The attorney remains responsible. This is not legal advice."
+                    : "Texas docket clocks from filed facts. Confirm exceptions, tolling, and local rules before you rely on a date. The attorney remains responsible. This is not legal advice.");
             return m;
         }
     }

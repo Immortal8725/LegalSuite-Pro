@@ -1,10 +1,10 @@
 # LegalSuite Pro — Product
 
-**Status:** All twelve product phases shipped. Demo, not a hosted production practice.  
+**Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, Stripe keys, a domain, and TLS are still operator work.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
 **Effective:** 16 September 2026. Operator: LegalSuite Pro (the software described in this repository).
 
-A multi-tenant practice system for law firms. A firm registers once. It gets a public website, an intake form, a docket that watches statutory clocks, a hire gate that will not let an unsigned file appear, and a trust ledger that cannot spend another client’s money. In-app calls are free. Add-on modules and PSTN minutes invoice when the month closes.
+A multi-tenant practice system for a solo South African attorney. A firm registers once. It gets a public website, an intake form, a docket that watches statutory clocks, a hire gate that will not let an unsigned file appear, and a trust ledger that cannot spend another client’s money. Light is R1,199 per month for one attorney and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about R79 per month, or bundled when the operator includes it.
 
 South Africa is the default jurisdiction. Texas still runs on a second tenant so both docket engines can be compared.
 
@@ -32,7 +32,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 2. **The clock is the home screen.** RAF Act s 23, Prescription Act ss 11–13, Act 40 of 2002 s 3, LRA s 191 (ZA). Texas CPRC ch. 16, 74, 101 and Estates Code on the other tenant. Overdue lodge/notice/referral clocks spawn a task and **block trial status**.
 3. **The phone is on the file.** In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
-5. **Metered, not seated.** Core modules stay on. Add-ons and PSTN minutes roll into the month-end usage invoice.
+5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. There is no included minute bundle and no unlimited voice tier. A local number (DID) is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
 6. **Privilege-shaped AI.** Summaries, drafts, and intake screening stay on the tenant row. No vendor key. No training corpus.
 
 ---
@@ -78,13 +78,13 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 ## 5. Plans and modules
 
-**Plans (seeded):** Free · Essentials · Professional · Enterprise.
+**Plan (seeded):** Light. R1,199 per month. One attorney. Currency is ZAR. Older Free, Essentials, Professional, and Enterprise rows, and any USD price, are not part of this pilot.
 
-**Core (cannot be switched off):** cases, clients, contacts, calendar, tasks, documents, conflicts (from Essentials), reports, audit, voice (in-app).
+**In the seat (not a separate charge):** cases, clients, contacts, calendar, tasks, documents, time, billing, messages, conflicts, reports, audit, in-app voice, and section 86 trust.
 
-**Add-ons (month-end invoice):** trust, expenses, client portal, e-signatures, AI, templates, integrations.
+**Phone:** public-network minutes are pay-what-you-use. `includedVoiceMinutes` is 0. A negative minute cap is treated as 0, not unlimited. A local number is optional at about R79 per month, or bundled. The per-minute carrier rate is `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`. Leave them blank until the carrier price is known. Blank does not invent a rate.
 
-Voice over the public switched network is metered. In-app WebRTC is not.
+**Not in the seat price:** card collection (Stripe) and the public-network bridge (Twilio). Both stay off until keys are in the environment.
 
 ---
 
@@ -103,7 +103,7 @@ Voice over the public switched network is metered. In-app WebRTC is not.
 
 1. Three-way recon short **R11,750** (bank R438,250 vs book/ledgers R450,000). Do not certify.
 2. C-2002 Act 40 s 3 notice overdue — trial blocked.
-3. Production ops: default **H2 create-drop**. Postgres profile + `docker-compose` exist. TLS and forced 2FA are not on.
+3. Production ops on the H2 demo: TLS, a public domain, Stripe keys, and Twilio KYC are not done. Postgres is the hosted path (`docker compose` and `SPRING_PROFILES_ACTIVE=postgres`). The fitness row turns green only when that profile is actually running.
 
 ---
 
@@ -114,14 +114,14 @@ Voice over the public switched network is metered. In-app WebRTC is not.
 | Ndlovu & Partners (Sandton, GP) | `ndlovu-partners` | `thabo@ndlovulaw.co.za` / `lindiwe@ndlovulaw.co.za` / `sipho@ndlovulaw.co.za` · `password` | `nomsa@example.com` / `portal123` |
 | Smith & Associates (Austin, TX) | `smith-associates` | `john@smithlaw.com` · `password` | `sarah@example.com` / `portal123` |
 
-Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), information officer Thabo, PAIA generated, POPIA operator acknowledged, bank-feed timestamp set. Matters C-2001 RAF, C-2002 City of Johannesburg (Act 40 overdue), C-2003 CCMA, C-2004 estate, C-2005 contract.
+Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), information officer Thabo, PAIA generated, POPIA operator acknowledged, bank-feed timestamp set. Matters C-2001 RAF, C-2002 City of Johannesburg (Act 40 overdue), C-2003 CCMA, C-2004 estate, C-2005 contract. The commercial seat is one attorney. The sample firm still has extra staff logins so the file can be shown.
 
 ---
 
 ## 8. Stack and tenancy
 
 - **Web:** Next.js 15, React 19, Tailwind, shadcn-style primitives.
-- **API:** Spring Boot 3.4, Java 21, JPA, JWT. Default H2 (`ddl-auto: create-drop`). `SPRING_PROFILES_ACTIVE=postgres` + `docker compose up postgres` for PostgreSQL.
+- **API:** Spring Boot 3.4, Java 21, JPA, JWT. Default H2 (`ddl-auto: create-drop`) for the demo. Hosted path: `SPRING_PROFILES_ACTIVE=postgres`, `docker compose up postgres`, and `GET /api/v1/health`. The Postgres profile refuses the checked-in development JWT secret.
 - **Voice:** `/ws/signal` plus HTTP inbox fallback.
 - **Mobile:** Flutter against `/api/v1`.
 
@@ -129,13 +129,21 @@ Firms are the security boundary. Every row carries `tenant_id`. JWT writes `Tena
 
 ---
 
-## 9. Out of product (next work, not missing phases)
+## 9. Still needs a person
 
-- Hosted PostgreSQL, TLS, forced 2FA, backups, SSO.
-- Live bank feed (Open Banking / Plaid).
-- SANAS-accredited electronic signatures or DocuSign/Adobe with a certificate.
-- CaseLines / RAF e-lodgement / court e-filing.
-- Real Stripe / Twilio keys (connect hub is a stub).
+Coded in this repo: Postgres via Docker, `.env.example` for Twilio and Stripe with no secrets, `GET /api/v1/health`, and the hosted runbook in [README.md](README.md).
+
+A person still has to:
+
+- Approve Twilio and finish KYC before a public number or outbound PSTN call can be real.
+- Create the Stripe account and put keys in the environment. Do not commit them. Card fields must be Stripe-hosted.
+- Choose a domain, put TLS in front of the web and API processes, and point `TWILIO_PUBLIC_BASE_URL` at the public HTTPS origin.
+- Set `LEGALSUITE_JWT_SECRET` and a non-default `DB_PASSWORD` on that host.
+- Set the per-minute PSTN rate from the carrier price. Do not treat a blank rate as a bundle of free minutes.
+- Merge the earlier draft pull requests if those changes are wanted on main: matter workspace, staff draft help, copy scrub, and firm caller ID. This pilot does not force-push main and does not merge those branches for you.
+- Have counsel review the legal pack before it is published on a production domain.
+
+Not in the product: live Open Banking, a SANAS-accredited signature, CaseLines or RAF e-lodgement, SSO, and backups beyond what the operator runs.
 
 ---
 
@@ -241,7 +249,7 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 **No legal advice.** Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. Fitness scores are a checklist, not an LPC audit.
 
-**Fees.** Plan prices on `/`. Add-ons and PSTN minutes invoice at month end. Demo prices are illustrative.
+**Fees.** Light is R1,199 per month for one attorney and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled. Prices on `/` are in rand.
 
 **Warranties.** The software is provided as a running demo in this repository. Production SLAs exist only under a signed order form.
 
@@ -272,7 +280,7 @@ Applies if the operator (or a connected Stripe-class provider) takes card paymen
 
 - The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **LegalSuite Pro subscriptions**.
 - Chargebacks: you must keep the engagement and invoice that support the debit.
-- Refunds of unused subscription days: as on the invoice; usage already incurred (PSTN, add-on months) is not refundable.
+- Refunds of unused subscription days: as on the invoice. Public-network minutes already used are not refundable.
 - PCI: we do not store raw card PAN in this repository. A production Stripe connection must use Stripe-hosted fields.
 - The in-app “connect Stripe” control is a **stub** until keys exist. Do not treat a green “connected” flag in the demo as a live merchant account.
 - Trust money is **never** mixed with subscription charges. s 86 / IOLTA ledgers are not a payment gateway.
@@ -302,9 +310,9 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | --- | --- | --- | --- |
 | Operator (LegalSuite Pro) | Host, support | Tenant database | In product |
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
-| PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
-| Stripe | Subscriptions / invoices | Billing details | Connect stub |
-| Twilio | PSTN | Call metadata, numbers | Connect stub |
+| PostgreSQL host | Database | All tenant rows | `docker compose` and the postgres profile. Default demo is still H2. |
+| Stripe | Light subscription and usage invoices | Billing details | Keys via environment. Toggle is not a live account. |
+| Twilio | Public-network calls and an optional DID | Call metadata, numbers | Keys via environment. KYC is operator work. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
 | No LLM vendor | — | — | Heuristic only |
 
@@ -319,6 +327,7 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | Version | Date | Notes |
 | --- | --- | --- |
 | 1.0 | 16 September 2026 | All twelve phases recorded. Legal pack added to match the public policy set. |
+| 1.1 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

@@ -2,11 +2,13 @@ package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
+import com.legalsuite.domain.AppUser;
 import com.legalsuite.domain.Client;
 import com.legalsuite.domain.DocumentTemplate;
 import com.legalsuite.domain.Lead;
 import com.legalsuite.domain.SignatureRequest;
 import com.legalsuite.domain.TrustAccount;
+import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.ClientRepository;
 import com.legalsuite.repo.DocumentTemplateRepository;
 import com.legalsuite.repo.LeadRepository;
@@ -36,6 +38,7 @@ public class RetainService {
     private final SignatureRequestRepository signatureRows;
     private final AuditService audit;
     private final TenantRepository tenants;
+    private final AppUserRepository users;
 
     public RetainService(
             LeadRepository leads,
@@ -48,7 +51,8 @@ public class RetainService {
             SignatureService signatures,
             SignatureRequestRepository signatureRows,
             AuditService audit,
-            TenantRepository tenants) {
+            TenantRepository tenants,
+            AppUserRepository users) {
         this.leads = leads;
         this.clients = clients;
         this.templates = templates;
@@ -60,6 +64,7 @@ public class RetainService {
         this.signatureRows = signatureRows;
         this.audit = audit;
         this.tenants = tenants;
+        this.users = users;
     }
 
     @Transactional
@@ -132,7 +137,7 @@ public class RetainService {
         TexasDocketRules.Result docket = DocketEngine.compute(tenant, facts);
         Map<String, Object> caseBody = new HashMap<>();
         caseBody.put("clientId", client.getId());
-        caseBody.put("title", area + " — " + client.displayName());
+        caseBody.put("title", area + ": " + client.displayName());
         caseBody.put("practiceArea", area);
         caseBody.put("caseType", area);
         caseBody.put("description", lead.getDescription());
@@ -150,7 +155,8 @@ public class RetainService {
         caseBody.put("status", "limited");
         caseBody.put("engagementStatus", "unsigned");
         caseBody.put("appearanceAuthorized", false);
-        BigDecimal retainer = new BigDecimal(String.valueOf(body.getOrDefault("retainerAmount", "2500")));
+        AppUser actor = users.findByIdAndTenantId(TenantContext.requireUser(), tid).orElse(null);
+        BigDecimal retainer = pledgedRetainer(body.get("retainerAmount"), actor == null ? null : actor.getHourlyRate());
         List<TrustAccount> accounts = trusts.findByTenantId(tid);
         if (!accounts.isEmpty() && retainer.signum() > 0) {
             caseBody.put("pendingRetainerAmount", retainer);
@@ -178,7 +184,7 @@ public class RetainService {
         }
 
         Map<String, Object> sigBody = new HashMap<>();
-        sigBody.put("title", "Engagement letter — " + client.displayName());
+        sigBody.put("title", "Engagement letter: " + client.displayName());
         sigBody.put("documentBody", merged);
         sigBody.put("signerName", client.displayName());
         sigBody.put("signerEmail", client.getEmail() == null ? "" : client.getEmail());
@@ -193,7 +199,9 @@ public class RetainService {
         trust.put("pledged", true);
         trust.put("amount", retainer);
         trust.put("posted", false);
-        trust.put("note", "Retainer is pledged. It posts to the " + trustLabel + " when the mandate is signed.");
+        trust.put("note", retainer.signum() > 0
+                ? "Retainer is pledged at the amount you set, or at the acting attorney's hourly rate when no amount is sent. It posts to the " + trustLabel + " when the mandate is signed."
+                : "No retainer amount was pledged. Set retainerAmount or an hourly rate before the mandate posts trust.");
 
         lead.setStatus("retained");
         lead.setCaseId(caseId);
@@ -239,7 +247,7 @@ public class RetainService {
             return view;
         }
         Map<String, Object> create = new HashMap<>();
-        create.put("title", "Conflict waiver — " + lead.getName());
+        create.put("title", "Conflict waiver: " + lead.getName());
         create.put("documentBody", waiverLetter(lead, conflict));
         create.put("signerName", lead.getName());
         create.put("signerEmail", lead.getEmail() == null ? "" : lead.getEmail());
@@ -277,7 +285,7 @@ public class RetainService {
                 Prospective client: %s
                 Adverse / related hits:
                 %s
-                I have been told that this firm already has a relationship that may be adverse or substantially related (LPC Code of Conduct — conflicts). I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
+                I have been told that this firm already has a relationship that may be adverse or substantially related (LPC Code of Conduct, conflicts). I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
 
                 This is a signed instrument. A click on “retain anyway” is not consent.
                 """.formatted(lead.getName(), hits.toString().isBlank() ? "- (see conflict record)\n" : hits);
@@ -304,6 +312,22 @@ public class RetainService {
 
                 Sign below to retain the firm. This is not a guarantee of result.
                 """.formatted(client.displayName(), matter.get("title"), matter.get("caseNumber"));
+    }
+
+    static BigDecimal pledgedRetainer(Object requested, BigDecimal hourlyRate) {
+        if (requested != null) {
+            String raw = String.valueOf(requested).trim();
+            if (!raw.isEmpty() && !"null".equals(raw)) {
+                try {
+                    BigDecimal explicit = new BigDecimal(raw);
+                    if (explicit.signum() > 0) return explicit;
+                } catch (NumberFormatException ignored) {
+                    // Fall through to the attorney rate. Do not invent a flat amount.
+                }
+            }
+        }
+        if (hourlyRate != null && hourlyRate.signum() > 0) return hourlyRate;
+        return BigDecimal.ZERO;
     }
 
     static LocalDate defaultSol(String area) {

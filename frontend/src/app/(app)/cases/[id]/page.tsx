@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/components/auth-provider";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
@@ -13,6 +14,8 @@ import Link from "next/link";
 
 export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
+  const { tenant } = useAuth();
+  const za = tenant?.jurisdiction === "ZA" || tenant?.country === "ZA";
   const [c, setC] = useState<Matter | null>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState("");
@@ -91,7 +94,7 @@ export default function CaseDetailPage() {
       </div>
       {!c.appearanceAuthorized && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          <p className="font-semibold">Limited file — no appearance.</p>
+          <p className="font-semibold">Limited file. No appearance.</p>
           <p className="mt-1">
             The mandate is unsigned. Status cannot move to open or trial. Trust will not post the pledged retainer
             {c.pendingRetainerAmount ? ` (${c.pendingRetainerAmount})` : ""} until this instrument is signed.
@@ -105,7 +108,7 @@ export default function CaseDetailPage() {
       )}
       {c.docketHold && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950">
-          <p className="font-semibold">Docket hold — do not appear.</p>
+          <p className="font-semibold">Docket hold. Do not appear.</p>
           <p className="mt-1">{c.docketHoldReason || "A statutory notice, RAF lodge, or CCMA referral is overdue."} Trial status is blocked until you lodge, serve, or apply for condonation.</p>
         </div>
       )}
@@ -141,7 +144,7 @@ export default function CaseDetailPage() {
             <p>
               <span className="text-slate-400">Limitations</span>
               <br />
-              {c.solCitation || "Texas docket"}
+              {c.solCitation || (za ? "South African prescription" : "Texas limitations")}
               {c.statuteOfLimitations ? ` · ${c.statuteOfLimitations}` : ""}
             </p>
             <p className="sm:col-span-2">
@@ -169,6 +172,7 @@ export default function CaseDetailPage() {
               </div>
             ))}
             {c.solReason && (c.docketClocks || []).length === 0 && <p className="text-xs text-slate-500">{c.solReason}</p>}
+            <p className="text-xs text-slate-500">The attorney remains responsible. Confirm interruptions and condonation. This is not legal advice.</p>
           </CardBody>
         </Card>
         <Card>

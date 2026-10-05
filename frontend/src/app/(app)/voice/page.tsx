@@ -58,7 +58,7 @@ export default function VoicePage() {
     <div>
       <PageHeader
         title="Voice registry"
-        subtitle="In-app WebRTC is free. PSTN invoices at month end. Recording is opt-in and parked on the matter."
+        subtitle="In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle. Recording is opt-in and stays on the matter."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <select

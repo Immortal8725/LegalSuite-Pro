@@ -26,10 +26,21 @@ spring:
 
 legalsuite:
   jwt:
-    secret: "legalsuite-pro-dev-secret-change-in-production-must-be-64-chars-longXX"
+    secret: ${LEGALSUITE_JWT_SECRET:legalsuite-pro-dev-secret-change-in-production-must-be-64-chars-longXX}
     access-ms: 86400000
     refresh-ms: 604800000
   upload-dir: ${user.dir}/uploads
+  pstn:
+    outbound-per-minute: ${LEGALSUITE_PSTN_OUTBOUND_PER_MIN:}
+    inbound-per-minute: ${LEGALSUITE_PSTN_INBOUND_PER_MIN:}
+  twilio:
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    public-base-url: ${TWILIO_PUBLIC_BASE_URL:}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
 
 logging:
   level:

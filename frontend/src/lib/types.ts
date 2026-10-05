@@ -379,6 +379,7 @@ export type Integration = {
   category: string;
   description: string;
   connected: boolean;
+  liveCredentialsPresent?: boolean;
   statusNote?: string;
   connectedAt?: string;
 };

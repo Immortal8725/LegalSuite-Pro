@@ -1,8 +1,8 @@
 # LegalSuite Pro
 
-Multi-tenant practice platform for law firms. A firm registers once, receives a public website and intake form, then turns modules on as the docket grows. In-app WebRTC voice is free. PSTN minutes and add-on modules invoice at month end.
+Practice system for a solo South African attorney. Light is **R1,199 per month for one attorney** and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about **R79 per month**, or bundled when the operator includes it.
 
-This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or Stripe keys.
+This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh. Stripe and Twilio keys are not in the repo. The default draft help does not call a model vendor.
 
 ## Demo (seeded on boot)
 
@@ -42,14 +42,72 @@ cd frontend && npm install && npm run dev -- -p 43123 -H 0.0.0.0
 
 H2 console: `http://127.0.0.1:18081/h2-console` (JDBC URL `jdbc:h2:mem:legalsuite`).
 
+Health: `GET http://127.0.0.1:18081/api/v1/health` returns `{ success, data: { status, database, databaseUp } }`. It does not include secrets or the JDBC URL.
+
 The Next.js dev server rewrites `/api/*` to the Spring Boot process.
+
+## Hosted deploy
+
+The demo boots on in-memory H2 and drops data when the process stops. A pilot host uses Postgres. TLS, the domain name, Stripe, and Twilio are still things a person does. See [Still needs a person](#still-needs-a-person).
+
+1. Copy the template and edit it on the host. Do not commit the result.
+
+```bash
+cp .env.example .env
+```
+
+Set `LEGALSUITE_JWT_SECRET` to a unique string of at least 32 characters, and set `DB_PASSWORD` to something other than the laptop default. Leave Twilio and Stripe blank until those accounts exist. Leave the per-minute rates blank until the carrier price is known. A blank rate records duration at zero cost. It is not a free minute bundle.
+
+2. Start Postgres and wait until it is healthy.
+
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+3. Run the API on the Postgres profile. The profile refuses to start if the JWT secret is missing or still the development value from `application.yml`.
+
+```bash
+set -a && source .env && set +a
+cd backend && ./mvnw -DskipTests spring-boot:run
+```
+
+`DATABASE_URL` defaults to `jdbc:postgresql://127.0.0.1:5432/legalsuite` when `SPRING_PROFILES_ACTIVE=postgres`.
+
+4. Run the web app with the API origin the browser should use.
+
+```bash
+cd frontend && npm install && NEXT_PUBLIC_API_URL=http://127.0.0.1:18081 npm run build && npm start
+```
+
+5. Check the process.
+
+```bash
+curl -fsS http://127.0.0.1:18081/api/v1/health
+```
+
+`data.database` must be `postgres` and `data.databaseUp` must be true. Put TLS in front of both ports before any client uses the host. Do not expose the H2 console. The Postgres profile turns the H2 console off.
+
+### All-in Docker (optional)
+
+`docker compose --profile hosted up --build` builds the API and the web image and starts them with Postgres. It requires `LEGALSUITE_JWT_SECRET` in `.env`. The web container rewrites `/api` to `http://api:18081`. Publish that through your TLS proxy on port 3000. This path is for a single host. It is not a multi-region deploy.
+
+## Still needs a person
+
+- Twilio account and KYC before a real caller ID or public-network call.
+- Stripe secret, publishable key, and webhook secret. Card numbers never go in this repo.
+- A domain and TLS certificates.
+- `LEGALSUITE_JWT_SECRET` and a real `DB_PASSWORD` on that host.
+- The carrier's per-minute price in `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`.
+- Merge earlier draft pull requests if you want them on main: matter workspace, draft help, copy scrub, and firm caller ID. Do not force-push main.
+- Counsel review of the legal pack before it is the text on a production domain.
 
 ## What shipped (all eight phases)
 
 1. **Foundation** — JWT auth, tenant isolation, firm registration, onboarding, app shell.
 2. **Landing + practice** — Auto-generated public site, intake, cases, clients, contacts, documents, calendar, tasks.
-3. **Financial** — Timers, invoices, IOLTA trust (no overdraw), expenses. Usage add-ons stay on the month-end invoice.
-4. **Communication** — Internal messages, WebRTC voice (in-app free; PSTN recorded for invoicing), call registry, recording opt-in.
+3. **Financial** — Timers, invoices, section 86 / IOLTA trust (no overdraw), expenses. Trust is in the Light seat. Public-network minutes are the usage bill.
+4. **Communication** — Internal messages, in-app voice (included), public-network minutes recorded for the usage invoice, call registry, recording opt-in.
 5. **Advanced** — Conflicts, reports, module toggles, team, settings, global search.
 6. **Mobile** — Responsive web + PWA; Flutter client in `mobile/` (`flutter run` after `flutter create .`).
 7. **AI & integrations** — Local heuristic assistant (summarize, draft, intake screen, chat over the docket), document merge templates, built-in e-sign, connect/disconnect hub, audit log. No vendor keys.
@@ -72,7 +130,7 @@ See [docs/architecture.md](docs/architecture.md), [docs/erd.md](docs/erd.md), an
 - Voice: WebSocket `/ws/signal` plus HTTP inbox fallback
 - Mobile: Flutter (Dart) against `/api/v1`
 
-Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) and put the API behind TLS. TOTP 2FA is in Settings; demo users stay without it so `password` still works. The UI can publish to Vercel; the Java API needs a JVM host.
+The hosted path is Postgres (`SPRING_PROFILES_ACTIVE=postgres` plus `docker compose up postgres`) behind TLS that you terminate. TOTP is in Settings. Demo users stay without it so `password` still works. Do not treat that as forced 2FA.
 
 ## Inspection pack (in product)
 
@@ -83,4 +141,4 @@ Production would swap H2 for PostgreSQL (`SPRING_PROFILES_ACTIVE=postgres` plus 
 - **ECT Act s 13** — Public sign requires an identity number; the hash includes it. Not a SANAS-accredited CSP.
 - **RAF 1 pack** — Compile from C-2001 (or any RAF-track matter). Not CaseLines e-lodgement.
 
-Still demo, not production: H2 create-drop, unbalanced Ndlovu recon (bank short R11,750), overdue Act 40 on C-2002.
+The Ndlovu demo is still a sample file: H2 unless you start Postgres, unbalanced recon (bank short R11,750), overdue Act 40 on C-2002. Those reds are intentional. Twilio, Stripe, the domain, and TLS are not.

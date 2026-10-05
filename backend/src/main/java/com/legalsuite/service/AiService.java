@@ -49,7 +49,7 @@ public class AiService {
         for (LegalCase c : cases.findByTenantIdOrderByUpdatedAtDesc(tid)) {
             String blob = c.getTitle() + " " + nz(c.getCaseNumber()) + " " + nz(c.getDescription()) + " " + nz(c.getOpposingParty());
             if (HeuristicAi.matches(blob, prompt) || HeuristicAi.matches(prompt, nz(c.getTitle()))) {
-                hits.add("Matter " + c.getCaseNumber() + " — " + c.getTitle() + " (" + c.getStatus() + ").");
+                hits.add("Matter " + c.getCaseNumber() + ": " + c.getTitle() + " (" + c.getStatus() + ").");
                 citations.add(Map.of("type", "case", "id", c.getId().toString(), "label", c.getCaseNumber() + " " + c.getTitle()));
             }
         }
@@ -69,17 +69,18 @@ public class AiService {
         String reply;
         String lower = prompt.toLowerCase();
         if (lower.contains("conflict")) {
-            reply = "Run a conflict check from Conflicts. Search the prospect's name, then opposing parties and counsel. A hit is not a hard stop — record how you cleared it.";
+            reply = "Run a conflict check from Conflicts. Search the prospect's name, then opposing parties and counsel. A hit is not a hard stop. Record how you cleared it.";
         } else if (lower.contains("invoice") || lower.contains("bill") || lower.contains("trust")) {
-            reply = "Unbilled time lives under Time Tracking. Generate an invoice from Billing, then record a trust deposit if a retainer arrived. IOLTA ledgers refuse an overdraw.";
+            reply = "Unbilled time lives under Time Tracking. Generate an invoice from Billing, then record a trust deposit if a retainer arrived. Trust ledgers refuse an overdraw of another client's money.";
         } else if (hits.isEmpty()) {
-            reply = "I searched this tenant's cases, clients, and intake and did not find a close match for “"
+            reply = "I searched this tenant's cases, clients, and intake and did not find a close match for \""
                     + prompt
-                    + "”. Try a case number, a last name, or ask how to bill, conflicts, or voice calling. This assistant runs locally — no outside model and no client text leaves the firm.";
+                    + "\". Try a case number, a last name, or ask how to bill, conflicts, or voice calling. This draft stays on the firm. No outside model is called.";
         } else {
-            reply = "Here is what matches “" + prompt + "” on this docket:\n\n- " + String.join("\n- ", hits.subList(0, Math.min(8, hits.size())))
-                    + "\n\nOpen the cited record for the full file. Nothing here was sent to an external AI vendor.";
+            reply = "Here is what matches \"" + prompt + "\" on this docket:\n\n- " + String.join("\n- ", hits.subList(0, Math.min(8, hits.size())))
+                    + "\n\nOpen the cited record for the full file. Nothing here was sent to an external model vendor.";
         }
+        reply = reply + "\n\nDraft for staff. The attorney remains responsible. This is not legal advice, a court filing, or CaseLines.";
         audit.record("ai.chat", "ai", null, prompt.length() > 80 ? prompt.substring(0, 80) : prompt);
         Map<String, Object> out = new HashMap<>();
         out.put("reply", reply);

@@ -58,7 +58,7 @@ export default function RegisterPage() {
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
         <p className="text-sm text-slate-500">
-          In under a minute you get a tenant, an admin seat, and a public site at /firm/your-slug. New firms default to South Africa (ZAR, Prescription Act, LPA s 86).
+          You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing waits until Stripe is connected.
         </p>
         <ErrorBanner error={error} />
         <div>
@@ -135,7 +135,7 @@ export default function RegisterPage() {
           </div>
         </div>
         <Button className="w-full" variant="gold" disabled={loading}>
-          {loading ? "Creating tenant…" : "Create firm & start trial"}
+          {loading ? "Creating tenant…" : "Create firm on Light"}
         </Button>
         <p className="text-center text-sm text-slate-500">
           Already registered?{" "}

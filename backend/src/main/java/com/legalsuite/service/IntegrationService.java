@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntegrationService {
     private static final List<Map<String, String>> CATALOG = List.of(
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
-                    "description", "Card payments on invoices. Connect in production with a restricted key — local demo stores the toggle only."),
+                    "description", "Subscriptions and usage invoices. The toggle does not store a card or a secret. Live keys belong in the environment."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
-                    "description", "PSTN minutes and SMS. In-app WebRTC stays free; this is only for the public network."),
+                    "description", "Public-network calls and an optional local number. In-app calls stay on the seat. Keys belong in the environment, not in this app."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",
                     "description", "Two-way hearings and deadlines. OAuth is mocked locally."),
             Map.of("provider", "dropbox", "name", "Dropbox", "category", "documents",
@@ -30,10 +30,15 @@ public class IntegrationService {
 
     private final ConnectedIntegrationRepository integrations;
     private final AuditService audit;
+    private final OperatorCredentials credentials;
 
-    public IntegrationService(ConnectedIntegrationRepository integrations, AuditService audit) {
+    public IntegrationService(
+            ConnectedIntegrationRepository integrations,
+            AuditService audit,
+            OperatorCredentials credentials) {
         this.integrations = integrations;
         this.audit = audit;
+        this.credentials = credentials;
     }
 
     public List<Map<String, Object>> list() {
@@ -45,7 +50,9 @@ public class IntegrationService {
             Map<String, Object> row = new LinkedHashMap<>(item);
             ConnectedIntegration saved = byProvider.get(item.get("provider"));
             boolean connected = saved != null && saved.isConnected();
+            boolean live = credentials.live(item.get("provider"));
             row.put("connected", connected);
+            row.put("liveCredentialsPresent", live);
             row.put("statusNote", saved == null ? "Not connected" : saved.getStatusNote());
             row.put("connectedAt", saved == null ? null : saved.getConnectedAt());
             out.add(row);
@@ -71,7 +78,11 @@ public class IntegrationService {
         row.setUpdatedAt(Instant.now());
         if (connected) {
             row.setConnectedAt(Instant.now());
-            row.setStatusNote("Connected in this workspace. Live credentials are not required for the local demo.");
+            if (("stripe".equals(slug) || "twilio".equals(slug)) && !credentials.live(slug)) {
+                row.setStatusNote("Preference saved. Live keys are not on this process. Set them in the environment. Do not paste secrets into the app.");
+            } else {
+                row.setStatusNote("Marked connected on this workspace.");
+            }
         } else {
             row.setStatusNote("Disconnected");
         }

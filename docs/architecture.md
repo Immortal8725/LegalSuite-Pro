@@ -18,11 +18,11 @@ JPA  →  H2 (dev) / PostgreSQL (prod)
 
 ## Modules
 
-`modules` is a catalog. `tenant_modules` stores enabled flags. Core slugs (`cases`, `clients`, `calendar`, …) cannot be disabled. Add-on prices (`trust`, `esignatures`, `ai`, …) are summed on the Modules screen for the month-end invoice. The demo Smith & Associates tenant has every module on.
+`modules` is a catalog. `tenant_modules` stores enabled flags. Core slugs cannot be disabled. Section 86 trust is core on the Light seat and is not a month-end add-on. The Light subscription itself is a seat line on the usage preview. Public-network minutes are the usage. The demo tenants have the catalog enabled so the sample files can be opened.
 
 ## Voice
 
-In-app WebRTC is free. `VoiceService` records duration and a `callType` of `webrtc` or `pstn`. PSTN cost is stored on `CallRecord.totalCost` for the usage invoice. Recording is opt-in on hangup.
+In-app calls are included in the Light seat. `VoiceService` records duration and a `callType` of `webrtc` or `pstn`. Public-network cost uses the per-minute rate from the environment. If that rate is blank, cost stays zero and the minutes are still recorded. There is no included minute bundle. Recording is opt-in on hangup.
 
 ## AI
 

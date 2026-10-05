@@ -3,12 +3,56 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: legalsuite
-      POSTGRES_USER: legalsuite
-      POSTGRES_PASSWORD: legalsuite
+      POSTGRES_USER: ${DB_USER:-legalsuite}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-legalsuite}
     ports:
       - "5432:5432"
     volumes:
       - legalsuite-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-legalsuite} -d legalsuite"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    profiles: ["hosted"]
+    build:
+      context: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      PORT: "18081"
+      DATABASE_URL: jdbc:postgresql://postgres:5432/legalsuite
+      DB_USER: ${DB_USER:-legalsuite}
+      DB_PASSWORD: ${DB_PASSWORD:-legalsuite}
+      LEGALSUITE_JWT_SECRET: ${LEGALSUITE_JWT_SECRET:-}
+      LEGALSUITE_PSTN_OUTBOUND_PER_MIN: ${LEGALSUITE_PSTN_OUTBOUND_PER_MIN:-}
+      LEGALSUITE_PSTN_INBOUND_PER_MIN: ${LEGALSUITE_PSTN_INBOUND_PER_MIN:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PUBLIC_BASE_URL: ${TWILIO_PUBLIC_BASE_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+    ports:
+      - "18081:18081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    profiles: ["hosted"]
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://api:18081
+    environment:
+      PORT: "3000"
+      NEXT_PUBLIC_API_URL: http://api:18081
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
 
 volumes:
   legalsuite-pg:
