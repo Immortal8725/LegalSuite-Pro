@@ -34,7 +34,7 @@ export default function EsignPage() {
     <div>
       <PageHeader
         title="E-signatures"
-        subtitle="Built-in signing. Share the public link — no DocuSign account."
+        subtitle="Built-in signing. Share the public link. No DocuSign account."
         actions={<Button onClick={() => setOpen(true)}>Send for signature</Button>}
       />
       <ErrorBanner error={error} />

@@ -22,6 +22,16 @@ class CallEthicsTest {
         assertFalse((Boolean) r.get("allPartyConsent"));
         assertTrue(String.valueOf(r.get("notice")).contains("opt-in"));
     }
+
+    @Test
+    void pstnNoticeKeepsEmergencyOnTheHandset() {
+        String notice = CallEthics.pstnNotice();
+        assertTrue(notice.contains("verified personal number"));
+        assertTrue(notice.toLowerCase().contains("optional"));
+        assertTrue(notice.toLowerCase().contains("emergency"));
+        assertTrue(notice.contains("opt-in"));
+        assertFalse(notice.contains("—"));
+    }
 }
 
 class RetainSolTest {

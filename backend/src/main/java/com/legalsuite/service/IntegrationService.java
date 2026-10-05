@@ -3,6 +3,7 @@ package com.legalsuite.service;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.ConnectedIntegration;
 import com.legalsuite.repo.ConnectedIntegrationRepository;
+import com.legalsuite.voice.TwilioProperties;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,7 +18,7 @@ public class IntegrationService {
             Map.of("provider", "stripe", "name", "Stripe", "category", "payments",
                     "description", "Subscriptions and usage invoices. The toggle does not store a card or a secret. Live keys belong in the environment."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
-                    "description", "Public-network calls and an optional local number. In-app calls stay on the seat. Keys belong in the environment, not in this app."),
+                    "description", "Dial out on the public network. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. Credentials stay in the server environment. This toggle does not store a password."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",
                     "description", "Two-way hearings and deadlines. OAuth is mocked locally."),
             Map.of("provider", "dropbox", "name", "Dropbox", "category", "documents",
@@ -30,15 +31,24 @@ public class IntegrationService {
 
     private final ConnectedIntegrationRepository integrations;
     private final AuditService audit;
+    private final TwilioProperties twilio;
     private final OperatorCredentials credentials;
 
     public IntegrationService(
             ConnectedIntegrationRepository integrations,
             AuditService audit,
+            TwilioProperties twilio,
             OperatorCredentials credentials) {
         this.integrations = integrations;
         this.audit = audit;
+        this.twilio = twilio;
         this.credentials = credentials;
+    }
+
+    public boolean isConnected(String provider) {
+        return integrations.findByTenantIdAndProvider(TenantContext.requireTenant(), provider.toLowerCase())
+                .map(ConnectedIntegration::isConnected)
+                .orElse(false);
     }
 
     public List<Map<String, Object>> list() {
@@ -50,11 +60,14 @@ public class IntegrationService {
             Map<String, Object> row = new LinkedHashMap<>(item);
             ConnectedIntegration saved = byProvider.get(item.get("provider"));
             boolean connected = saved != null && saved.isConnected();
-            boolean live = credentials.live(item.get("provider"));
             row.put("connected", connected);
-            row.put("liveCredentialsPresent", live);
+            row.put("liveCredentialsPresent", credentials.live(item.get("provider")));
             row.put("statusNote", saved == null ? "Not connected" : saved.getStatusNote());
             row.put("connectedAt", saved == null ? null : saved.getConnectedAt());
+            if ("twilio".equals(item.get("provider"))) {
+                row.put("credentialsPresent", twilio.configured());
+                row.put("publicBaseUrlSet", twilio.hasPublicBaseUrl());
+            }
             out.add(row);
         }
         return out;
@@ -78,10 +91,14 @@ public class IntegrationService {
         row.setUpdatedAt(Instant.now());
         if (connected) {
             row.setConnectedAt(Instant.now());
-            if (("stripe".equals(slug) || "twilio".equals(slug)) && !credentials.live(slug)) {
+            if ("twilio".equals(slug)) {
+                row.setStatusNote(twilio.configured()
+                        ? "Connected. Credentials stay in the server environment, not in this database."
+                        : "Toggle saved. Add TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN on the server before a real call can leave the firm.");
+            } else if ("stripe".equals(slug) && !credentials.stripeLive()) {
                 row.setStatusNote("Preference saved. Live keys are not on this process. Set them in the environment. Do not paste secrets into the app.");
             } else {
-                row.setStatusNote("Marked connected on this workspace.");
+                row.setStatusNote("Connected in this workspace. Live credentials are not required for the local demo.");
             }
         } else {
             row.setStatusNote("Disconnected");

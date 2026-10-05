@@ -33,14 +33,25 @@ legalsuite:
   pstn:
     outbound-per-minute: ${LEGALSUITE_PSTN_OUTBOUND_PER_MIN:}
     inbound-per-minute: ${LEGALSUITE_PSTN_INBOUND_PER_MIN:}
-  twilio:
-    account-sid: ${TWILIO_ACCOUNT_SID:}
-    auth-token: ${TWILIO_AUTH_TOKEN:}
-    public-base-url: ${TWILIO_PUBLIC_BASE_URL:}
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
     publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  twilio:
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    public-base-url: ${TWILIO_PUBLIC_BASE_URL:}
+    voice-from: ${TWILIO_VOICE_FROM:}
+  ai:
+    # local (default) never sends a prompt off the tenant.
+    # openai or anthropic run only when the matching key is set.
+    provider: ${LEGALSUITE_AI_PROVIDER:local}
+    openai-api-key: ${OPENAI_API_KEY:}
+    anthropic-api-key: ${ANTHROPIC_API_KEY:}
+    openai-model: ${OPENAI_MODEL:gpt-4o-mini}
+    anthropic-model: ${ANTHROPIC_MODEL:claude-3-5-haiku-latest}
+    openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    anthropic-base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com/v1}
 
 logging:
   level:

@@ -57,7 +57,7 @@ export default function TeamPage() {
                   ))}
                 </select>
               </Td>
-              <Td>${u.hourlyRate ?? "—"}</Td>
+              <Td>${u.hourlyRate ?? "n/a"}</Td>
               <Td>{u.onlineStatus || "offline"}</Td>
             </tr>
           ))}

@@ -1,12 +1,14 @@
 package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
+import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
 import com.legalsuite.domain.Client;
 import com.legalsuite.domain.DocumentTemplate;
 import com.legalsuite.domain.Lead;
 import com.legalsuite.domain.SignatureRequest;
+import com.legalsuite.domain.Tenant;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.ClientRepository;
@@ -155,10 +157,20 @@ public class RetainService {
         caseBody.put("status", "limited");
         caseBody.put("engagementStatus", "unsigned");
         caseBody.put("appearanceAuthorized", false);
-        AppUser actor = users.findByIdAndTenantId(TenantContext.requireUser(), tid).orElse(null);
-        BigDecimal retainer = pledgedRetainer(body.get("retainerAmount"), actor == null ? null : actor.getHourlyRate());
+        AppUser actor = TenantContext.getUserId() == null
+                ? null
+                : users.findByIdAndTenantId(TenantContext.getUserId(), tid).orElse(null);
+        if (actor != null) {
+            caseBody.put("leadAttorneyId", actor.getId());
+            if (actor.getHourlyRate() != null) caseBody.put("billingRate", actor.getHourlyRate());
+        }
+        BigDecimal retainer = resolveRetainer(
+                body.get("retainerAmount"),
+                tenant,
+                actor == null ? null : actor.getHourlyRate());
         List<TrustAccount> accounts = trusts.findByTenantId(tid);
-        if (!accounts.isEmpty() && retainer.signum() > 0) {
+        boolean pledged = !accounts.isEmpty() && retainer.signum() > 0;
+        if (pledged) {
             caseBody.put("pendingRetainerAmount", retainer);
             caseBody.put("pendingTrustAccountId", accounts.get(0).getId());
         }
@@ -196,12 +208,12 @@ public class RetainService {
         practice.saveCase(caseId, Map.of("engagementSignatureId", sig.get("id")));
 
         Map<String, Object> trust = new HashMap<>();
-        trust.put("pledged", true);
+        trust.put("pledged", pledged);
         trust.put("amount", retainer);
         trust.put("posted", false);
-        trust.put("note", retainer.signum() > 0
-                ? "Retainer is pledged at the amount you set, or at the acting attorney's hourly rate when no amount is sent. It posts to the " + trustLabel + " when the mandate is signed."
-                : "No retainer amount was pledged. Set retainerAmount or an hourly rate before the mandate posts trust.");
+        trust.put("note", pledged
+                ? "Retainer is pledged. It posts to the " + trustLabel + " when the mandate is signed."
+                : "No retainer amount is on the attorney or the firm. Nothing is pledged.");
 
         lead.setStatus("retained");
         lead.setCaseId(caseId);
@@ -291,6 +303,42 @@ public class RetainService {
                 """.formatted(lead.getName(), hits.toString().isBlank() ? "- (see conflict record)\n" : hits);
     }
 
+    /**
+     * Explicit amount, then a firm default already stored on the tenant, then the
+     * acting attorney's hourly rate. Missing all three pledges nothing. It does not invent a fee.
+     */
+    static BigDecimal resolveRetainer(Object requested, Tenant tenant, BigDecimal attorneyRate) {
+        BigDecimal explicit = decimalOrNull(requested);
+        if (explicit != null) return explicit.signum() < 0 ? BigDecimal.ZERO : explicit;
+        BigDecimal firm = tenantDefaultRetainer(tenant);
+        if (firm != null) return firm;
+        if (attorneyRate != null && attorneyRate.signum() > 0) return attorneyRate;
+        return BigDecimal.ZERO;
+    }
+
+    private static BigDecimal tenantDefaultRetainer(Tenant tenant) {
+        if (tenant == null) return null;
+        Map<String, Object> settings = JsonLists.map(tenant.getSettingsJson());
+        for (String key : List.of("retainerAmount", "defaultRetainer", "defaultRetainerAmount")) {
+            BigDecimal value = decimalOrNull(settings.get(key));
+            if (value != null && value.signum() > 0) return value;
+        }
+        return null;
+    }
+
+    private static BigDecimal decimalOrNull(Object raw) {
+        if (raw == null) return null;
+        if (raw instanceof BigDecimal money) return money;
+        if (raw instanceof Number number) return new BigDecimal(number.toString());
+        String s = String.valueOf(raw).trim();
+        if (s.isEmpty() || "null".equalsIgnoreCase(s)) return null;
+        try {
+            return new BigDecimal(s);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     static TexasDocketRules.Facts factsFromLead(Lead lead) {
         TexasDocketRules.Facts f = new TexasDocketRules.Facts();
         f.practiceArea = lead.getCaseType();
@@ -312,22 +360,6 @@ public class RetainService {
 
                 Sign below to retain the firm. This is not a guarantee of result.
                 """.formatted(client.displayName(), matter.get("title"), matter.get("caseNumber"));
-    }
-
-    static BigDecimal pledgedRetainer(Object requested, BigDecimal hourlyRate) {
-        if (requested != null) {
-            String raw = String.valueOf(requested).trim();
-            if (!raw.isEmpty() && !"null".equals(raw)) {
-                try {
-                    BigDecimal explicit = new BigDecimal(raw);
-                    if (explicit.signum() > 0) return explicit;
-                } catch (NumberFormatException ignored) {
-                    // Fall through to the attorney rate. Do not invent a flat amount.
-                }
-            }
-        }
-        if (hourlyRate != null && hourlyRate.signum() > 0) return hourlyRate;
-        return BigDecimal.ZERO;
     }
 
     static LocalDate defaultSol(String area) {

@@ -45,4 +45,24 @@ public class CallRecord {
     private String notes;
     private boolean billable = true;
     private UUID timeEntryId;
+    /** Caller ID presented to the other party (firm DID or verified landline). */
+    @Column(length = 20)
+    private String fromNumber;
+    /** Destination on the public network. */
+    @Column(length = 20)
+    private String toNumber;
+    /** Attorney handset that rings first on a callback bridge. */
+    @Column(length = 20)
+    private String staffCallbackNumber;
+    /** did or verified_landline. */
+    @Column(length = 32)
+    private String callerIdKind;
+    private UUID firmPhoneNumberId;
+    @Column(length = 64)
+    private String twilioCallSid;
+    /** Unguessable token embedded in Twilio callback URLs. Never returned to the staff UI. */
+    @Column(unique = true, length = 64)
+    private String bridgeToken;
+    /** Staff explicitly confirmed the call is not tied to a matter. */
+    private boolean nonMatter;
 }

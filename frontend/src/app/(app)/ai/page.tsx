@@ -5,17 +5,14 @@ import { apiGet, apiPost } from "@/lib/api";
 import { Button, PageHeader } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
-import { Label, Select, Textarea } from "@/components/ui/input";
+import { Label, Select } from "@/components/ui/input";
 import { PrivilegeStrip } from "@/components/privilege-strip";
+import { MatterAssistant } from "@/components/matter-assistant";
 import type { Lead, Matter } from "@/lib/types";
 
-type ChatTurn = { role: "you" | "assistant"; text: string };
-
 export default function AiPage() {
-  const [prompt, setPrompt] = useState("What is open on Johnson?");
-  const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const [chatCaseId, setChatCaseId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const [cases, setCases] = useState<Matter[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [caseId, setCaseId] = useState("");
@@ -38,51 +35,24 @@ export default function AiPage() {
       .catch(() => setLeads([]));
   }, []);
 
+  const chatMatter = cases.find((c) => c.id === chatCaseId);
+
   return (
     <div>
       <PageHeader
         title="Draft help"
-        subtitle="Drafts stay on this firm. The attorney remains responsible. This is not legal advice, a court filing, or CaseLines."
+        subtitle="Draft help for staff on this firm. The attorney remains responsible. A model vendor runs only if the firm configured one. Otherwise the answer stays on this tenant."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Ask the docket</CardTitle>
-          </CardHeader>
-          <CardBody className="space-y-3">
-            <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg bg-slate-50 p-3 text-sm">
-              {turns.length === 0 && (
-                <p className="text-slate-500">Try a last name, a case number, or “how do I bill a retainer?”</p>
-              )}
-              {turns.map((t, i) => (
-                <p key={i} className={t.role === "you" ? "font-semibold text-navy" : "whitespace-pre-wrap text-slate-700"}>
-                  {t.role === "you" ? "You: " : "Assistant: "}
-                  {t.text}
-                </p>
-              ))}
-            </div>
-            <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} />
-            <Button
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                setError(null);
-                try {
-                  const res = await apiPost<{ reply: string }>("/api/v1/ai/chat", { prompt });
-                  setTurns((prev) => [...prev, { role: "you", text: prompt }, { role: "assistant", text: res.reply }]);
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : "Chat failed");
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              {busy ? "Thinking…" : "Ask"}
-            </Button>
-          </CardBody>
-        </Card>
+        <MatterAssistant
+          caseId={chatCaseId || undefined}
+          onCaseId={setChatCaseId}
+          matters={cases}
+          matterLabel={chatMatter ? `${chatMatter.caseNumber} · ${chatMatter.title}` : undefined}
+          title={chatCaseId ? "Draft help on the selected matter" : "Search this firm's docket"}
+        />
 
         <div className="space-y-6">
           <Card>

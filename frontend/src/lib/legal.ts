@@ -23,7 +23,7 @@ Purpose and lawful basis (POPIA ss 11–12)
 - Legitimate interest / compliance: security, audit, FFC gating, recon.
 - Consent: call recording (opt-in).
 
-Attorney-client privilege. Matter text belongs to the tenant. The heuristic AI does not send prompts to a vendor. The operator is an operator under POPIA ss 20–22 for tenant files.
+Attorney-client privilege. Matter text belongs to the tenant. The assistant does not send prompts to a vendor unless the operator sets LEGALSUITE_AI_PROVIDER and a key (see Staff assistant). The operator is an operator under POPIA ss 20–22 for tenant files.
 
 Rights. Access, correction, deletion, objection, and complaint to the Information Regulator (South Africa). Texas users may also use applicable US state rights.
 
@@ -98,19 +98,17 @@ ECT Act. Identity-bound signatures in the product are an advanced-signature anal
   },
   {
     slug: "generative-ai",
-    title: "Generative AI",
+    title: "Staff assistant",
     section: "10.7",
-    body: `The assistant is a local heuristic. It does not call OpenAI, Anthropic, Google, or any other model vendor.
+    body: `The assistant is assistive. It is not legal advice, not a court e-filing system, and not CaseLines. A human attorney remains responsible.
 
-Prompts are written to the audit log on the tenant. They are not sent outbound.
+Default: on-tenant rules for the matter the staff member already has open. Prompts are written to the audit log on the tenant and are not sent outbound.
 
-Outputs can be wrong. They are drafts. A human attorney remains responsible.
+Optional vendor. An operator may set LEGALSUITE_AI_PROVIDER to openai or anthropic and supply OPENAI_API_KEY or ANTHROPIC_API_KEY. Until that is set, no prompt leaves the tenant. When it is set, the prompt and that one matter’s staff-visible context (not file bytes, not other matters) are sent to that vendor. A missing key stays on the tenant.
 
-We do not use tenant prompts to train a shared model.
+Enabling a vendor is a cross-border transfer. Do not enable it on a production domain until a POPIA s 72 mechanism and the operator agreement you intend to rely on are in place.
 
-Privilege stripping is heuristic, not a guarantee.
-
-If a future build adds a vendor model, that build will require a separate operator agreement, a POPIA transfer assessment, and a notice in this section before any prompt leaves the tenant.`,
+The assistant does not invent case-law citations as fact. Deadlines follow the matter’s computed clocks. Outputs can be wrong. Tenant prompts are not used to train a shared model.`,
   },
   {
     slug: "merchant",
@@ -143,19 +141,19 @@ If a future build adds a vendor model, that build will require a separate operat
     slug: "subprocessors",
     title: "Service Providers, Sub-processors, and Affiliates",
     section: "10.10",
-    body: `Operator (LegalSuite Pro) — host and support; tenant database; in product.
+    body: `Operator (LegalSuite Pro): host and support; tenant database; in product.
 
-Vercel (optional) — web front end; request logs; UI can publish, API needs a JVM.
+Vercel (optional): web front end; request logs; UI can publish, API needs a JVM.
 
-PostgreSQL host: all tenant rows. docker compose and the postgres profile. The demo default is still H2.
+PostgreSQL host (optional): all tenant rows; docker-compose / postgres profile; not the default.
 
-Stripe: Light subscription and usage invoices. Keys come from the environment. A toggle is not a live account.
+Stripe: subscriptions and invoices; connect stub.
 
-Twilio: public-network calls and an optional local number. Keys come from the environment. KYC is operator work.
+Twilio: PSTN metadata and caller ID when the firm connects it. Credentials stay in the server environment.
 
-Authenticator apps — TOTP; shared secret stays on the user row.
+Authenticator apps: TOTP; shared secret stays on the user row.
 
-No LLM vendor. Heuristic only.
+OpenAI or Anthropic (optional): model answers for one matter; off unless LEGALSUITE_AI_PROVIDER and a key are set.
 
 Affiliates: none listed. Firms may not treat a demo “connected” integration as a live subprocessor until keys are real.`,
   },

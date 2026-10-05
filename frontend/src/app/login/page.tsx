@@ -39,10 +39,10 @@ export default function LoginPage() {
           Legal<span className="text-gold">Suite</span> Pro
         </h1>
         <p className="mt-3 text-xl text-white/80">Built for South African firms. Texas still runs on the other tenant.</p>
-        <ul className="mt-10 space-y-3 text-white/85">
+        <ul className="mt-10 list-disc space-y-3 pl-5 text-white/85">
           {[
             "RAF, Act 40, CCMA, and Prescription Act clocks on the home screen",
-            "LPA s 86 three-way recon: bank, cashbook, client ledgers",
+            "LPA s 86 three-way recon: bank, cashbook, and client ledgers",
             "RICA recording is opt-in even though the statute is one-party",
             "Hire is a gate: conflict, signed waiver, limited file, signed mandate",
           ].map((t) => (
@@ -69,7 +69,7 @@ export default function LoginPage() {
             }
           }}
         >
-          <h2 className="text-2xl font-bold text-navy">Welcome back</h2>
+          <h2 className="text-2xl font-bold text-navy">Staff sign in</h2>
           <p className="text-sm text-slate-500">Sign in with your firm slug. Demo password is password.</p>
           <div className="flex flex-col gap-2">
             {DEMOS.map((d) => (

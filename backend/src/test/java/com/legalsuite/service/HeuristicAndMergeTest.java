@@ -11,9 +11,9 @@ class MergeEngineTest {
     @Test
     void substitutesTokensAndLeavesUnknownBlank() {
         String out = MergeEngine.merge(
-                "Dear {{client.name}}, re {{case.title}} — {{missing}}end",
+                "Dear {{client.name}}, re {{case.title}}: {{missing}}end",
                 Map.of("client.name", "Sarah Williams", "case.title", "Johnson v. Corp Inc."));
-        assertEquals("Dear Sarah Williams, re Johnson v. Corp Inc. — end", out);
+        assertEquals("Dear Sarah Williams, re Johnson v. Corp Inc.: end", out);
     }
 }
 

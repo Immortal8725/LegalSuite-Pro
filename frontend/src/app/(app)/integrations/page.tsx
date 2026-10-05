@@ -20,7 +20,7 @@ export default function IntegrationsPage() {
     <div>
       <PageHeader
         title="Integrations"
-        subtitle="The toggle is a preference. Stripe and Twilio go live only when keys are in the environment. Do not paste secrets here."
+        subtitle="Connect or disconnect without pasting production secrets. Local demo stores the toggle only."
       />
       <ErrorBanner error={error} />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -34,16 +34,16 @@ export default function IntegrationsPage() {
             </CardHeader>
             <CardBody>
               <p className="mb-3 text-sm text-slate-500">{row.description}</p>
-              <p className="mb-4 text-xs text-slate-400">
-                {row.statusNote}
-                {(row.provider === "stripe" || row.provider === "twilio") && (
-                  <span className="mt-1 block">
-                    {row.liveCredentialsPresent
-                      ? "Live keys are present on this process. Values are not shown."
-                      : "Live keys are not on this process."}
-                  </span>
-                )}
-              </p>
+              <p className="mb-4 text-xs text-slate-400">{row.statusNote}</p>
+              {row.provider === "twilio" && (
+                <p className="mb-4 text-xs text-slate-500">
+                  {row.credentialsPresent
+                    ? "Server credentials are present. They are not shown here."
+                    : "No Twilio credentials on this server yet. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in the environment."}
+                  {row.publicBaseUrlSet ? " Public callback address is set." : " TWILIO_PUBLIC_BASE_URL is still empty."}
+                  {" Optional: TWILIO_VOICE_FROM when no personal number is verified yet. Buying a number is optional."}
+                </p>
+              )}
               {row.connected ? (
                 <Button
                   variant="outline"

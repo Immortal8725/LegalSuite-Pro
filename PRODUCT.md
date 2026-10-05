@@ -1,4 +1,4 @@
-# LegalSuite Pro — Product
+# LegalSuite Pro
 
 **Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, Stripe keys, a domain, and TLS are still operator work.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
@@ -8,7 +8,7 @@ A multi-tenant practice system for a solo South African attorney. A firm registe
 
 South Africa is the default jurisdiction. Texas still runs on a second tenant so both docket engines can be compared.
 
-This file is not legal advice. The legal pack at the end is the product’s starting texts for privacy, acceptable use, AI, payments, and operators. A live firm must have them reviewed by counsel before they go on a production domain.
+This file is not legal advice. The legal pack at the end is the product’s starting texts for privacy, acceptable use, the staff assistant, payments, and operators. A live firm must have them reviewed by counsel before they go on a production domain.
 
 ---
 
@@ -30,10 +30,10 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 
 1. **Hire is a gate.** Website consult → party-aware conflict → signed waiver instrument if needed → **limited file** → signed mandate → appearance authorised and the pledged retainer posts to trust. Billable time and trust movements wait until the mandate is signed.
 2. **The clock is the home screen.** RAF Act s 23, Prescription Act ss 11–13, Act 40 of 2002 s 3, LRA s 191 (ZA). Texas CPRC ch. 16, 74, 101 and Estates Code on the other tenant. Overdue lodge/notice/referral clocks spawn a task and **block trial status**.
-3. **The phone is on the file.** In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
+3. **The phone is on the file.** In-app WebRTC is free. Outbound PSTN is a callback bridge: the attorney's phone rings, then the other party sees a verified personal number (mobile or landline), `TWILIO_VOICE_FROM`, or a rented local number if the firm already has one. Buying a number is optional. No South Africa regulatory bundle is required for this path. A matter (or an explicit non-matter) is required before dial. Emergency numbers stay on the device dialer. Hangup writes a time entry when the call is on a matter. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
-5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. There is no included minute bundle and no unlimited voice tier. A local number (DID) is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
-6. **Privilege-shaped AI.** Summaries, drafts, and intake screening stay on the tenant row. No vendor key. No training corpus.
+5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. There is no included minute bundle and no unlimited voice tier. A local number is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
+6. **Draft help on the file.** Summaries, drafts, and intake screening stay on the tenant row unless the operator sets a model-vendor key. Tenant files are not used to train a shared model. The attorney remains responsible.
 
 ---
 
@@ -47,7 +47,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | 4 | Communication | Internal messages, WebRTC voice, call registry, leads |
 | 5 | Advanced | Conflicts, reports, modules, team, settings, search |
 | 6 | Mobile | Responsive web + PWA; Flutter client in `mobile/` |
-| 7 | AI & integrations | Heuristic assistant, merge templates, in-app e-sign, connect hub, audit log |
+| 7 | Assistant and integrations | On-tenant draft help, merge templates, in-app e-sign, connect hub, audit log |
 | 8 | Polish | README, ERD, class diagrams, tests, PWA manifest |
 | 9 | Hire loop | Signed waiver, limited file, engagement unlock, pledged retainer post |
 | 10 | South Africa | Prescription / RAF / Act 40 / CCMA clocks, RICA, LPA s 86, VAT, docket hold |
@@ -78,13 +78,13 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 ## 5. Plans and modules
 
-**Plan (seeded):** Light. R1,199 per month. One attorney. Currency is ZAR. Older Free, Essentials, Professional, and Enterprise rows, and any USD price, are not part of this pilot.
+**Plan (seeded):** Light. R1,199 per month. One attorney. Currency is ZAR.
 
 **In the seat (not a separate charge):** cases, clients, contacts, calendar, tasks, documents, time, billing, messages, conflicts, reports, audit, in-app voice, and section 86 trust.
 
 **Phone:** public-network minutes are pay-what-you-use. `includedVoiceMinutes` is 0. A negative minute cap is treated as 0, not unlimited. A local number is optional at about R79 per month, or bundled. The per-minute carrier rate is `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`. Leave them blank until the carrier price is known. Blank does not invent a rate.
 
-**Not in the seat price:** card collection (Stripe) and the public-network bridge (Twilio). Both stay off until keys are in the environment.
+**Not in the seat price:** card collection (Stripe) and the public-network bridge (Twilio). Both stay off until keys are in the environment. Draft help stays on the tenant unless the operator sets a model-vendor key.
 
 ---
 
@@ -102,7 +102,7 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 **Demo fitness (Ndlovu): 11 / 14.** Three reds are intentional:
 
 1. Three-way recon short **R11,750** (bank R438,250 vs book/ledgers R450,000). Do not certify.
-2. C-2002 Act 40 s 3 notice overdue — trial blocked.
+2. C-2002 Act 40 s 3 notice is overdue, so trial is blocked.
 3. Production ops on the H2 demo: TLS, a public domain, Stripe keys, and Twilio KYC are not done. Postgres is the hosted path (`docker compose` and `SPRING_PROFILES_ACTIVE=postgres`). The fitness row turns green only when that profile is actually running.
 
 ---
@@ -114,7 +114,7 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 | Ndlovu & Partners (Sandton, GP) | `ndlovu-partners` | `thabo@ndlovulaw.co.za` / `lindiwe@ndlovulaw.co.za` / `sipho@ndlovulaw.co.za` · `password` | `nomsa@example.com` / `portal123` |
 | Smith & Associates (Austin, TX) | `smith-associates` | `john@smithlaw.com` · `password` | `sarah@example.com` / `portal123` |
 
-Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), information officer Thabo, PAIA generated, POPIA operator acknowledged, bank-feed timestamp set. Matters C-2001 RAF, C-2002 City of Johannesburg (Act 40 overdue), C-2003 CCMA, C-2004 estate, C-2005 contract. The commercial seat is one attorney. The sample firm still has extra staff logins so the file can be shown.
+Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), information officer Thabo, PAIA generated, POPIA operator acknowledged, bank-feed timestamp set. Matters C-2001 RAF, C-2002 City of Johannesburg (Act 40 overdue), C-2003 CCMA, C-2004 estate, C-2005 contract.
 
 ---
 
@@ -122,7 +122,7 @@ Ndlovu seed: FFC `FFC-GP-2026-44821` (expires 2027-12-31, holder Thabo Ndlovu), 
 
 - **Web:** Next.js 15, React 19, Tailwind, shadcn-style primitives.
 - **API:** Spring Boot 3.4, Java 21, JPA, JWT. Default H2 (`ddl-auto: create-drop`) for the demo. Hosted path: `SPRING_PROFILES_ACTIVE=postgres`, `docker compose up postgres`, and `GET /api/v1/health`. The Postgres profile refuses the checked-in development JWT secret.
-- **Voice:** `/ws/signal` plus HTTP inbox fallback.
+- **Voice:** `/ws/signal` plus HTTP inbox fallback for in-app WebRTC. PSTN uses Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`, optional `TWILIO_VOICE_FROM`). Those values stay in the server environment. A purchased number is not required.
 - **Mobile:** Flutter against `/api/v1`.
 
 Firms are the security boundary. Every row carries `tenant_id`. JWT writes `TenantContext`. Public routes (`landing`, `intake`, `sign`, login, register) never leak another firm’s rows. Prompts and documents stay on the tenant.
@@ -135,12 +135,11 @@ Coded in this repo: Postgres via Docker, `.env.example` for Twilio and Stripe wi
 
 A person still has to:
 
-- Approve Twilio and finish KYC before a public number or outbound PSTN call can be real.
+- Approve Twilio and finish KYC before a public number or outbound PSTN call can be real. Calls are real when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` are set, plus a caller ID the account already owns or has verified (`TWILIO_VOICE_FROM`, an in-app verified personal number, or a number already on the account). Upgraded accounts no longer have the free trial From number. Trial accounts, if any remain, can only call verified destinations. Native CallKit is not built yet.
 - Create the Stripe account and put keys in the environment. Do not commit them. Card fields must be Stripe-hosted.
 - Choose a domain, put TLS in front of the web and API processes, and point `TWILIO_PUBLIC_BASE_URL` at the public HTTPS origin.
 - Set `LEGALSUITE_JWT_SECRET` and a non-default `DB_PASSWORD` on that host.
 - Set the per-minute PSTN rate from the carrier price. Do not treat a blank rate as a bundle of free minutes.
-- Merge the earlier draft pull requests if those changes are wanted on main: matter workspace, staff draft help, copy scrub, and firm caller ID. This pilot does not force-push main and does not merge those branches for you.
 - Have counsel review the legal pack before it is published on a production domain.
 
 Not in the product: live Open Banking, a SANAS-accredited signature, CaseLines or RAF e-lodgement, SSO, and backups beyond what the operator runs.
@@ -153,9 +152,9 @@ These texts are the product’s public legal documents. They apply to **LegalSui
 
 Publish these ten documents on the public site at `/legal/{slug}` (footer on `/`). Long-form control copy is this file.
 
-Footer set: Privacy & Cookie Policy · Acceptable Use Policy · Event Privacy Policy · Visitor Privacy Policy · Dispute Policy · Terms of Use · Generative AI · Merchant Services Agreement · Data Processing Agreement · Service Providers, Sub-processors, and Affiliates.
+Footer set: Privacy & Cookie Policy · Acceptable Use Policy · Event Privacy Policy · Visitor Privacy Policy · Dispute Policy · Terms of Use · Staff assistant · Merchant Services Agreement · Data Processing Agreement · Service Providers, Sub-processors, and Affiliates.
 
-Governing law for the **operator–customer** relationship: Republic of South Africa (POPIA, PAIA, ECT Act 25 of 2002, CPA where it applies). Texas firms using the product remain bound by their own professional rules for the practice; this pack governs use of the software.
+Governing law for the **operator-customer** relationship: Republic of South Africa (POPIA, PAIA, ECT Act 25 of 2002, CPA where it applies). Texas firms using the product remain bound by their own professional rules for the practice; this pack governs use of the software.
 
 ---
 
@@ -177,7 +176,7 @@ Governing law for the **operator–customer** relationship: Republic of South Af
 - Legitimate interest / compliance: security, audit, FFC gating, recon.
 - Consent: call recording (opt-in), marketing cookies if ever added (none today).
 
-**Attorney-client privilege.** Matter text, notes, and documents belong to the **tenant**. The heuristic AI does not send prompts to a vendor. The operator is an **operator** under POPIA ss 20–22 for tenant files (see the DPA). The operator does not use tenant files to train a public model.
+**Attorney-client privilege.** Matter text, notes, and documents belong to the **tenant**. The assistant does not send prompts to a vendor unless the operator sets `LEGALSUITE_AI_PROVIDER` and a key (see §10.7). The operator is an **operator** under POPIA ss 20–22 for tenant files (see the DPA). The operator does not use tenant files to train a public model.
 
 **Retention.** Tenant data until the firm closes the account or a statutory period the firm sets. Audit rows follow the firm’s file-retention policy. Demo H2 data dies when the process dies.
 
@@ -261,16 +260,16 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 ---
 
-### 10.7 Generative AI
+### 10.7 Staff assistant
 
-- The assistant is a **local heuristic**. It does not call OpenAI, Anthropic, Google, or any other model vendor.
-- Prompts are written to the **audit log** on the tenant. They are not sent outbound.
+- The assistant is **assistive**. It is not legal advice, not a court e-filing system, and not CaseLines. A human attorney remains responsible.
+- **Default:** on-tenant rules for the matter the staff member already has open (parties, computed clocks, notes, file names). Prompts are written to the **audit log** on the tenant and are not sent outbound.
+- **Optional vendor.** An operator may set `LEGALSUITE_AI_PROVIDER` to `openai` or `anthropic` and supply `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. Until that is set, no prompt leaves the tenant. When it is set, the prompt and the single matter’s staff-visible context (not file bytes, not other matters) are sent to that vendor to produce an answer. A missing key or a failed call stays on the tenant and says so.
+- Enabling a vendor is a cross-border transfer. Do not enable it on a production domain until a POPIA s 72 mechanism and the operator agreement you intend to rely on are in place. This section is the product’s notice of that path.
+- The assistant does not invent case-law citations as fact. Deadline and next-step suggestions follow the matter’s computed clocks and the product rules (docket hold, limited file). Confirm interruptions, condonation, and service.
 - Do not paste another client’s privileged text into a chat that people without a need-to-know can open.
-- Outputs can be wrong. They are drafts. A human attorney remains responsible.
-- We do not use tenant prompts to train a shared model.
-- Privilege stripping is heuristic, not a guarantee. Treat the assistant as inside the firm, not as a court reporter.
-
-If a future build adds a vendor model, that build will require a separate operator agreement, a POPIA transfer assessment, and a notice in this section **before** any prompt leaves the tenant.
+- Outputs can be wrong. We do not use tenant prompts to train a shared model.
+- Privilege stripping is a rough check, not a guarantee. Treat the assistant as inside the firm, not as a court reporter.
 
 ---
 
@@ -310,11 +309,11 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | --- | --- | --- | --- |
 | Operator (LegalSuite Pro) | Host, support | Tenant database | In product |
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
-| PostgreSQL host | Database | All tenant rows | `docker compose` and the postgres profile. Default demo is still H2. |
+| PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
 | Stripe | Light subscription and usage invoices | Billing details | Keys via environment. Toggle is not a live account. |
-| Twilio | Public-network calls and an optional DID | Call metadata, numbers | Keys via environment. KYC is operator work. |
+| Twilio | PSTN | Call metadata, numbers, caller ID | Real calls when server env vars are set. No keys in the repo. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
-| No LLM vendor | — | — | Heuristic only |
+| OpenAI or Anthropic (optional) | Model answers for one matter | Prompt and staff-visible matter context, not file bytes | Off unless `LEGALSUITE_AI_PROVIDER` and a key are set |
 
 Affiliates: none listed. If the operator group adds a company that can see tenant data, this table will be updated **before** that access starts.
 
@@ -327,7 +326,8 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | Version | Date | Notes |
 | --- | --- | --- |
 | 1.0 | 16 September 2026 | All twelve phases recorded. Legal pack added to match the public policy set. |
-| 1.1 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
+| 1.1 | 5 October 2026 | Matter-scoped staff assistant. Model vendor stays off unless an operator sets a key. |
+| 1.2 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

@@ -114,7 +114,7 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardBody className="space-y-3">
-          {docket.length === 0 && <p className="text-sm text-slate-500">No statute or filing in the next 45 days. Stay that way.</p>}
+          {docket.length === 0 && <p className="text-sm text-slate-500">No statute or filing in the next 45 days.</p>}
           {docket.map((item, i) => (
             <Link
               key={`${item.kind}-${item.caseId}-${i}`}

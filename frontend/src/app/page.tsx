@@ -7,7 +7,7 @@ const FEATURES = [
   ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket. The attorney remains responsible for the date."],
   ["The phone is on the file", "In-app calls are included. Public-network minutes are pay-what-you-use. Recording is opt-in, with a spoken notice."],
   ["One attorney, one seat", "Light is R1,199 per month. Section 86 trust is in that seat. There is no minute bundle and no unlimited voice."],
-  ["Drafts stay on the firm", "Summaries and drafts stay on this tenant. The attorney remains responsible. This is not legal advice."],
+  ["Drafts stay on the firm", "Summaries stay on this tenant unless the firm turns on a model vendor. The attorney remains responsible. This is not legal advice."],
   ["Trust an inspector can read", "Per-client ledgers. Three-way recon (bank, cashbook, and clients). One client cannot spend another's money."],
 ];
 

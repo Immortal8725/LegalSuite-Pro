@@ -44,7 +44,14 @@ public final class CallEthics {
         m.put("notice", allParty
                 ? "All-party consent state. Every person on the line must be told before you record. Recording stays opt-in."
                 : "One-party consent in " + st
-                        + ". This product still requires an opt-in click. Tell the other party anyway — ethics is not a loophole.");
+                        + ". This product still requires an opt-in click. Tell the other party anyway. Ethics is not a loophole.");
         return m;
+    }
+
+    /** Shown before a public-network dial. Recording still follows {@link #forTenant}. */
+    public static String pstnNotice() {
+        return "Outbound calls on the public network present a rented number, a verified personal number, or the caller ID configured on the server. "
+                + "Your phone rings first. Emergency numbers stay on the device dialer. "
+                + "Recording stays opt-in under the same rule as in-app calls. Buying a number is optional.";
     }
 }

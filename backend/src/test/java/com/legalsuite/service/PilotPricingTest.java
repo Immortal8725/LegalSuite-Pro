@@ -31,10 +31,10 @@ class PilotPricingTest {
         assertEquals(0, Pricing.INCLUDED_PSTN_MINUTES);
         assertEquals(new BigDecimal("1199"), Pricing.LIGHT_MONTHLY_ZAR);
         assertEquals(new BigDecimal("79"), Pricing.DID_MONTHLY_ZAR);
-        assertEquals(new BigDecimal("4200"), RetainService.pledgedRetainer(null, new BigDecimal("4200")));
-        assertEquals(new BigDecimal("5000"), RetainService.pledgedRetainer("5000", new BigDecimal("4200")));
-        assertEquals(BigDecimal.ZERO, RetainService.pledgedRetainer(null, null));
-        assertEquals(BigDecimal.ZERO, RetainService.pledgedRetainer("2500abc", null));
+        assertEquals(new BigDecimal("4200"), RetainService.resolveRetainer(null, null, new BigDecimal("4200")));
+        assertEquals(new BigDecimal("5000"), RetainService.resolveRetainer("5000", null, new BigDecimal("4200")));
+        assertEquals(BigDecimal.ZERO, RetainService.resolveRetainer(null, null, null));
+        assertEquals(BigDecimal.ZERO, RetainService.resolveRetainer("2500abc", null, null));
         assertEquals(BigDecimal.ZERO, VoiceService.rateOrZero(""));
         assertEquals(BigDecimal.ZERO, VoiceService.rateOrZero("-1"));
         assertFalse(OperatorCredentials.present(""));

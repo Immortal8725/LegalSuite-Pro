@@ -131,7 +131,7 @@ public final class SouthAfricanDocketRules {
                     "Once lodged under s 17, the claim may not prescribe before five years from the cause of action. Issue in time.",
                     assumed));
         } else {
-            caveats.add("RAF 1 not marked lodged. The five-year summons protection in s 23(3) does not start until the claim is lodged.");
+            caveats.add("RAF 1 is not marked lodged. The five-year summons protection in s 23(3) does not start until the claim is lodged.");
         }
     }
 
@@ -174,7 +174,7 @@ public final class SouthAfricanDocketRules {
                     "Written notice of intended legal proceedings is generally due within six months from when the debt became due. Missing it requires condonation before you issue.",
                     assumed));
         } else {
-            caveats.add("Act 40 s 3 notice marked served. Notice clock cleared. Prescription still runs.");
+            caveats.add("Act 40 s 3 notice is marked served. The notice clock is cleared. Prescription still runs.");
         }
         delict(f, knowledge, assumed, clocks, caveats, "delict");
         if (accrual != null && !accrual.equals(knowledge)) {

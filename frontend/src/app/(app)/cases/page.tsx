@@ -39,7 +39,7 @@ export default function CasesPage() {
     <div>
       <PageHeader
         title="Cases & matters"
-        subtitle="Every open file, court, and opposing party — filter later, act now."
+        subtitle="Every open file, with court and opposing party."
         actions={<Button onClick={() => setOpen(true)}>New matter</Button>}
       />
       <ErrorBanner error={error} />
