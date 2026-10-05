@@ -113,7 +113,7 @@ export default function VoicePage() {
     <div>
       <PageHeader
         title="Voice registry"
-        subtitle="In-app calls are free. Public network calls show a rented local number or a verified landline. Recording stays opt-in."
+        subtitle="In-app calls are free. Public network calls use a verified personal number or the caller ID configured on the server. Buying a number is optional. Recording stays opt-in."
       />
       {ethics && (
         <p className={`mb-4 rounded-lg border px-3 py-2 text-xs ${ethics.allPartyConsent ? "border-red-200 bg-red-50 text-red-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
