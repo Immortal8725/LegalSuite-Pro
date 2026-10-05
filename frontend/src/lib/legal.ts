@@ -23,7 +23,7 @@ Purpose and lawful basis (POPIA ss 11–12)
 - Legitimate interest / compliance: security, audit, FFC gating, recon.
 - Consent: call recording (opt-in).
 
-Attorney-client privilege. Matter text belongs to the tenant. The assistant does not send prompts to a vendor unless the operator sets LEGALSUITE_AI_PROVIDER and a key (see Generative AI). The operator is an operator under POPIA ss 20–22 for tenant files.
+Attorney-client privilege. Matter text belongs to the tenant. The assistant does not send prompts to a vendor unless the operator sets LEGALSUITE_AI_PROVIDER and a key (see Staff assistant). The operator is an operator under POPIA ss 20–22 for tenant files.
 
 Rights. Access, correction, deletion, objection, and complaint to the Information Regulator (South Africa). Texas users may also use applicable US state rights.
 
@@ -96,11 +96,11 @@ ECT Act. Identity-bound signatures in the product are an advanced-signature anal
   },
   {
     slug: "generative-ai",
-    title: "Generative AI",
+    title: "Staff assistant",
     section: "10.7",
     body: `The assistant is assistive. It is not legal advice, not a court e-filing system, and not CaseLines. A human attorney remains responsible.
 
-Default: a local heuristic on the matter the staff member already has open. Prompts are written to the audit log on the tenant and are not sent outbound.
+Default: on-tenant rules for the matter the staff member already has open. Prompts are written to the audit log on the tenant and are not sent outbound.
 
 Optional vendor. An operator may set LEGALSUITE_AI_PROVIDER to openai or anthropic and supply OPENAI_API_KEY or ANTHROPIC_API_KEY. Until that is set, no prompt leaves the tenant. When it is set, the prompt and that one matter’s staff-visible context (not file bytes, not other matters) are sent to that vendor. A missing key stays on the tenant.
 
@@ -139,19 +139,19 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     slug: "subprocessors",
     title: "Service Providers, Sub-processors, and Affiliates",
     section: "10.10",
-    body: `Operator (LegalSuite Pro) — host and support; tenant database; in product.
+    body: `Operator (LegalSuite Pro): host and support; tenant database; in product.
 
-Vercel (optional) — web front end; request logs; UI can publish, API needs a JVM.
+Vercel (optional): web front end; request logs; UI can publish, API needs a JVM.
 
-PostgreSQL host (optional) — all tenant rows; docker-compose / postgres profile; not the default.
+PostgreSQL host (optional): all tenant rows; docker-compose / postgres profile; not the default.
 
-Stripe — subscriptions / invoices; connect stub.
+Stripe: subscriptions and invoices; connect stub.
 
-Twilio — PSTN metadata; connect stub.
+Twilio: PSTN metadata; connect stub.
 
-Authenticator apps — TOTP; shared secret stays on the user row.
+Authenticator apps: TOTP; shared secret stays on the user row.
 
-OpenAI or Anthropic (optional) — model answers for one matter; off unless LEGALSUITE_AI_PROVIDER and a key are set.
+OpenAI or Anthropic (optional): model answers for one matter; off unless LEGALSUITE_AI_PROVIDER and a key are set.
 
 Affiliates: none listed. Firms may not treat a demo “connected” integration as a live subprocessor until keys are real.`,
   },

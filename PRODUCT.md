@@ -1,4 +1,4 @@
-# LegalSuite Pro — Product
+# LegalSuite Pro
 
 **Status:** All twelve product phases shipped. Demo, not a hosted production practice.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
@@ -8,7 +8,7 @@ A multi-tenant practice system for law firms. A firm registers once. It gets a p
 
 South Africa is the default jurisdiction. Texas still runs on a second tenant so both docket engines can be compared.
 
-This file is not legal advice. The legal pack at the end is the product’s starting texts for privacy, acceptable use, AI, payments, and operators. A live firm must have them reviewed by counsel before they go on a production domain.
+This file is not legal advice. The legal pack at the end is the product’s starting texts for privacy, acceptable use, the staff assistant, payments, and operators. A live firm must have them reviewed by counsel before they go on a production domain.
 
 ---
 
@@ -33,7 +33,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 3. **The phone is on the file.** In-app WebRTC is free. Hangup writes a time entry. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA).
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
 5. **Metered, not seated.** Core modules stay on. Add-ons and PSTN minutes roll into the month-end usage invoice.
-6. **Privilege-shaped AI.** Summaries, drafts, and intake screening stay on the tenant row unless the operator sets a model-vendor key. No training corpus.
+6. **Draft help on the file.** Summaries, drafts, and intake screening stay on the tenant row unless the operator sets a model-vendor key. Tenant files are not used to train a shared model. The attorney remains responsible.
 
 ---
 
@@ -47,7 +47,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | 4 | Communication | Internal messages, WebRTC voice, call registry, leads |
 | 5 | Advanced | Conflicts, reports, modules, team, settings, search |
 | 6 | Mobile | Responsive web + PWA; Flutter client in `mobile/` |
-| 7 | AI & integrations | Heuristic assistant, merge templates, in-app e-sign, connect hub, audit log |
+| 7 | Assistant and integrations | On-tenant draft help, merge templates, in-app e-sign, connect hub, audit log |
 | 8 | Polish | README, ERD, class diagrams, tests, PWA manifest |
 | 9 | Hire loop | Signed waiver, limited file, engagement unlock, pledged retainer post |
 | 10 | South Africa | Prescription / RAF / Act 40 / CCMA clocks, RICA, LPA s 86, VAT, docket hold |
@@ -82,7 +82,7 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 **Core (cannot be switched off):** cases, clients, contacts, calendar, tasks, documents, conflicts (from Essentials), reports, audit, voice (in-app).
 
-**Add-ons (month-end invoice):** trust, expenses, client portal, e-signatures, AI, templates, integrations.
+**Add-ons (month-end invoice):** trust, expenses, client portal, e-signatures, draft help, templates, integrations.
 
 Voice over the public switched network is metered. In-app WebRTC is not.
 
@@ -102,7 +102,7 @@ Voice over the public switched network is metered. In-app WebRTC is not.
 **Demo fitness (Ndlovu): 11 / 14.** Three reds are intentional:
 
 1. Three-way recon short **R11,750** (bank R438,250 vs book/ledgers R450,000). Do not certify.
-2. C-2002 Act 40 s 3 notice overdue — trial blocked.
+2. C-2002 Act 40 s 3 notice is overdue, so trial is blocked.
 3. Production ops: default **H2 create-drop**. Postgres profile + `docker-compose` exist. TLS and forced 2FA are not on.
 
 ---
@@ -145,9 +145,9 @@ These texts are the product’s public legal documents. They apply to **LegalSui
 
 Publish these ten documents on the public site at `/legal/{slug}` (footer on `/`). Long-form control copy is this file.
 
-Footer set: Privacy & Cookie Policy · Acceptable Use Policy · Event Privacy Policy · Visitor Privacy Policy · Dispute Policy · Terms of Use · Generative AI · Merchant Services Agreement · Data Processing Agreement · Service Providers, Sub-processors, and Affiliates.
+Footer set: Privacy & Cookie Policy · Acceptable Use Policy · Event Privacy Policy · Visitor Privacy Policy · Dispute Policy · Terms of Use · Staff assistant · Merchant Services Agreement · Data Processing Agreement · Service Providers, Sub-processors, and Affiliates.
 
-Governing law for the **operator–customer** relationship: Republic of South Africa (POPIA, PAIA, ECT Act 25 of 2002, CPA where it applies). Texas firms using the product remain bound by their own professional rules for the practice; this pack governs use of the software.
+Governing law for the **operator-customer** relationship: Republic of South Africa (POPIA, PAIA, ECT Act 25 of 2002, CPA where it applies). Texas firms using the product remain bound by their own professional rules for the practice; this pack governs use of the software.
 
 ---
 
@@ -253,16 +253,16 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 ---
 
-### 10.7 Generative AI
+### 10.7 Staff assistant
 
 - The assistant is **assistive**. It is not legal advice, not a court e-filing system, and not CaseLines. A human attorney remains responsible.
-- **Default:** a local heuristic on the matter the staff member already has open (parties, computed clocks, notes, file names). Prompts are written to the **audit log** on the tenant and are not sent outbound.
+- **Default:** on-tenant rules for the matter the staff member already has open (parties, computed clocks, notes, file names). Prompts are written to the **audit log** on the tenant and are not sent outbound.
 - **Optional vendor.** An operator may set `LEGALSUITE_AI_PROVIDER` to `openai` or `anthropic` and supply `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. Until that is set, no prompt leaves the tenant. When it is set, the prompt and the single matter’s staff-visible context (not file bytes, not other matters) are sent to that vendor to produce an answer. A missing key or a failed call stays on the tenant and says so.
 - Enabling a vendor is a cross-border transfer. Do not enable it on a production domain until a POPIA s 72 mechanism and the operator agreement you intend to rely on are in place. This section is the product’s notice of that path.
 - The assistant does not invent case-law citations as fact. Deadline and next-step suggestions follow the matter’s computed clocks and the product rules (docket hold, limited file). Confirm interruptions, condonation, and service.
 - Do not paste another client’s privileged text into a chat that people without a need-to-know can open.
 - Outputs can be wrong. We do not use tenant prompts to train a shared model.
-- Privilege stripping is heuristic, not a guarantee. Treat the assistant as inside the firm, not as a court reporter.
+- Privilege stripping is a rough check, not a guarantee. Treat the assistant as inside the firm, not as a court reporter.
 
 ---
 

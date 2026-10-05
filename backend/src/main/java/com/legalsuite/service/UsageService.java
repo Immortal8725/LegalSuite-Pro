@@ -90,7 +90,7 @@ public class UsageService {
         m.put("pstnMinutes", pstnMinutes);
         m.put("total", total);
         m.put("lineItems", lines);
-        m.put("note", "In-app WebRTC is $0. You pay add-on modules and public-network minutes at month end — no prepaid bucket.");
+        m.put("note", "In-app WebRTC is $0. You pay add-on modules and public-network minutes at month end. There is no prepaid bucket.");
         m.put("issued", existing == null ? null : view(existing));
         return m;
     }

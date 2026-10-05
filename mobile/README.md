@@ -1,4 +1,4 @@
-# LegalSuite Pro — Flutter client (Phase 6)
+# LegalSuite Pro Flutter client (Phase 6)
 
 Attorney mobile slice against the same Spring Boot API as the web app.
 
@@ -9,7 +9,7 @@ Attorney mobile slice against the same Spring Boot API as the web app.
 - Matter list
 - Time entries
 
-Voice calling, e-sign, and AI stay on the responsive web app (installable as a PWA). This client is the native docket.
+Voice calling, e-sign, and draft help stay on the responsive web app (installable as a PWA). This client is the native docket.
 
 ## Run
 

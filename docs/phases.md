@@ -8,7 +8,7 @@
 | 4 Communication | Shipped | Messages, WebRTC voice, leads |
 | 5 Advanced | Shipped | Conflicts, reports, modules, team, settings, search |
 | 6 Mobile | Shipped | Responsive web + PWA; Flutter in `mobile/` |
-| 7 AI & integrations | Shipped | `/ai`, `/templates`, `/esign`, `/sign/[id]`, `/integrations`, `/audit` |
+| 7 Assistant and integrations | Shipped | `/ai`, `/templates`, `/esign`, `/sign/[id]`, `/integrations`, `/audit` |
 | 8 Polish | Shipped | README, ERD, class diagrams, tests, PWA |
 | Unique loop | Shipped | Hire motion, Texas clocks, signed conflict waiver, limited file until engagement |
 

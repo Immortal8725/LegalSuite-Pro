@@ -139,7 +139,7 @@ public class RetainService {
         TexasDocketRules.Result docket = DocketEngine.compute(tenant, facts);
         Map<String, Object> caseBody = new HashMap<>();
         caseBody.put("clientId", client.getId());
-        caseBody.put("title", area + " — " + client.displayName());
+        caseBody.put("title", area + ": " + client.displayName());
         caseBody.put("practiceArea", area);
         caseBody.put("caseType", area);
         caseBody.put("description", lead.getDescription());
@@ -196,7 +196,7 @@ public class RetainService {
         }
 
         Map<String, Object> sigBody = new HashMap<>();
-        sigBody.put("title", "Engagement letter — " + client.displayName());
+        sigBody.put("title", "Engagement letter: " + client.displayName());
         sigBody.put("documentBody", merged);
         sigBody.put("signerName", client.displayName());
         sigBody.put("signerEmail", client.getEmail() == null ? "" : client.getEmail());
@@ -259,7 +259,7 @@ public class RetainService {
             return view;
         }
         Map<String, Object> create = new HashMap<>();
-        create.put("title", "Conflict waiver — " + lead.getName());
+        create.put("title", "Conflict waiver: " + lead.getName());
         create.put("documentBody", waiverLetter(lead, conflict));
         create.put("signerName", lead.getName());
         create.put("signerEmail", lead.getEmail() == null ? "" : lead.getEmail());
@@ -297,7 +297,7 @@ public class RetainService {
                 Prospective client: %s
                 Adverse / related hits:
                 %s
-                I have been told that this firm already has a relationship that may be adverse or substantially related (LPC Code of Conduct — conflicts). I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
+                I have been told that this firm already has a relationship that may be adverse or substantially related (LPC Code of Conduct, conflicts). I have had a chance to seek independent counsel. I still ask the firm to consider this matter, and I waive the conflict described above to the extent a waiver is permitted.
 
                 This is a signed instrument. A click on “retain anyway” is not consent.
                 """.formatted(lead.getName(), hits.toString().isBlank() ? "- (see conflict record)\n" : hits);
@@ -305,7 +305,7 @@ public class RetainService {
 
     /**
      * Explicit amount, then a firm default already stored on the tenant, then the
-     * acting attorney's hourly rate. Missing all three pledges nothing — it does not invent a fee.
+     * acting attorney's hourly rate. Missing all three pledges nothing. It does not invent a fee.
      */
     static BigDecimal resolveRetainer(Object requested, Tenant tenant, BigDecimal attorneyRate) {
         BigDecimal explicit = decimalOrNull(requested);

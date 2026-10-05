@@ -59,7 +59,7 @@ public class AiModelGateway {
             return new Completion(Status.CONFIGURED, "anthropic", null, null);
         }
         if (!"local".equals(provider) && !"heuristic".equals(provider)) {
-            return new Completion(Status.LOCAL, "local", null, "Unknown AI provider. Showing the on-tenant assistant.");
+            return new Completion(Status.LOCAL, "local", null, "Unknown LEGALSUITE_AI_PROVIDER value. Showing the on-tenant draft.");
         }
         return new Completion(Status.LOCAL, "local", null, null);
     }
@@ -82,7 +82,7 @@ public class AiModelGateway {
                         Status.VENDOR_ERROR,
                         "openai",
                         null,
-                        "The OpenAI request did not return an answer. Showing the on-tenant assistant instead.");
+                        "The OpenAI request did not return an answer. Showing the on-tenant draft instead.");
             }
         }
         if ("anthropic".equals(provider)) {
@@ -101,11 +101,11 @@ public class AiModelGateway {
                         Status.VENDOR_ERROR,
                         "anthropic",
                         null,
-                        "The Anthropic request did not return an answer. Showing the on-tenant assistant instead.");
+                        "The Anthropic request did not return an answer. Showing the on-tenant draft instead.");
             }
         }
         if (!"local".equals(provider) && !"heuristic".equals(provider)) {
-            return new Completion(Status.LOCAL, "local", null, "Unknown AI provider. Showing the on-tenant assistant.");
+            return new Completion(Status.LOCAL, "local", null, "Unknown LEGALSUITE_AI_PROVIDER value. Showing the on-tenant draft.");
         }
         return new Completion(Status.LOCAL, "local", null, null);
     }

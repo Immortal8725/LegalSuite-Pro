@@ -9,8 +9,8 @@ import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Select, Textarea } from "@/components/ui/input";
-import { MatterAssistant } from "@/components/matter-assistant";
 import type { DocketClock, Matter } from "@/lib/types";
+import { MatterAssistant } from "@/components/matter-assistant";
 import Link from "next/link";
 
 const STATUSES = ["limited", "intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"];
@@ -230,7 +230,7 @@ export default function CaseDetailPage() {
       </div>
       {!c.appearanceAuthorized && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          <p className="font-semibold">Limited file — no appearance.</p>
+          <p className="font-semibold">Limited file. No appearance.</p>
           <p className="mt-1">
             The mandate is unsigned. Status cannot move to open or trial. Trust will not post the pledged retainer
             {c.pendingRetainerAmount ? ` (${moneyExact(c.pendingRetainerAmount)})` : ""} until this instrument is signed.
@@ -244,7 +244,7 @@ export default function CaseDetailPage() {
       )}
       {c.docketHold && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-950">
-          <p className="font-semibold">Docket hold — do not appear.</p>
+          <p className="font-semibold">Docket hold. Do not appear.</p>
           <p className="mt-1">
             {c.docketHoldReason || "A statutory notice, RAF lodge, or CCMA referral is overdue."} Trial is disabled until
             you lodge, serve, or apply for condonation.
@@ -260,27 +260,27 @@ export default function CaseDetailPage() {
             <p>
               <span className="text-slate-400">Court</span>
               <br />
-              {c.courtName || "—"}
+              {c.courtName || "None"}
             </p>
             <p>
               <span className="text-slate-400">Judge</span>
               <br />
-              {c.judgeName || "—"}
+              {c.judgeName || "None"}
             </p>
             <p>
               <span className="text-slate-400">Client</span>
               <br />
-              {c.clientName || "—"}
+              {c.clientName || "None"}
             </p>
             <p>
               <span className="text-slate-400">Opposing party</span>
               <br />
-              {c.opposingParty || "—"}
+              {c.opposingParty || "None"}
             </p>
             <p>
               <span className="text-slate-400">Opposing counsel</span>
               <br />
-              {c.opposingCounsel || "—"}
+              {c.opposingCounsel || "None"}
             </p>
             <p>
               <span className="text-slate-400">Limitations</span>

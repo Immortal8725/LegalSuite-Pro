@@ -29,7 +29,7 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <PageHeader title="Calendar" subtitle="Court, depositions, and filing clocks — color is by event type." actions={<Button onClick={() => setOpen(true)}>New event</Button>} />
+      <PageHeader title="Calendar" subtitle="Court dates, depositions, and filing clocks. Color follows the event type." actions={<Button onClick={() => setOpen(true)}>New event</Button>} />
       <div className="space-y-4">
         {byDay.length === 0 && <p className="text-sm text-slate-500">No events in the next 40 days.</p>}
         {byDay.map(([day, list]) => (

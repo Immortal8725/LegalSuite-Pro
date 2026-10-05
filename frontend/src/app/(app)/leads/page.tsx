@@ -87,7 +87,7 @@ export default function LeadsPage() {
     <div>
       <PageHeader
         title="Hire pipeline"
-        subtitle="Conflict waiver is a signed letter. Unsigned engagement is a limited file — no appearance, retainer pledged not posted."
+        subtitle="A conflict waiver is a signed letter. An unsigned engagement is a limited file. No appearance, and the pledged retainer is not posted."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
@@ -99,7 +99,7 @@ export default function LeadsPage() {
             {(result.conflict?.matches || []).map((m, i) => (
               <li key={i}>
                 <span className="font-semibold uppercase">{m.role || m.type}</span>: {m.name}
-                {m.detail ? ` — ${m.detail}` : ""}
+                {m.detail ? `. ${m.detail}` : ""}
               </li>
             ))}
           </ul>

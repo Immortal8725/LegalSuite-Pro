@@ -28,7 +28,7 @@ public final class SouthAfricanDocketRules {
         }
         LocalDate accrual = f.accrualDate != null ? f.accrualDate : TexasDocketRules.inferAccrual(f.description, today);
         String assumed = f.accrualDate == null
-                ? "No incident date on file — accrued " + accrual + " from the intake narrative or today."
+                ? "No incident date on file. Accrued " + accrual + " from the intake narrative or today."
                 : "";
         if (f.accrualDate == null) caveats.add(assumed);
         boolean hitAndRun = f.hitAndRun || looksHitAndRun(f);
@@ -131,7 +131,7 @@ public final class SouthAfricanDocketRules {
                     "Once lodged under s 17, the claim may not prescribe before five years from the cause of action. Issue in time.",
                     assumed));
         } else {
-            caveats.add("RAF 1 not marked lodged — the five-year summons protection in s 23(3) does not start until the claim is lodged.");
+            caveats.add("RAF 1 is not marked lodged. The five-year summons protection in s 23(3) does not start until the claim is lodged.");
         }
     }
 
@@ -174,7 +174,7 @@ public final class SouthAfricanDocketRules {
                     "Written notice of intended legal proceedings is generally due within six months from when the debt became due. Missing it requires condonation before you issue.",
                     assumed));
         } else {
-            caveats.add("Act 40 s 3 notice marked served — notice clock cleared. Prescription still runs.");
+            caveats.add("Act 40 s 3 notice is marked served. The notice clock is cleared. Prescription still runs.");
         }
         delict(f, knowledge, assumed, clocks, caveats, "delict");
         if (accrual != null && !accrual.equals(knowledge)) {
@@ -223,7 +223,7 @@ public final class SouthAfricanDocketRules {
             TexasDocketRules.Facts f, LocalDate accrual, String assumed, List<TexasDocketRules.Clock> clocks, List<String> caveats) {
         LocalDate letters = f.probateOpened != null ? f.probateOpened : accrual;
         if (f.probateOpened == null) {
-            caveats.add("No letters of executorship date — treating " + letters + " as the appointment date.");
+            caveats.add("No letters of executorship date. Treating " + letters + " as the appointment date.");
         }
         String note = f.probateOpened == null ? "Assumed letters " + letters + "." : assumed;
         clocks.add(clock("notice", "za.estate.s29", "Administration of Estates Act 66 of 1965 s 29",

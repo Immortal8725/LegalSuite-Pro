@@ -118,7 +118,7 @@ public final class TexasDocketRules {
         boolean gov = f.governmentalDefendant || looksGovernmental(f.opposingParty);
         LocalDate accrual = f.accrualDate != null ? f.accrualDate : inferAccrual(f.description, today);
         String assumedAccrual = f.accrualDate == null
-                ? "No incident date on file — accrued " + accrual + " from the intake narrative or today."
+                ? "No incident date on file. Accrued " + accrual + " from the intake narrative or today."
                 : "";
         if (f.accrualDate == null) caveats.add(assumedAccrual);
         if (gov && !f.governmentalDefendant) {
@@ -199,7 +199,7 @@ public final class TexasDocketRules {
         String reason = "Two years from the day the cause of action accrues.";
         if (f.discoveryDate != null && f.discoveryDate.isAfter(accrual)) {
             solStart = f.discoveryDate;
-            reason = "Two years from discovery. The discovery rule is fact-specific — confirm it actually applies.";
+            reason = "Two years from discovery. The discovery rule is fact-specific. Confirm it actually applies.";
             caveats.add("Discovery-rule clock used because a discovery date is later than the incident date.");
         }
         LocalDate sol = solStart.plusYears(2);
@@ -252,7 +252,7 @@ public final class TexasDocketRules {
     private static void estate(Facts f, LocalDate accrual, String assumed, List<Clock> clocks, List<String> caveats) {
         LocalDate letters = f.probateOpened != null ? f.probateOpened : accrual;
         if (f.probateOpened == null) {
-            caveats.add("No probate-opened date — treating " + letters + " as the date letters issued.");
+            caveats.add("No probate-opened date. Treating " + letters + " as the date letters issued.");
         }
         String lettersNote = f.probateOpened == null
                 ? "Assumed letters issued " + letters + "."

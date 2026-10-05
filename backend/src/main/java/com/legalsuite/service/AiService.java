@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AiService {
     static final String LOCAL_NOTICE =
-            "On-tenant assistant. This prompt was not sent to a model vendor.";
+            "On-tenant draft. This prompt was not sent to a model vendor.";
 
     private final LegalCaseRepository cases;
     private final ClientRepository clients;
@@ -189,7 +189,7 @@ public class AiService {
         for (LegalCase c : cases.findByTenantIdOrderByUpdatedAtDesc(tid)) {
             String blob = c.getTitle() + " " + nz(c.getCaseNumber()) + " " + nz(c.getDescription()) + " " + nz(c.getOpposingParty());
             if (HeuristicAi.matches(blob, prompt) || HeuristicAi.matches(prompt, nz(c.getTitle()))) {
-                hits.add("Matter " + c.getCaseNumber() + " — " + c.getTitle() + " (" + c.getStatus() + ").");
+                hits.add("Matter " + c.getCaseNumber() + ": " + c.getTitle() + " (" + c.getStatus() + ").");
                 citations.add(Map.of("type", "case", "id", c.getId().toString(), "label", c.getCaseNumber() + " " + c.getTitle()));
             }
         }
@@ -209,15 +209,15 @@ public class AiService {
         String reply;
         String lower = prompt.toLowerCase(Locale.ROOT);
         if (lower.contains("conflict")) {
-            reply = "Run a conflict check from Conflicts. Search the prospect's name, then opposing parties and counsel. A hit is not a hard stop — record how you cleared it.";
+            reply = "Run a conflict check from Conflicts. Search the prospect's name, then opposing parties and counsel. A hit is not a hard stop. Record how you cleared it.";
         } else if (lower.contains("invoice") || lower.contains("bill") || lower.contains("trust")) {
             reply = "Unbilled time lives under Time Tracking. Generate an invoice from Billing, then record a trust deposit if a retainer arrived. A client ledger refuses another client's money.";
         } else if (hits.isEmpty()) {
-            reply = "I searched this tenant's matters, clients, and intake and did not find a close match for “"
+            reply = "Nothing on this tenant's matters, clients, or intake matched closely for “"
                     + prompt
-                    + "”. Open a matter and ask there, or try a case number or a last name.";
+                    + "”. Open a matter, or try a case number or a last name.";
         } else {
-            reply = "Here is what matches “" + prompt + "” on this docket:\n\n- "
+            reply = "Matches for “" + prompt + "” on this docket:\n\n- "
                     + String.join("\n- ", hits.subList(0, Math.min(8, hits.size())))
                     + "\n\nOpen the matter to ask about its clocks, notes, and file names.";
         }
@@ -229,7 +229,7 @@ public class AiService {
         if (completion.status() == AiModelGateway.Status.MISSING_KEY
                 || completion.status() == AiModelGateway.Status.CONFIGURED
                 || completion.status() == AiModelGateway.Status.VENDOR_ERROR) {
-            notice = "Docket search stays on the tenant. Open a matter to ask with that file’s clocks and notes."
+            notice = "Docket search stays on the tenant. Open a matter to use that file's clocks and notes."
                     + (completion.notice() == null ? "" : " " + completion.notice());
             providerStatus = completion.status().name().toLowerCase(Locale.ROOT).replace('_', '-');
         }
@@ -318,10 +318,10 @@ public class AiService {
     private void requireStaffAssistant() {
         String role = TenantContext.getRole();
         if (role == null || role.isBlank()) {
-            throw ApiException.unauthorized("Sign in as firm staff to use the assistant");
+            throw ApiException.unauthorized("Sign in as firm staff to use draft help");
         }
         if ("client".equalsIgnoreCase(role)) {
-            throw ApiException.forbidden("The assistant is for firm staff. Client portal accounts cannot open matter notes.");
+            throw ApiException.forbidden("Draft help is for firm staff. Client portal accounts cannot open matter notes.");
         }
         UUID tenantId = TenantContext.requireTenant();
         AppModule ai = modules.findBySlug("ai").orElse(null);
@@ -330,7 +330,7 @@ public class AiService {
                 .map(TenantModule::isEnabled)
                 .orElse(false);
         if (!enabled) {
-            throw ApiException.forbidden("The AI assistant add-on is off for this firm.");
+            throw ApiException.forbidden("Draft help is off for this firm.");
         }
     }
 

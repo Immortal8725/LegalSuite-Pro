@@ -1,7 +1,7 @@
 {
   "name": "LegalSuite Pro",
   "short_name": "LegalSuite",
-  "description": "Law firm operating system — cases, billing, voice, and a live website.",
+  "description": "Law firm operating system for cases, billing, voice, and a live website.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#1a365d",

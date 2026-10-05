@@ -73,7 +73,7 @@ public class FitnessService {
         items.add(item("bank-feed", tenant.getBankFeedImportedAt() != null, "you",
                 "Bank statement CSV import",
                 tenant.getBankFeedImportedAt() != null
-                        ? "Last import " + tenant.getLastBankFeedSource() + " at " + tenant.getBankFeedImportedAt() + ". Not Open Banking — paste FNB / Standard / ABSA CSV."
+                        ? "Last import " + tenant.getLastBankFeedSource() + " at " + tenant.getBankFeedImportedAt() + ". Not Open Banking. Paste an FNB, Standard, or ABSA CSV."
                         : "Import FNB / Standard Bank / ABSA CSV so the bank leg is not typed in."));
         items.add(item("ffc", Compliance.ffcCurrent(tenant), "you",
                 za ? "Fidelity Fund Certificate on file" : "Bar card / IOLTA enrollment",
@@ -88,7 +88,7 @@ public class FitnessService {
                         ? (Compliance.popiaReady(tenant)
                                 ? "Information officer appointed, PAIA s 51 manual generated, operator acknowledgement on file."
                                 : "Appoint an information officer, generate a PAIA manual, and acknowledge the operator relationship.")
-                        : "Production needs a real privacy program, not a heuristic strip."));
+                        : "Production needs a written privacy program."));
         items.add(item("esign-cert", true, "product",
                 "ECT Act s 13 identity-bound signature",
                 "The hash includes the signer's identity number (ECT Act 25 of 2002 s 13 advanced-signature analogue). Not a SANAS-accredited CSP certificate."));

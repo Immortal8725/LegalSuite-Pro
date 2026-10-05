@@ -31,17 +31,17 @@ export default function ReportsPage() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Realization, collections, and practice-area mix — enough to run the firm this month."
+        subtitle="Realization, collections, and practice-area mix for this month."
       />
       <ErrorBanner error={error} />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          ["Active matters", o?.activeCases ?? "—"],
-          ["Hours billed", o?.hoursBilled ?? "—"],
+          ["Active matters", o?.activeCases ?? "n/a"],
+          ["Hours billed", o?.hoursBilled ?? "n/a"],
           ["Collected", money(o?.revenueMtd)],
           ["AR outstanding", money(o?.outstanding)],
-          ["Open tasks", o?.pendingTasks ?? "—"],
-          ["Clients", o?.totalClients ?? "—"],
+          ["Open tasks", o?.pendingTasks ?? "n/a"],
+          ["Clients", o?.totalClients ?? "n/a"],
         ].map(([k, v]) => (
           <Card key={String(k)}>
             <CardHeader>

@@ -40,8 +40,8 @@ export default function AiPage() {
   return (
     <div>
       <PageHeader
-        title="AI assistant"
-        subtitle="Assistive only. The attorney remains responsible. A model vendor runs only if the firm configured one; otherwise the answer stays on this tenant."
+        title="Draft help"
+        subtitle="Draft help for staff on this firm. The attorney remains responsible. A model vendor runs only if the firm configured one. Otherwise the answer stays on this tenant."
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
@@ -51,7 +51,7 @@ export default function AiPage() {
           onCaseId={setChatCaseId}
           matters={cases}
           matterLabel={chatMatter ? `${chatMatter.caseNumber} · ${chatMatter.title}` : undefined}
-          title={chatCaseId ? "Ask about the selected matter" : "Ask the docket"}
+          title={chatCaseId ? "Draft help on the selected matter" : "Search this firm's docket"}
         />
 
         <div className="space-y-6">
@@ -64,7 +64,7 @@ export default function AiPage() {
               <Select value={caseId} onChange={(e) => setCaseId(e.target.value)}>
                 {cases.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.caseNumber} — {c.title}
+                    {c.caseNumber}: {c.title}
                   </option>
                 ))}
               </Select>
@@ -126,7 +126,7 @@ export default function AiPage() {
                   <Select value={leadId} onChange={(e) => setLeadId(e.target.value)}>
                     {leads.map((l) => (
                       <option key={l.id} value={l.id}>
-                        {l.name} — {l.caseType || "unspecified"}
+                        {l.name}: {l.caseType || "unspecified"}
                       </option>
                     ))}
                   </Select>
@@ -139,7 +139,7 @@ export default function AiPage() {
                           "/api/v1/ai/screen-intake",
                           { leadId }
                         );
-                        setScreen(`${res.score}/100 — ${res.summary}\n\nNext: ${res.recommendedNext}`);
+                        setScreen(`${res.score}/100. ${res.summary}\n\nNext: ${res.recommendedNext}`);
                       } catch (e) {
                         setError(e instanceof Error ? e.message : "Screen failed");
                       }

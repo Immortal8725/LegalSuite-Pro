@@ -6,7 +6,7 @@ import com.legalsuite.domain.Tenant;
 import java.time.LocalDate;
 import java.util.List;
 
-/** RAF Act s 24 lodging pack — the form the Fund expects, filled from the file. */
+/** RAF Act s 24 lodging pack. The form the Fund expects, filled from the file. */
 public final class Raf1Pack {
     private Raf1Pack() {}
 
@@ -22,7 +22,7 @@ public final class Raf1Pack {
             clocks = sb.toString();
         }
         return """
-                ROAD ACCIDENT FUND ACT 56 OF 1996 — SECTION 24 CLAIM PACK
+                ROAD ACCIDENT FUND ACT 56 OF 1996, SECTION 24 CLAIM PACK
                 (RAF 1 equivalent compiled from the matter. Lodge with the Fund; this is not e-filing to CaseLines.)
 
                 Firm: %s
@@ -43,7 +43,7 @@ public final class Raf1Pack {
                 Opposing party: %s
                 Court: %s
 
-                4. Prescription (docket engine — confirm before lodging)
+                4. Prescription (docket engine; confirm before lodging)
                 %s
                 5. Documents still required before the Fund will accept the claim
                 - Completed RAF 1 form (this pack)
@@ -57,7 +57,7 @@ public final class Raf1Pack {
                 """.formatted(
                 firm.getFirmName(),
                 firm.getFfcNumber() == null ? "(no FFC on file)" : firm.getFfcNumber(),
-                firm.getFfcExpiresOn() == null ? "—" : firm.getFfcExpiresOn().toString(),
+                firm.getFfcExpiresOn() == null ? "not on file" : firm.getFfcExpiresOn().toString(),
                 c.getCaseNumber(),
                 c.getTitle(),
                 claimant,
