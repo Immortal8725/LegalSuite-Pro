@@ -169,7 +169,7 @@ export function SiteFrame({
         </p>
       </footer>
       {cookieChoice === null ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ps-line)] bg-[var(--ps-card)] px-6 py-4 shadow-[0_12px_30px_-18px_rgba(74,42,16,0.45)]" role="dialog" aria-label="Cookie choice">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ps-line)] bg-[var(--ps-card)] px-6 py-4 shadow-[0_12px_30px_-18px_rgba(24,24,24,0.2)]" role="dialog" aria-label="Cookie choice">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-[var(--ps-body)]">
               This site can store your cookie choice on this browser. It does not load advertising or analytics scripts.{" "}
@@ -204,7 +204,7 @@ export function Portrait({ initials, name, src }: { initials: string; name: stri
   }
   return (
     <div
-      className="flex aspect-[4/5] items-end bg-[#e8d3b8] p-5 text-5xl font-semibold text-[#6b5340]"
+      className="flex aspect-[4/5] items-end bg-[#e8eaed] p-5 text-5xl font-semibold text-[#5c5c5c]"
       style={serifStyle}
       role="img"
       aria-label={`Portrait placeholder for ${name}`}

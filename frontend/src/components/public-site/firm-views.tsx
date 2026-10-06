@@ -98,7 +98,7 @@ function place(site: PublicSite) {
   return [site.city, site.state].filter(Boolean).join(", ");
 }
 
-const floatShadow = "shadow-[0_22px_40px_-22px_rgba(74,42,16,0.55)]";
+const floatShadow = "shadow-[0_22px_40px_-22px_rgba(24,24,24,0.28)]";
 
 function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: string; index?: number }) {
   return (
@@ -191,7 +191,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
             {site.about ? <p className="mt-8 max-w-xl text-lg leading-relaxed text-[var(--ps-body)]">{site.about}</p> : null}
             <div className="mt-10 flex flex-wrap items-center gap-3">
               {features.has("booking") ? (
-                <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_28px_-16px_rgba(74,42,16,0.55)]">
+                <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_28px_-16px_rgba(24,24,24,0.22)]">
                   Make an enquiry
                 </Link>
               ) : null}
@@ -199,7 +199,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
                 View expertise
               </Link>
             </div>
-            <aside className="mt-12 max-w-sm border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 shadow-[0_16px_32px_-22px_rgba(74,42,16,0.45)]">
+            <aside className="mt-12 max-w-sm border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
               <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--ps-meta)]">Office</p>
               <p className="mt-3 text-xl font-normal leading-snug text-[var(--ps-ink)]" style={serifStyle}>
                 {[site.addressLine1, place(site)].filter(Boolean).join(", ")}
@@ -231,7 +231,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
           <ul className="mt-12 border-t-2 border-[var(--ps-ink)]">
             {(site.practices || []).map((practice) => (
               <li key={practice.slug} className="border-b border-[var(--ps-line)]">
-                <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-7 text-2xl font-semibold tracking-tight text-[var(--ps-ink)] hover:text-[var(--ps-accent)] sm:text-3xl" style={serifStyle}>
+                <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-7 text-2xl font-semibold tracking-tight text-[var(--ps-ink)] hover:underline sm:text-3xl" style={serifStyle}>
                   <span>{practice.name}</span>
                   <span aria-hidden="true" className="text-lg font-normal text-[var(--ps-meta)]">→</span>
                 </Link>
@@ -290,7 +290,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
         <section className="bg-[var(--ps-clay)]">
           <div className="mx-auto max-w-6xl px-6 py-20 lg:py-24">
             <SectionTitle kicker="On the record" title="Recognition" />
-            <ul className="mt-10 max-w-3xl divide-y divide-[#d7b48e] border-y border-[#d7b48e]">
+            <ul className="mt-10 max-w-3xl divide-y divide-[var(--ps-line)] border-y border-[var(--ps-line)]">
               {site.recognition.map((item) => (
                 <li key={`${item.year}-${item.title}`} className="py-5">
                   <p className="text-xl font-semibold text-[var(--ps-ink)]" style={serifStyle}>{item.title}</p>
@@ -313,7 +313,7 @@ function Expertise({ site, base }: { site: PublicSite; base: string }) {
         <ul className="mx-auto max-w-6xl border-t-2 border-[var(--ps-ink)] px-6">
           {(site.practices || []).map((practice) => (
             <li key={practice.slug} className="border-b border-[var(--ps-line)]">
-              <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-8 text-3xl font-semibold tracking-tight text-[var(--ps-ink)] hover:text-[var(--ps-accent)] sm:py-10 sm:text-4xl" style={serifStyle}>
+              <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-8 text-3xl font-semibold tracking-tight text-[var(--ps-ink)] hover:underline sm:py-10 sm:text-4xl" style={serifStyle}>
                 <span>{practice.name}</span>
                 <span aria-hidden="true" className="text-xl font-normal text-[var(--ps-meta)]">→</span>
               </Link>
@@ -472,7 +472,7 @@ function Insight({ site, base }: { site: PublicSite; base: string }) {
   }
   return (
     <article className="mx-auto max-w-3xl px-6 py-16">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ps-accent)]">{article.type} / {article.date}</p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
       <h1 className="mt-3 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{article.title}</h1>
       <p className="mt-6 text-lg leading-relaxed text-[#44403c]">{article.body}</p>
       <Link href={href(base, "/insights")} className="mt-8 inline-block text-sm underline">All insights</Link>
@@ -672,7 +672,7 @@ function legalCopy(doc: string, site: PublicSite) {
 
 function ContactBlock({ site, base, person }: { site: PublicSite; base: string; person?: PublicPerson }) {
   return (
-    <aside className="border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 text-sm shadow-[0_16px_32px_-22px_rgba(74,42,16,0.45)]">
+    <aside className="border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 text-sm shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716c]">Contact</p>
       {person ? <p className="mt-2 font-semibold text-[var(--ps-ink)]">{person.fullName}, {person.title}</p> : null}
       {site.phone ? <p className="mt-2"><a href={`tel:${site.phone.replace(/\s/g, "")}`}>{site.phone}</a></p> : null}
