@@ -20,6 +20,12 @@ const DEMOS = [
     email: "john@smithlaw.com",
     note: "SOL, TTCA, IOLTA",
   },
+  {
+    label: "LegalSuite operator",
+    slug: "legalsuite",
+    email: "ops@legalsuite.pro",
+    note: "Approves public site features",
+  },
 ];
 
 export default function LoginPage() {

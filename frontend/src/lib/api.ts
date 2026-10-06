@@ -102,7 +102,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const res = await fetch(path, { ...init, headers });
   const skipAuthRedirect =
-    path.includes("/landing/") || /\/intake\/[^/]+$/.test(path) || path.includes("/api/v1/sign/");
+    path.includes("/landing/") ||
+    path.includes("/api/v1/public/") ||
+    /\/intake\/[^/]+$/.test(path) ||
+    path.includes("/api/v1/sign/");
   if (res.status === 401 && !path.includes("/auth/login") && !skipAuthRedirect) {
     const refresh = localStorage.getItem(REFRESH_KEY);
     if (refresh) {

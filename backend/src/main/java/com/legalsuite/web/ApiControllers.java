@@ -5,6 +5,7 @@ import com.legalsuite.service.CommsService;
 import com.legalsuite.service.DashboardService;
 import com.legalsuite.service.FinanceService;
 import com.legalsuite.service.PracticeService;
+import com.legalsuite.service.PublicSiteService;
 import com.legalsuite.service.TenantService;
 import com.legalsuite.service.VoiceService;
 import java.time.Instant;
@@ -33,6 +34,7 @@ public class ApiControllers {
     private final VoiceService voice;
     private final CommsService comms;
     private final DashboardService dashboard;
+    private final PublicSiteService publicSites;
 
     public ApiControllers(
             TenantService tenants,
@@ -40,13 +42,15 @@ public class ApiControllers {
             FinanceService finance,
             VoiceService voice,
             CommsService comms,
-            DashboardService dashboard) {
+            DashboardService dashboard,
+            PublicSiteService publicSites) {
         this.tenants = tenants;
         this.practice = practice;
         this.finance = finance;
         this.voice = voice;
         this.comms = comms;
         this.dashboard = dashboard;
+        this.publicSites = publicSites;
     }
 
     @GetMapping("/api/v1/plans")
@@ -315,10 +319,11 @@ public class ApiControllers {
     }
 
     @GetMapping("/api/v1/landing/{slug}")
-    public ApiResponse<?> landing(@PathVariable String slug) { return ApiResponse.ok(comms.publicLanding(slug)); }
+    public ApiResponse<?> landing(@PathVariable String slug) { return ApiResponse.ok(publicSites.publicView(slug)); }
 
     @PostMapping("/api/v1/intake/{slug}")
     public ApiResponse<?> intake(@PathVariable String slug, @RequestBody Map<String, Object> body) {
+        publicSites.requireBookingOpen(slug);
         return ApiResponse.ok(comms.intake(slug, body));
     }
 

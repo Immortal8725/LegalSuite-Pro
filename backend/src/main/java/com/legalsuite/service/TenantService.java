@@ -170,6 +170,7 @@ public class TenantService {
         if (users.existsByTenantIdAndEmailIgnoreCase(tenantId, email)) {
             throw ApiException.conflict("A user with that email already exists");
         }
+        rejectPlatformRole(body.get("role"));
         AppUser user = new AppUser();
         user.setTenantId(tenantId);
         user.setEmail(email);
@@ -190,12 +191,19 @@ public class TenantService {
     public Map<String, Object> updateUser(UUID id, Map<String, Object> body) {
         AppUser user = users.findByIdAndTenantId(id, TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
+        rejectPlatformRole(body.get("role"));
         if (body.get("role") != null) user.setRole(String.valueOf(body.get("role")));
         if (body.get("status") != null) user.setStatus(String.valueOf(body.get("status")));
         if (body.get("title") != null) user.setTitle(String.valueOf(body.get("title")));
         if (body.get("hourlyRate") != null) user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         users.save(user);
         return authService.userView(user);
+    }
+
+    private static void rejectPlatformRole(Object role) {
+        if (role != null && "superadmin".equalsIgnoreCase(String.valueOf(role).trim())) {
+            throw ApiException.forbidden("That role is reserved for the platform operator.");
+        }
     }
 
     private static String blankToNull(String v) {

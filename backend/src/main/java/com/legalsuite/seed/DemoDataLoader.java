@@ -29,6 +29,7 @@ import com.legalsuite.domain.TimeEntry;
 import com.legalsuite.domain.TrustAccount;
 import com.legalsuite.domain.TrustReconciliation;
 import com.legalsuite.service.Pricing;
+import com.legalsuite.service.PublicSiteService;
 import com.legalsuite.domain.TrustTransaction;
 import com.legalsuite.service.DocketEngine;
 import com.legalsuite.service.PracticeService;
@@ -103,6 +104,7 @@ public class DemoDataLoader implements CommandLineRunner {
     private final PracticeService practice;
     private final TrustReconciliationRepository recons;
     private final PasswordEncoder encoder;
+    private final PublicSiteService publicSites;
 
     public DemoDataLoader(
             PlanRepository plans,
@@ -134,7 +136,8 @@ public class DemoDataLoader implements CommandLineRunner {
             LeadRepository leads,
             PracticeService practice,
             TrustReconciliationRepository recons,
-            PasswordEncoder encoder) {
+            PasswordEncoder encoder,
+            PublicSiteService publicSites) {
         this.plans = plans;
         this.modules = modules;
         this.tenants = tenants;
@@ -165,6 +168,7 @@ public class DemoDataLoader implements CommandLineRunner {
         this.practice = practice;
         this.recons = recons;
         this.encoder = encoder;
+        this.publicSites = publicSites;
     }
 
     @Override
@@ -422,8 +426,16 @@ public class DemoDataLoader implements CommandLineRunner {
         page.setAboutText("We take matters that require both judgment and stamina: commercial disputes, serious injuries, and the private work of families putting their houses in order.");
         page.setColorsJson("{\"primary\":\"#1a365d\",\"accent\":\"#c6a052\"}");
         page.setSeoTitle("Smith & Associates | Austin Law Firm");
-        page.setPublished(true);
+        page.setPublished(false);
         landingPages.save(page);
+        publicSites.seed(
+                firm,
+                "navy",
+                "pending_approval",
+                Map.of("people", "pending", "insights", "pending", "booking", "pending"),
+                page.getAboutText(),
+                firm.getTagline(),
+                null);
 
         notify(firm.getId(), john.getId(), "Hearing today", "Johnson v. Corp Inc. is on the 10:00 a.m. docket in Room 4B.", "calendar", "/calendar");
         notify(firm.getId(), john.getId(), "Invoice paid", "Invoice #1084 was marked paid.", "billing", "/billing");
@@ -559,6 +571,7 @@ public class DemoDataLoader implements CommandLineRunner {
         leads.save(conflictLead);
 
         seedSouthAfrica(light);
+        seedPlatform(light);
 
         if (light.getSlug() == null || mCases == null || mTrust == null || mVoice == null || c2 == null || c4 == null) {
             throw new IllegalStateException("seed failed");
@@ -605,6 +618,15 @@ public class DemoDataLoader implements CommandLineRunner {
         AppUser thabo = user(firm.getId(), "thabo@ndlovulaw.co.za", "password", "Thabo", "Ndlovu", "owner", "Director", "4200", "LPC GP 44821", "GP");
         AppUser lindiwe = user(firm.getId(), "lindiwe@ndlovulaw.co.za", "password", "Lindiwe", "Mokoena", "attorney", "Director", "3200", "LPC GP 51209", "GP");
         AppUser sipho = user(firm.getId(), "sipho@ndlovulaw.co.za", "password", "Sipho", "Dlamini", "associate", "Associate", "2100", "LPC GP 60114", "GP");
+        thabo.setPhone("011 555 0181");
+        thabo.setBio("Director, admitted in Gauteng. He leads RAF and delict files and is the firm's information officer.");
+        lindiwe.setPhone("011 555 0182");
+        lindiwe.setBio("Director, admitted in Gauteng. She runs labour referrals and commercial mandates.");
+        sipho.setPhone("011 555 0183");
+        sipho.setBio("Associate. He prepares RAF lodgements and estate papers under a director's supervision.");
+        users.save(thabo);
+        users.save(lindiwe);
+        users.save(sipho);
 
         Client nomsa = client(firm.getId(), "individual", "Nomsa", "Khumalo", null, "nomsa@example.com", "website", thabo);
         nomsa.setPortalEnabled(true);
@@ -710,8 +732,23 @@ public class DemoDataLoader implements CommandLineRunner {
         page.setAboutText("We take the files whose clocks actually kill the claim: Road Accident Fund, Act 40 notices, CCMA referrals: and we will not open a file until conflicts and a signed mandate are on the instrument.");
         page.setColorsJson("{\"primary\":\"#1a365d\",\"accent\":\"#c6a052\"}");
         page.setSeoTitle("Ndlovu & Partners | Sandton Law Firm");
-        page.setPublished(true);
+        page.setPublished(false);
         landingPages.save(page);
+        publicSites.seed(
+                firm,
+                "copper",
+                "published",
+                Map.of(
+                        "people", "approved",
+                        "insights", "approved",
+                        "recognition", "approved",
+                        "whatsapp", "approved",
+                        "booking", "approved",
+                        "newsletter", "pending",
+                        "situations", "pending"),
+                page.getAboutText(),
+                firm.getTagline(),
+                "[{\"year\":\"2026\",\"source\":\"Firm record\",\"title\":\"Directors and an associate admitted to practise in Gauteng\"}]");
 
         DocumentTemplate mandate = new DocumentTemplate();
         mandate.setTenantId(firm.getId());
@@ -781,6 +818,33 @@ public class DemoDataLoader implements CommandLineRunner {
         tx.setDescription(memo);
         tx.setCreatedBy(actor);
         trustTx.save(tx);
+    }
+
+    private void seedPlatform(Plan light) {
+        Tenant firm = new Tenant();
+        firm.setFirmName("LegalSuite");
+        firm.setSlug("legalsuite");
+        firm.setEmail("ops@legalsuite.pro");
+        firm.setCountry("ZA");
+        firm.setState("GP");
+        firm.setCity("Johannesburg");
+        firm.setPlanId(light.getId());
+        firm.setStatus("active");
+        firm.setOnboardingCompleted(true);
+        firm.setTagline("Platform operator");
+        firm = tenants.save(firm);
+        for (AppModule m : modules.findAll()) {
+            if (!m.isCore()) {
+                continue;
+            }
+            TenantModule tm = new TenantModule();
+            tm.setTenantId(firm.getId());
+            tm.setModuleId(m.getId());
+            tm.setEnabled(true);
+            tenantModules.save(tm);
+        }
+        user(firm.getId(), "ops@legalsuite.pro", "password", "Platform", "Operator", "superadmin", "Platform operator", "0", "", "");
+        publicSites.ensureDraft(firm);
     }
 
     private Plan plan(String name, String slug, String desc, int price, int users, int cases, int mins, int order) {
