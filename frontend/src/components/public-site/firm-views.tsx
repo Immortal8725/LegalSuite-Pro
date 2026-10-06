@@ -7,7 +7,8 @@ import type { PublicPerson, PublicSite } from "@/lib/types";
 import { apiPost } from "@/lib/api";
 import { usePublicSite } from "@/components/public-site/site-context";
 import { EnquiryForm } from "@/components/public-site/enquiry-form";
-import { PageIntro, Portrait, SiteFrame, href, useSiteBase } from "@/components/public-site/site-chrome";
+import { DESK, READING_ROOM, portraitSrc } from "@/components/public-site/photos";
+import { PageIntro, Portrait, SectionTitle, SiteFrame, href, serifStyle, useSiteBase } from "@/components/public-site/site-chrome";
 
 export type FirmPage =
   | "home"
@@ -97,6 +98,69 @@ function place(site: PublicSite) {
   return [site.city, site.state].filter(Boolean).join(", ");
 }
 
+const floatShadow = "shadow-[0_22px_40px_-22px_rgba(74,42,16,0.55)]";
+
+function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: string; index?: number }) {
+  return (
+    <Link href={href(base, `/people/${person.id}`)} className="block">
+      <img
+        src={portraitSrc(person.fullName, index)}
+        alt=""
+        className={`aspect-[3/4] w-full object-cover object-[center_18%] ${floatShadow}`}
+      />
+      <div className={`relative z-10 -mt-14 mx-4 border border-[var(--ps-line)] bg-[var(--ps-card)] px-4 py-4 ${floatShadow}`}>
+        <p className="text-2xl font-semibold leading-tight tracking-tight text-[var(--ps-ink)]" style={serifStyle}>{person.fullName}</p>
+        <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">{person.title}</p>
+      </div>
+    </Link>
+  );
+}
+
+function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
+  const people = site.people || [];
+  const lead = people.find((person) => person.title === "Director") || people[0];
+  const next = people.find((person) => person.id !== lead?.id);
+  return (
+    <div className="relative mx-auto h-[30rem] w-full max-w-lg sm:h-[34rem] lg:h-[38rem]">
+      <img
+        src={READING_ROOM}
+        alt="People working together beside a sunlit window"
+        className={`absolute right-0 top-12 h-[72%] w-[76%] object-cover ${floatShadow}`}
+        style={{ transform: "rotate(-1.5deg)" }}
+      />
+      {lead ? (
+        <Link
+          href={href(base, `/people/${lead.id}`)}
+          className={`absolute left-0 top-0 z-10 w-[48%] bg-[var(--ps-card)] p-2 ${floatShadow}`}
+          style={{ transform: "rotate(2.4deg)" }}
+        >
+          <img src={portraitSrc(lead.fullName, 0)} alt="" className="aspect-[4/5] w-full object-cover object-[center_18%]" />
+          <p className="px-1.5 pb-0.5 pt-2 text-lg font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{lead.fullName}</p>
+          <p className="px-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{lead.title}</p>
+        </Link>
+      ) : null}
+      {next ? (
+        <Link
+          href={href(base, `/people/${next.id}`)}
+          className={`absolute bottom-2 right-1 z-20 w-[40%] bg-[var(--ps-card)] p-1.5 ${floatShadow}`}
+          style={{ transform: "rotate(-2.5deg)" }}
+        >
+          <img src={portraitSrc(next.fullName, 1)} alt="" className="aspect-[4/5] w-full object-cover object-[center_15%]" />
+          <p className="px-1 pb-0.5 pt-1.5 text-base font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{next.fullName}</p>
+          <p className="px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{next.title}</p>
+        </Link>
+      ) : (
+        <img
+          src={DESK}
+          alt=""
+          className={`absolute bottom-2 right-2 z-10 w-[42%] object-cover ${floatShadow}`}
+          style={{ transform: "rotate(-3deg)" }}
+        />
+      )}
+    </div>
+  );
+}
+
 function Home({ site, base }: { site: PublicSite; base: string }) {
   const features = new Set(site.features || []);
   const jsonLd = {
@@ -117,75 +181,76 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="border-b border-[#e6e0d6]">
-        <div className="mx-auto grid max-w-6xl items-end gap-12 px-6 py-20 lg:grid-cols-12">
+      <section className="bg-[var(--ps-paper)]">
+        <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-14 lg:grid-cols-12 lg:pb-28 lg:pt-20">
           <div className="lg:col-span-7">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ps-accent)]">{place(site) || "Law firm"}</p>
-            <h1 className="mt-4 text-4xl leading-[1.05] sm:text-6xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{place(site) || "Law firm"}</p>
+            <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-[var(--ps-ink)] sm:text-7xl lg:text-8xl" style={serifStyle}>
               {site.tagline || site.firmName}
             </h1>
-            {site.about ? <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#44403c]">{site.about}</p> : null}
-            <div className="mt-8 flex flex-wrap gap-3">
+            {site.about ? <p className="mt-8 max-w-xl text-lg leading-relaxed text-[var(--ps-body)]">{site.about}</p> : null}
+            <div className="mt-10 flex flex-wrap items-center gap-3">
               {features.has("booking") ? (
-                <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-5 py-3 text-sm font-semibold text-white">
+                <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_28px_-16px_rgba(74,42,16,0.55)]">
                   Make an enquiry
                 </Link>
               ) : null}
-              <Link href={href(base, "/expertise")} className="border border-[#1c1917] px-5 py-3 text-sm font-semibold">
+              <Link href={href(base, "/expertise")} className="border border-[var(--ps-line)] px-5 py-3 text-sm font-medium text-[var(--ps-body)]">
                 View expertise
               </Link>
             </div>
+            <aside className="mt-12 max-w-sm border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 shadow-[0_16px_32px_-22px_rgba(74,42,16,0.45)]">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--ps-meta)]">Office</p>
+              <p className="mt-3 text-xl font-normal leading-snug text-[var(--ps-ink)]" style={serifStyle}>
+                {[site.addressLine1, place(site)].filter(Boolean).join(", ")}
+              </p>
+              {site.phone ? (
+                <a href={`tel:${site.phone.replace(/\s/g, "")}`} className="mt-5 block text-base font-medium text-[var(--ps-ink)]">
+                  {site.phone}
+                </a>
+              ) : null}
+              {site.whatsappUrl ? (
+                <a href={site.whatsappUrl} className="mt-1 block text-sm text-[var(--ps-meta)]" target="_blank" rel="noreferrer">
+                  WhatsApp
+                </a>
+              ) : null}
+            </aside>
           </div>
-          <aside className="bg-[#efeae2] p-8 lg:col-span-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716c]">Office</p>
-            <p className="mt-4 text-2xl leading-snug" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>
-              {[site.addressLine1, place(site)].filter(Boolean).join(", ")}
-            </p>
-            {site.phone ? (
-              <a href={`tel:${site.phone.replace(/\s/g, "")}`} className="mt-6 block text-lg font-semibold">
-                {site.phone}
-              </a>
-            ) : null}
-            {site.whatsappUrl ? (
-              <a href={site.whatsappUrl} className="mt-2 inline-block text-sm underline" target="_blank" rel="noreferrer">
-                WhatsApp the firm
-              </a>
-            ) : null}
-          </aside>
+          <div className="lg:col-span-5">
+            <HeroCluster site={site} base={base} />
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-3xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>Expertise</h2>
-          <Link href={href(base, "/expertise")} className="text-sm font-semibold underline">All practices</Link>
+      <section className="bg-[var(--ps-cream)]">
+        <div className="mx-auto max-w-6xl px-6 py-24 lg:py-28">
+          <div className="flex items-end justify-between gap-6">
+            <SectionTitle kicker="Practices" title="Expertise" />
+            <Link href={href(base, "/expertise")} className="text-sm font-medium text-[var(--ps-meta)] underline decoration-[var(--ps-line)] underline-offset-4">All practices</Link>
+          </div>
+          <ul className="mt-12 border-t-2 border-[var(--ps-ink)]">
+            {(site.practices || []).map((practice) => (
+              <li key={practice.slug} className="border-b border-[var(--ps-line)]">
+                <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-7 text-2xl font-semibold tracking-tight text-[var(--ps-ink)] hover:text-[var(--ps-accent)] sm:text-3xl" style={serifStyle}>
+                  <span>{practice.name}</span>
+                  <span aria-hidden="true" className="text-lg font-normal text-[var(--ps-meta)]">→</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="mt-8 divide-y divide-[#e6e0d6] border-y border-[#e6e0d6]">
-          {(site.practices || []).map((practice) => (
-            <li key={practice.slug}>
-              <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between py-4 text-lg hover:text-[var(--ps-accent)]">
-                <span>{practice.name}</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </section>
 
       {features.has("people") && site.people?.length ? (
-        <section className="border-y border-[#e6e0d6] bg-[#fffcf8]">
-          <div className="mx-auto max-w-6xl px-6 py-16">
-            <div className="flex items-end justify-between gap-4">
-              <h2 className="text-3xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>People</h2>
-              <Link href={href(base, "/people")} className="text-sm font-semibold underline">Directory</Link>
+        <section className="bg-[var(--ps-sand)]">
+          <div className="mx-auto max-w-6xl px-6 py-24 lg:py-28">
+            <div className="flex items-end justify-between gap-6">
+              <SectionTitle kicker="The firm" title="People" />
+              <Link href={href(base, "/people")} className="text-sm font-medium text-[var(--ps-body)] underline decoration-[var(--ps-line)] underline-offset-4">Directory</Link>
             </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {site.people.map((person) => (
-                <Link key={person.id} href={href(base, `/people/${person.id}`)} className="group">
-                  <Portrait initials={person.initials} name={person.fullName} />
-                  <p className="mt-3 text-lg" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{person.fullName}</p>
-                  <p className="text-sm text-[#57534e]">{person.title}</p>
-                </Link>
+            <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {site.people.map((person, index) => (
+                <PersonCard key={person.id} person={person} base={base} index={index} />
               ))}
             </div>
           </div>
@@ -193,26 +258,28 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
       ) : null}
 
       {features.has("insights") && site.insights?.length ? (
-        <section className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-3xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>Insights</h2>
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
-            {site.insights.map((article) => (
-              <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className="border border-[#e6e0d6] bg-[#fffcf8] p-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ps-accent)]">{article.type} / {article.date}</p>
-                <h3 className="mt-3 text-2xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{article.title}</h3>
-                <p className="mt-3 text-sm text-[#44403c]">{article.summary}</p>
-              </Link>
-            ))}
+        <section className="bg-[var(--ps-paper)]">
+          <div className="mx-auto max-w-6xl px-6 py-24 lg:py-28">
+            <SectionTitle kicker="Reading" title="Insights" />
+            <div className="mt-12 grid gap-8 md:grid-cols-2">
+              {site.insights.map((article) => (
+                <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
+                  <h3 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[var(--ps-ink)]" style={serifStyle}>{article.title}</h3>
+                  <p className="mt-4 text-base leading-relaxed text-[var(--ps-body)]">{article.summary}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}
 
       {features.has("booking") ? (
-        <section className="border-t border-[#e6e0d6]">
-          <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-2">
+        <section className="bg-[var(--ps-cream)]">
+          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-2 lg:py-28">
             <div>
-              <h2 className="text-3xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>Make an enquiry</h2>
-              <p className="mt-4 text-[#44403c]">Tell the firm what happened. A conflict check comes before any mandate.</p>
+              <SectionTitle kicker="Instruct the firm" title="Make an enquiry" />
+              <p className="mt-6 max-w-md text-lg leading-relaxed text-[var(--ps-body)]">Tell the firm what happened. A conflict check comes before any mandate.</p>
             </div>
             <EnquiryForm site={site} base={base} />
           </div>
@@ -220,13 +287,14 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
       ) : null}
 
       {features.has("recognition") && site.recognition?.length ? (
-        <section className="border-t border-[#e6e0d6] bg-[#efeae2]">
-          <div className="mx-auto max-w-6xl px-6 py-12">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em]">Recognition</h2>
-            <ul className="mt-4 space-y-2">
+        <section className="bg-[var(--ps-clay)]">
+          <div className="mx-auto max-w-6xl px-6 py-20 lg:py-24">
+            <SectionTitle kicker="On the record" title="Recognition" />
+            <ul className="mt-10 max-w-3xl divide-y divide-[#d7b48e] border-y border-[#d7b48e]">
               {site.recognition.map((item) => (
-                <li key={`${item.year}-${item.title}`} className="text-sm">
-                  <span className="font-semibold">{item.year}</span> {item.title} <span className="text-[#57534e]">({item.source})</span>
+                <li key={`${item.year}-${item.title}`} className="py-5">
+                  <p className="text-xl font-semibold text-[var(--ps-ink)]" style={serifStyle}>{item.title}</p>
+                  <p className="mt-1 text-sm text-[var(--ps-body)]">{item.year} / {item.source}</p>
                 </li>
               ))}
             </ul>
@@ -241,15 +309,18 @@ function Expertise({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Expertise" title="Practice areas" lede="Each practice is a starting point. The firm confirms it can act before a file is opened." />
-      <ul className="mx-auto max-w-6xl divide-y divide-[#e6e0d6] px-6 py-10">
-        {(site.practices || []).map((practice) => (
-          <li key={practice.slug} className="py-6">
-            <Link href={href(base, `/expertise/${practice.slug}`)} className="text-2xl hover:text-[var(--ps-accent)]" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>
-              {practice.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="bg-[var(--ps-cream)]">
+        <ul className="mx-auto max-w-6xl border-t-2 border-[var(--ps-ink)] px-6">
+          {(site.practices || []).map((practice) => (
+            <li key={practice.slug} className="border-b border-[var(--ps-line)]">
+              <Link href={href(base, `/expertise/${practice.slug}`)} className="flex items-center justify-between gap-6 py-8 text-3xl font-semibold tracking-tight text-[var(--ps-ink)] hover:text-[var(--ps-accent)] sm:py-10 sm:text-4xl" style={serifStyle}>
+                <span>{practice.name}</span>
+                <span aria-hidden="true" className="text-xl font-normal text-[var(--ps-meta)]">→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
   );
 }
@@ -289,36 +360,34 @@ function People({ site, base }: { site: PublicSite; base: string }) {
   });
   return (
     <>
-      <PageIntro kicker="People" title="Find a lawyer" lede="Titles follow the role the firm uses on its letterhead. Photographs are not uploaded in this version." />
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <label className="block flex-1 text-sm">
-            Search by name or title
-            <input value={query} onChange={(e) => setQuery(e.target.value)} className="mt-1 w-full border border-[#d6d0c6] bg-white px-3 py-2" />
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {titles.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setTitle(item)}
-                className={`border px-3 py-2 text-sm ${title === item ? "border-[#1c1917] bg-[#1c1917] text-white" : "border-[#d6d0c6]"}`}
-              >
-                {item}
-              </button>
+      <PageIntro kicker="People" title="Find a lawyer" lede="Titles follow the role the firm uses on its letterhead. Portraits are placeholders until the firm adds its own photographs." />
+      <div className="bg-[var(--ps-sand)]">
+        <div className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
+            <label className="block flex-1 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-body)]">
+              Search by name or title
+              <input value={query} onChange={(e) => setQuery(e.target.value)} className="mt-2 w-full border border-[var(--ps-line)] bg-[var(--ps-card)] px-3 py-2.5 text-base normal-case tracking-normal text-[var(--ps-ink)]" />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {titles.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setTitle(item)}
+                  className={`border px-3 py-2 text-sm ${title === item ? "border-[var(--ps-ink)] bg-[var(--ps-ink)] text-[var(--ps-card)]" : "border-[var(--ps-line)] bg-[var(--ps-card)] text-[var(--ps-body)]"}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+            {shown.map((person, index) => (
+              <PersonCard key={person.id} person={person} base={base} index={index} />
             ))}
           </div>
+          {shown.length === 0 ? <p className="mt-10 text-sm text-[var(--ps-body)]">No one matches that search.</p> : null}
         </div>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((person) => (
-            <Link key={person.id} href={href(base, `/people/${person.id}`)}>
-              <Portrait initials={person.initials} name={person.fullName} />
-              <p className="mt-3 text-lg" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{person.fullName}</p>
-              <p className="text-sm text-[#57534e]">{person.title}</p>
-            </Link>
-          ))}
-        </div>
-        {shown.length === 0 ? <p className="mt-8 text-sm text-[#57534e]">No one matches that search.</p> : null}
       </div>
     </>
   );
@@ -334,17 +403,19 @@ function Person({ site, base }: { site: PublicSite; base: string }) {
     <>
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <Portrait initials={person.initials} name={person.fullName} />
+          <div className={floatShadow} style={{ transform: "rotate(-1.25deg)" }}>
+            <Portrait initials={person.initials} name={person.fullName} src={portraitSrc(person.fullName)} />
+          </div>
         </div>
         <div className="lg:col-span-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ps-accent)]">{person.title}</p>
-          <h1 className="mt-2 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{person.fullName}</h1>
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{person.title}</p>
+          <h1 className="mt-3 text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-[var(--ps-ink)] sm:text-6xl" style={serifStyle}>{person.fullName}</h1>
           {person.bio ? <p className="mt-4 max-w-2xl text-lg text-[#44403c]">{person.bio}</p> : null}
           <ul className="mt-6 space-y-2 text-sm">
             {person.phone ? <li><a href={`tel:${person.phone.replace(/\s/g, "")}`}>{person.phone}</a></li> : null}
             {person.email ? <li><a href={`mailto:${person.email}`}>{person.email}</a></li> : null}
           </ul>
-          <button type="button" className="mt-6 border border-[#1c1917] px-4 py-2 text-sm" onClick={() => downloadVcard(site, person)}>
+          <button type="button" className="mt-6 border border-[var(--ps-line)] px-4 py-2 text-sm text-[var(--ps-body)]" onClick={() => downloadVcard(site, person)}>
             Download vCard
           </button>
           <div className="mt-10">
@@ -382,10 +453,10 @@ function Insights({ site, base }: { site: PublicSite; base: string }) {
       <PageIntro kicker="Insights" title="Notes from the firm" lede="Short notes for general reading. They are not advice on your matter." />
       <div className="mx-auto grid max-w-6xl gap-6 px-6 py-12 md:grid-cols-2">
         {(site.insights || []).map((article) => (
-          <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className="border border-[#e6e0d6] bg-[#fffcf8] p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ps-accent)]">{article.type} / {article.date}</p>
-            <h2 className="mt-3 text-2xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{article.title}</h2>
-            <p className="mt-3 text-sm text-[#44403c]">{article.summary}</p>
+          <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
+            <h2 className="mt-4 text-3xl font-semibold leading-tight" style={serifStyle}>{article.title}</h2>
+            <p className="mt-4 text-base leading-relaxed text-[#57534e]">{article.summary}</p>
           </Link>
         ))}
       </div>
@@ -446,11 +517,11 @@ function Contact({ site, base }: { site: PublicSite; base: string }) {
       <PageIntro kicker="Contact" title="Talk to the firm" lede={place(site) ? `The office is in ${place(site)}.` : undefined} />
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-12 lg:grid-cols-2">
         <div className="text-sm text-[#44403c]">
-          <p className="text-2xl text-[#1c1917]" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{site.firmName}</p>
+          <p className="text-2xl text-[var(--ps-ink)]" style={serifStyle}>{site.firmName}</p>
           <p className="mt-4">{[site.addressLine1, site.city, site.state, site.zip].filter(Boolean).join(", ")}</p>
-          {site.phone ? <p className="mt-3"><a href={`tel:${site.phone.replace(/\s/g, "")}`} className="text-lg font-semibold text-[#1c1917]">{site.phone}</a></p> : null}
+          {site.phone ? <p className="mt-3"><a href={`tel:${site.phone.replace(/\s/g, "")}`} className="text-lg font-semibold text-[var(--ps-ink)]">{site.phone}</a></p> : null}
           {site.email ? <p className="mt-2"><a href={`mailto:${site.email}`}>{site.email}</a></p> : null}
-          {site.whatsappUrl ? <p className="mt-4"><a className="underline" href={site.whatsappUrl} target="_blank" rel="noreferrer">WhatsApp the firm</a></p> : null}
+          {site.whatsappUrl ? <p className="mt-3 text-sm text-[var(--ps-meta)]"><a href={site.whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a></p> : null}
         </div>
         <div>
           {booking ? <EnquiryForm site={site} base={base} /> : <p>The enquiry form is not open. Call the office number on this page.</p>}
@@ -601,9 +672,9 @@ function legalCopy(doc: string, site: PublicSite) {
 
 function ContactBlock({ site, base, person }: { site: PublicSite; base: string; person?: PublicPerson }) {
   return (
-    <aside className="border border-[#e6e0d6] bg-[#fffcf8] p-5 text-sm">
+    <aside className="border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 text-sm shadow-[0_16px_32px_-22px_rgba(74,42,16,0.45)]">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716c]">Contact</p>
-      {person ? <p className="mt-2 font-semibold text-[#1c1917]">{person.fullName}, {person.title}</p> : null}
+      {person ? <p className="mt-2 font-semibold text-[var(--ps-ink)]">{person.fullName}, {person.title}</p> : null}
       {site.phone ? <p className="mt-2"><a href={`tel:${site.phone.replace(/\s/g, "")}`}>{site.phone}</a></p> : null}
       <p className="mt-2"><Link href={href(base, "/contact")} className="underline">Enquiry page</Link></p>
     </aside>

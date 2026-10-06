@@ -57,4 +57,4 @@ Subdomain: `ndlovu-partners.localhost` rewrites marketing paths onto `/firm/ndlo
 
 ## Deferred
 
-Full CMS editing, custom domains, photo upload, geo personalisation, carousels, and sending the newsletter. Recognition items in the demo are seeded, not edited in the screen. Portrait blocks are initials on a plain ground until a real photo shoot exists. Legal footer pages are placeholders for counsel to replace.
+Full CMS editing, custom domains, photo upload, geo personalisation, carousels, and sending the newsletter. Recognition items in the demo are seeded, not edited in the screen. Portrait blocks use Pexels placeholder photographs until the firm uploads its own. Legal footer pages are placeholders for counsel to replace.
