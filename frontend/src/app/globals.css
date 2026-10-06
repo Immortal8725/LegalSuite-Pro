@@ -31,3 +31,205 @@ input[type="datetime-local"],
 input[type="date"] {
   color-scheme: light;
 }
+
+/* Public marketing site only. The staff desk does not use .ps-site. */
+.ps-site {
+  --ps-paper: #f4f5f6;
+  --ps-cream: #ffffff;
+  --ps-sand: #eceef1;
+  --ps-clay: #e4e7eb;
+  --ps-card: #ffffff;
+  --ps-ink: #1f1f1f;
+  --ps-body: #3d3d3d;
+  --ps-meta: #6e6e6e;
+  --ps-line: #e1e3e6;
+  --ps-gold: #c6a15a;
+  background: var(--ps-paper);
+  color: var(--ps-ink);
+  font-family: var(--font-public-sans), "Segoe UI", sans-serif;
+}
+
+.ps-site[data-theme="dark"] {
+  --ps-paper: #070d18;
+  --ps-cream: #0d1730;
+  --ps-sand: #152238;
+  --ps-clay: #090f1c;
+  --ps-card: #121c31;
+  --ps-ink: #f6f1e6;
+  --ps-body: #ddd6c8;
+  --ps-meta: #c9c1b4;
+  --ps-line: rgba(212, 179, 106, 0.28);
+  --ps-gold: #e4cc8e;
+  color-scheme: dark;
+  background-color: #070d18;
+  background-image:
+    radial-gradient(ellipse 80% 46% at 78% -8%, rgba(52, 78, 122, 0.42), transparent 58%),
+    radial-gradient(ellipse 36% 28% at 6% 18%, rgba(212, 179, 106, 0.07), transparent 52%);
+  background-attachment: fixed;
+}
+
+.ps-rule {
+  display: none;
+}
+
+.ps-site[data-theme="dark"] .ps-rule {
+  display: block;
+  width: 7.5rem;
+  height: 2px;
+  margin-top: 1.15rem;
+  background: linear-gradient(90deg, #f6ead0 0%, #e0c27a 42%, rgba(212, 179, 106, 0) 100%);
+}
+
+.ps-site[data-theme="dark"] .ps-kicker {
+  color: var(--ps-gold);
+}
+
+.ps-site[data-theme="dark"] .ps-hero {
+  background: transparent;
+}
+
+.ps-site[data-theme="dark"] .ps-hero-copy {
+  background: linear-gradient(165deg, rgba(16, 28, 50, 0.82), rgba(7, 12, 22, 0.62));
+  border: 1px solid rgba(212, 179, 106, 0.34);
+  box-shadow:
+    0 30px 60px -36px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 248, 230, 0.08);
+  backdrop-filter: blur(16px);
+  padding: 2.25rem 1.75rem 1.75rem;
+}
+
+.ps-hero-accent {
+  color: inherit;
+}
+
+.ps-site[data-theme="dark"] .ps-hero-lead,
+.ps-site[data-theme="dark"] .ps-hero-accent {
+  display: block;
+}
+
+.ps-site[data-theme="dark"] .ps-hero-accent {
+  margin-top: 0.12em;
+  color: #e7d09a;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.ps-cta {
+  background: var(--ps-accent);
+  color: #fff;
+  box-shadow: 0 14px 28px -16px rgba(24, 24, 24, 0.22);
+}
+
+.ps-site[data-theme="dark"] .ps-cta {
+  background: linear-gradient(180deg, #f6ead0 0%, #e0c27a 46%, #c6a15a 100%);
+  color: #1a140c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--ps-accent) 42%, #e8d5a3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 14px 28px -16px rgba(0, 0, 0, 0.8);
+}
+
+.ps-ghost {
+  border: 1px solid var(--ps-line);
+  background: transparent;
+  color: var(--ps-body);
+}
+
+.ps-site[data-theme="dark"] .ps-ghost {
+  border-color: rgba(232, 215, 168, 0.55);
+  color: #f6f0e4;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ps-site[data-theme="dark"] .ps-nav {
+  background: rgba(7, 12, 22, 0.72);
+  border-bottom-color: rgba(212, 179, 106, 0.38);
+  backdrop-filter: blur(18px);
+}
+
+.ps-site[data-theme="dark"] .ps-nav-link {
+  color: #efe8dc;
+}
+
+.ps-site[data-theme="dark"] .ps-nav-link:hover {
+  color: #f0d9a0;
+}
+
+.ps-site[data-theme="dark"] .ps-phone {
+  border: 1px solid rgba(212, 179, 106, 0.75);
+  color: #f3e6c4;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+.ps-site[data-theme="dark"] .ps-panel {
+  background: linear-gradient(180deg, rgba(20, 32, 54, 0.92), rgba(9, 14, 26, 0.9));
+  border-color: rgba(212, 179, 106, 0.32);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 22px 44px -28px rgba(0, 0, 0, 0.8);
+}
+
+.ps-site[data-theme="dark"] .ps-form {
+  background: linear-gradient(180deg, rgba(20, 32, 54, 0.92), rgba(9, 14, 26, 0.9));
+  border: 1px solid rgba(212, 179, 106, 0.32);
+  padding: 1.5rem;
+  backdrop-filter: blur(14px);
+}
+
+.ps-site[data-theme="dark"] .ps-panel .ps-form {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  backdrop-filter: none;
+}
+
+.ps-photo {
+  filter: none;
+}
+
+.ps-site[data-theme="dark"] .ps-photo {
+  outline: 1px solid rgba(247, 241, 230, 0.45);
+  box-shadow: 0 28px 46px -18px rgba(0, 0, 0, 0.72);
+  filter: none;
+}
+
+.ps-site[data-theme="dark"] .ps-cookie {
+  background: rgba(8, 13, 24, 0.92);
+  border-top-color: rgba(212, 179, 106, 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.ps-site[data-theme="dark"] input,
+.ps-site[data-theme="dark"] textarea,
+.ps-site[data-theme="dark"] select {
+  color: var(--ps-ink);
+  background: rgba(7, 12, 22, 0.72);
+  border-color: rgba(212, 179, 106, 0.32);
+  color-scheme: dark;
+}
+
+.ps-site a:focus-visible,
+.ps-site button:focus-visible,
+.ps-site input:focus-visible,
+.ps-site select:focus-visible,
+.ps-site textarea:focus-visible {
+  outline: 2px solid var(--ps-accent);
+  outline-offset: 2px;
+}
+
+.ps-site[data-theme="dark"] a:focus-visible,
+.ps-site[data-theme="dark"] button:focus-visible,
+.ps-site[data-theme="dark"] input:focus-visible,
+.ps-site[data-theme="dark"] select:focus-visible,
+.ps-site[data-theme="dark"] textarea:focus-visible {
+  outline-color: #e6d3a4;
+}

@@ -485,6 +485,7 @@ export type PublicSite = {
   tagline?: string;
   accent?: string;
   accentHex?: string;
+  theme?: string;
   phone?: string;
   email?: string;
   addressLine1?: string;
@@ -523,14 +524,17 @@ export type PublicSiteAdmin = {
   firmName: string;
   tagline: string;
   accent: string;
+  theme: string;
   about: string;
   liveFirmName?: string | null;
   liveTagline?: string | null;
   liveAccent?: string | null;
+  liveTheme?: string | null;
   liveAbout?: string | null;
   brandingStatus: string;
   brandingNote?: string | null;
   accents: { key: string; hex: string; label: string }[];
+  themes: { key: string; label: string }[];
   features: PublicSiteFeatureState[];
 };
 

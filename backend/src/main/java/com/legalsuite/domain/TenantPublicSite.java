@@ -42,6 +42,10 @@ public class TenantPublicSite {
     @Column(length = 32)
     private String accent = "navy";
 
+    /** light or dark. Draft until branding approval. */
+    @Column(nullable = false, length = 16)
+    private String theme = "light";
+
     @Column(length = 4000)
     private String aboutText;
 
@@ -53,6 +57,9 @@ public class TenantPublicSite {
 
     @Column(length = 32)
     private String liveAccent;
+
+    @Column(length = 16)
+    private String liveTheme;
 
     @Column(length = 4000)
     private String liveAboutText;

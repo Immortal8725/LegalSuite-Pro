@@ -39,7 +39,7 @@ export function EnquiryForm({ site, base }: { site: PublicSite; base: string }) 
   const za = site.country === "ZA";
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="ps-form space-y-4">
       <p className="text-sm text-[var(--ps-body)]">
         Please do not send confidential details until the firm confirms it can act. Sending this form does not create a mandate.{" "}
         <Link href={href(base, "/legal/privacy")} className="underline">Privacy notice</Link>
@@ -90,7 +90,7 @@ export function EnquiryForm({ site, base }: { site: PublicSite; base: string }) 
         What happened?
         <textarea required rows={5} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1 w-full border border-[var(--ps-line)] bg-[var(--ps-card)] px-3 py-2" />
       </label>
-      <button type="submit" className="bg-[var(--ps-accent)] px-5 py-3 text-sm font-semibold text-white">
+      <button type="submit" className="ps-cta px-5 py-3 text-sm font-semibold">
         Send enquiry
       </button>
     </form>

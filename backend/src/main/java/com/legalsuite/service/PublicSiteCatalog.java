@@ -27,6 +27,7 @@ public final class PublicSiteCatalog {
 
     private static final Map<String, String> ACCENTS = new LinkedHashMap<>();
     private static final Map<String, String> ACCENT_LABELS = new LinkedHashMap<>();
+    private static final Map<String, String> THEMES = new LinkedHashMap<>();
 
     static {
         ACCENTS.put("navy", "#1b3a4b");
@@ -37,6 +38,8 @@ public final class PublicSiteCatalog {
         ACCENT_LABELS.put("forest", "Forest");
         ACCENT_LABELS.put("oxblood", "Oxblood");
         ACCENT_LABELS.put("copper", "Copper");
+        THEMES.put("light", "Light");
+        THEMES.put("dark", "Dark");
     }
 
     private static final List<Article> ZA_INSIGHTS = List.of(
@@ -104,6 +107,20 @@ public final class PublicSiteCatalog {
 
     public static Set<String> accentKeys() {
         return ACCENTS.keySet();
+    }
+
+    public static String requireTheme(String key) {
+        String k = key == null ? "" : key.trim().toLowerCase(Locale.ROOT);
+        if (!THEMES.containsKey(k)) {
+            throw ApiException.badRequest("Choose light or dark");
+        }
+        return k;
+    }
+
+    public static List<Map<String, String>> themeChoices() {
+        return THEMES.entrySet().stream()
+                .map(e -> Map.of("key", e.getKey(), "label", e.getValue()))
+                .toList();
     }
 
     public static String slugify(String name) {

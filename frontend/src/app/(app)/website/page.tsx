@@ -37,6 +37,7 @@ export default function WebsiteSettingsPage() {
   const [tagline, setTagline] = useState("");
   const [about, setAbout] = useState("");
   const [accent, setAccent] = useState("navy");
+  const [theme, setTheme] = useState("light");
   const [requested, setRequested] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function WebsiteSettingsPage() {
         setTagline(next.tagline || "");
         setAbout(next.about || "");
         setAccent(next.accent || "navy");
+        setTheme(next.theme || "light");
         const flags: Record<string, boolean> = {};
         next.features.forEach((feature) => {
           flags[feature.key] = feature.requested;
@@ -57,7 +59,7 @@ export default function WebsiteSettingsPage() {
   }, []);
 
   function payload() {
-    return { firmName, tagline, about, accent, features: requested };
+    return { firmName, tagline, about, accent, theme, features: requested };
   }
 
   async function save() {
@@ -103,12 +105,11 @@ export default function WebsiteSettingsPage() {
             </CardHeader>
             <CardBody className="space-y-2 text-sm text-slate-600">
               {site.publishNote ? <p>Publish note: {site.publishNote}</p> : null}
-              {site.brandingStatus === "pending" ? <p>A branding change is waiting for approval. The live site still shows the last approved name and accent.</p> : null}
+              {site.brandingStatus === "pending" ? <p>A branding change is waiting for approval. The live site still shows the last approved name, accent, and appearance.</p> : null}
               {site.brandingStatus === "rejected" && site.brandingNote ? <p>Branding note: {site.brandingNote}</p> : null}
               {site.liveFirmName ? (
                 <p>
-                  On the site now: {site.liveFirmName}
-                  {site.liveAccent ? ` (${site.liveAccent})` : ""}.
+                  On the site now: {site.liveFirmName} ({site.liveAccent || "navy"}, {site.liveTheme || "light"}).
                 </p>
               ) : (
                 <p>Nothing from this screen is on the public site yet.</p>
@@ -149,6 +150,26 @@ export default function WebsiteSettingsPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <Label>Appearance</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(site.themes || [
+                    { key: "light", label: "Light" },
+                    { key: "dark", label: "Dark" },
+                  ]).map((choice) => (
+                    <button
+                      key={choice.key}
+                      type="button"
+                      aria-pressed={theme === choice.key}
+                      onClick={() => setTheme(choice.key)}
+                      className={`border px-3 py-2 text-sm ${theme === choice.key ? "border-navy" : "border-slate-200"}`}
+                    >
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Light is the cool neutral site. Dark is a near-black navy field with cream type and gold rules. It goes live only after approval, same as the accent.</p>
               </div>
               <p className="text-xs text-slate-500">Invoices and letterhead still use Firm settings. This name is only for the public site, and only after approval.</p>
             </CardBody>

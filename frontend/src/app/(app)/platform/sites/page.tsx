@@ -22,9 +22,11 @@ type QueueItem = {
   draftFirmName?: string;
   draftTagline?: string;
   draftAccent?: string;
+  draftTheme?: string;
   liveFirmName?: string;
   liveTagline?: string;
   liveAccent?: string;
+  liveTheme?: string;
   publishStatus?: string;
   note?: string | null;
 };
@@ -101,13 +103,13 @@ export default function PlatformSitesPage() {
                 </p>
                 {item.kind === "branding" ? (
                   <p>
-                    Draft: {item.draftFirmName} / {item.draftAccent}. Live: {item.liveFirmName || "not published"} / {item.liveAccent || "none"}.
+                    Draft: {item.draftFirmName} / {item.draftAccent} / {item.draftTheme || "light"}. Live: {item.liveFirmName || "not published"} / {item.liveAccent || "none"} / {item.liveTheme || "light"}.
                     {item.draftTagline ? ` Tagline: ${item.draftTagline}` : ""}
                   </p>
                 ) : null}
                 {item.kind === "publish" ? (
                   <p>
-                    Draft name {item.draftFirmName}, accent {item.draftAccent}.
+                    Draft name {item.draftFirmName}, accent {item.draftAccent}, appearance {item.draftTheme || "light"}.
                     {item.publishStatus === "published" ? (
                       <Link href={`/firm/${item.slug}`} className="ml-2 underline">View site</Link>
                     ) : null}
