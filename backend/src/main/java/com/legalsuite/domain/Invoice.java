@@ -34,6 +34,11 @@ public class Invoice {
     private BigDecimal taxAmount = BigDecimal.ZERO;
     private BigDecimal total = BigDecimal.ZERO;
     private BigDecimal amountPaid = BigDecimal.ZERO;
+    private BigDecimal writeOffAmount = BigDecimal.ZERO;
+    @Column(length = 2000)
+    private String writeOffNote;
+    private Instant writeOffAt;
+    private UUID writeOffBy;
     @Column(length = 8000)
     private String lineItemsJson;
     @Column(length = 2000)

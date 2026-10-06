@@ -225,7 +225,65 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/invoices/{id}/pay")
     public ApiResponse<?> pay(@PathVariable UUID id) {
-        return ApiResponse.ok(finance.updateInvoice(id, Map.of("status", "paid")));
+        return ApiResponse.ok(finance.payInFull(id));
+    }
+
+    @PostMapping("/api/v1/invoices/{id}/payments")
+    public ApiResponse<?> recordPayment(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.recordPayment(id, body));
+    }
+
+    @PostMapping("/api/v1/invoices/{id}/write-off")
+    public ApiResponse<?> writeOff(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.writeOff(id, body));
+    }
+
+    @PostMapping("/api/v1/invoices/{id}/apply-trust")
+    public ApiResponse<?> applyTrust(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.applyTrustToInvoice(id, body));
+    }
+
+    @PostMapping(value = "/api/v1/invoices/{id}/proofs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<?> submitProof(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "amount", required = false) String amount,
+            @RequestParam(value = "reference", required = false) String reference,
+            @RequestParam(value = "note", required = false) String note) {
+        return ApiResponse.ok(finance.submitProof(id, file, amount, reference, note));
+    }
+
+    @GetMapping("/api/v1/payment-proofs")
+    public ApiResponse<?> proofs(@RequestParam(value = "status", required = false) String status) {
+        return ApiResponse.ok(finance.listProofs(status));
+    }
+
+    @PostMapping("/api/v1/payment-proofs/{id}/accept")
+    public ApiResponse<?> acceptProof(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return ApiResponse.ok(finance.acceptProof(id, body == null ? Map.of() : body));
+    }
+
+    @PostMapping("/api/v1/payment-proofs/{id}/reject")
+    public ApiResponse<?> rejectProof(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.rejectProof(id, body));
+    }
+
+    @GetMapping("/api/v1/payment-proofs/{id}/file")
+    public ResponseEntity<Resource> proofFile(@PathVariable UUID id) {
+        var meta = finance.proofDocument(id);
+        MediaType type = MediaType.APPLICATION_OCTET_STREAM;
+        if (meta.getMimeType() != null && !meta.getMimeType().isBlank()) {
+            try {
+                type = MediaType.parseMediaType(meta.getMimeType());
+            } catch (Exception ignored) {
+                type = MediaType.APPLICATION_OCTET_STREAM;
+            }
+        }
+        String name = meta.getOriginalName() == null ? meta.getName() : meta.getOriginalName();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + name.replace("\"", "") + "\"")
+                .contentType(type)
+                .body(finance.openProof(id));
     }
 
     @PostMapping("/api/v1/invoices/{id}/send")
@@ -379,6 +437,16 @@ public class ApiControllers {
     @GetMapping("/api/v1/portal/invoices")
     public ApiResponse<?> portalInvoices() {
         return ApiResponse.ok(finance.invoicesForClient(com.legalsuite.common.TenantContext.requireUser()));
+    }
+
+    @PostMapping(value = "/api/v1/portal/invoices/{id}/proofs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<?> portalProof(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "amount", required = false) String amount,
+            @RequestParam(value = "reference", required = false) String reference,
+            @RequestParam(value = "note", required = false) String note) {
+        return ApiResponse.ok(finance.submitProof(id, file, amount, reference, note));
     }
 
     @PostMapping("/api/v1/voice/signal")

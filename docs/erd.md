@@ -17,6 +17,9 @@ erDiagram
     TENANT ||--o{ TASK_ITEM : assigns
     TENANT ||--o{ TIME_ENTRY : logs
     TENANT ||--o{ INVOICE : bills
+    INVOICE ||--o{ INVOICE_PAYMENT : collects
+    INVOICE ||--o{ INVOICE_WRITE_OFF : writes_off
+    INVOICE ||--o{ PAYMENT_PROOF : evidences
     TENANT ||--o{ TRUST_ACCOUNT : holds
     TENANT ||--o{ EXPENSE : advances
     TENANT ||--o{ CONVERSATION : threads
@@ -88,6 +91,24 @@ erDiagram
         uuid client_id FK
         string status
         decimal total
+        decimal amount_paid
+        decimal write_off_amount
+    }
+    INVOICE_PAYMENT {
+        uuid id PK
+        uuid tenant_id FK
+        uuid invoice_id FK
+        decimal amount
+        string method
+        date paid_at
+    }
+    PAYMENT_PROOF {
+        uuid id PK
+        uuid tenant_id FK
+        uuid invoice_id FK
+        uuid document_id FK
+        string status
+        decimal amount_claimed
     }
     TRUST_ACCOUNT {
         uuid id PK
