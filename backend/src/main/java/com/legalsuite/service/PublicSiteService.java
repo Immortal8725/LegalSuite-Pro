@@ -57,6 +57,7 @@ public class PublicSiteService {
             created.setFirmName(tenant.getFirmName());
             created.setTagline(tenant.getTagline());
             created.setAccent("navy");
+            created.setTheme("light");
             created.setBrandingStatus("none");
             String city = tenant.getCity() == null || tenant.getCity().isBlank() ? "its office" : tenant.getCity();
             created.setAboutText(tenant.getFirmName() + " advises clients from " + city + ".");
@@ -85,9 +86,11 @@ public class PublicSiteService {
             Map<String, String> featureState,
             String about,
             String tagline,
-            String recognitionJson) {
+            String recognitionJson,
+            String theme) {
         TenantPublicSite site = ensureDraft(tenant);
         site.setAccent(PublicSiteCatalog.requireAccent(accent));
+        site.setTheme(PublicSiteCatalog.requireTheme(theme));
         site.setFirmName(tenant.getFirmName());
         site.setTagline(tagline);
         site.setAboutText(about);
@@ -101,6 +104,7 @@ public class PublicSiteService {
             site.setLiveFirmName(null);
             site.setLiveTagline(null);
             site.setLiveAccent(null);
+            site.setLiveTheme(null);
             site.setLiveAboutText(null);
             site.setBrandingStatus("pending");
         }
@@ -142,6 +146,7 @@ public class PublicSiteService {
         String accent = site.getLiveAccent() == null ? "navy" : site.getLiveAccent();
         m.put("accent", accent);
         m.put("accentHex", PublicSiteCatalog.hex(accent));
+        m.put("theme", blankTo(site.getLiveTheme(), "light"));
         m.put("phone", tenant.getPhone());
         m.put("email", tenant.getEmail());
         m.put("addressLine1", tenant.getAddressLine1());
@@ -246,6 +251,9 @@ public class PublicSiteService {
         }
         if (body.get("accent") != null) {
             site.setAccent(PublicSiteCatalog.requireAccent(String.valueOf(body.get("accent"))));
+        }
+        if (body.get("theme") != null) {
+            site.setTheme(PublicSiteCatalog.requireTheme(String.valueOf(body.get("theme"))));
         }
         if (body.get("about") != null) {
             site.setAboutText(clip(String.valueOf(body.get("about")), 4000));
@@ -383,15 +391,18 @@ public class PublicSiteService {
         m.put("firmName", site.getFirmName());
         m.put("tagline", site.getTagline() == null ? "" : site.getTagline());
         m.put("accent", site.getAccent());
+        m.put("theme", blankTo(site.getTheme(), "light"));
         m.put("about", site.getAboutText() == null ? "" : site.getAboutText());
         m.put("liveFirmName", site.getLiveFirmName());
         m.put("liveTagline", site.getLiveTagline());
         m.put("liveAccent", site.getLiveAccent());
+        m.put("liveTheme", site.getLiveTheme());
         m.put("liveAbout", site.getLiveAboutText());
         m.put("brandingStatus", site.getBrandingStatus());
         m.put("brandingNote", site.getBrandingNote());
         m.put("submittedAt", site.getSubmittedAt());
         m.put("accents", PublicSiteCatalog.accentChoices());
+        m.put("themes", PublicSiteCatalog.themeChoices());
         List<Map<String, Object>> rows = new ArrayList<>();
         for (PublicSiteCatalog.Feature feature : PublicSiteCatalog.FEATURES) {
             PublicSiteFeature row = features.findByTenantIdAndFeatureKey(tenant.getId(), feature.key()).orElseThrow();
@@ -422,9 +433,11 @@ public class PublicSiteService {
         m.put("draftFirmName", site.getFirmName());
         m.put("draftTagline", site.getTagline());
         m.put("draftAccent", site.getAccent());
+        m.put("draftTheme", blankTo(site.getTheme(), "light"));
         m.put("liveFirmName", site.getLiveFirmName());
         m.put("liveTagline", site.getLiveTagline());
         m.put("liveAccent", site.getLiveAccent());
+        m.put("liveTheme", site.getLiveTheme());
         if (row == null) {
             m.put("note", "branding".equals(kind) ? site.getBrandingNote() : site.getPublishNote());
         } else {
@@ -525,6 +538,7 @@ public class PublicSiteService {
         return !same(site.getFirmName(), site.getLiveFirmName())
                 || !same(site.getTagline(), site.getLiveTagline())
                 || !same(site.getAccent(), site.getLiveAccent())
+                || !same(blankTo(site.getTheme(), "light"), blankTo(site.getLiveTheme(), "light"))
                 || !same(site.getAboutText(), site.getLiveAboutText());
     }
 
@@ -532,6 +546,7 @@ public class PublicSiteService {
         site.setLiveFirmName(site.getFirmName());
         site.setLiveTagline(site.getTagline());
         site.setLiveAccent(site.getAccent());
+        site.setLiveTheme(blankTo(site.getTheme(), "light"));
         site.setLiveAboutText(site.getAboutText());
     }
 

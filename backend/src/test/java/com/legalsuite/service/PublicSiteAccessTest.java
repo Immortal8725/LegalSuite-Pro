@@ -33,6 +33,8 @@ class PublicSiteAccessTest {
     void approvalGateHidesFeaturesAndStaffFields() throws Exception {
         JsonNode ndlovu = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
         assertTrue(ndlovu.get("published").asBoolean());
+        assertEquals("dark", ndlovu.get("theme").asText());
+        assertEquals("copper", ndlovu.get("accent").asText());
         assertEquals(
                 Set.of("people", "insights", "recognition", "whatsapp", "booking"),
                 textSet(ndlovu.get("features")));
@@ -158,6 +160,57 @@ class PublicSiteAccessTest {
         assertFalse(textSet(feesOff.get("features")).contains("fees"));
 
         mvc.perform(get("/api/v1/public/sites/missing-firm")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void darkThemeWaitsForApprovalAndLightStillPublishes() throws Exception {
+        JsonNode before = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
+        assertEquals("dark", before.get("theme").asText());
+
+        String thabo = token("ndlovu-partners", "thabo@ndlovulaw.co.za");
+        mvc.perform(put("/api/v1/public-site")
+                        .header("Authorization", "Bearer " + thabo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"theme\":\"midnight\"}"))
+                .andExpect(status().isBadRequest());
+
+        JsonNode draft = data(mvc.perform(put("/api/v1/public-site")
+                        .header("Authorization", "Bearer " + thabo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"theme\":\"light\"}"))
+                .andExpect(status().isOk())
+                .andReturn());
+        assertEquals("light", draft.get("theme").asText());
+        assertEquals("dark", draft.get("liveTheme").asText());
+
+        mvc.perform(post("/api/v1/public-site/submit").header("Authorization", "Bearer " + thabo))
+                .andExpect(status().isOk());
+        JsonNode stillDark = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
+        assertEquals("dark", stillDark.get("theme").asText());
+
+        String ops = token("legalsuite", "ops@legalsuite.pro");
+        mvc.perform(post("/api/v1/platform/public-sites/" + draft.get("tenantId").asText() + "/branding")
+                        .header("Authorization", "Bearer " + ops)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"approved\"}"))
+                .andExpect(status().isOk());
+        JsonNode light = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
+        assertEquals("light", light.get("theme").asText());
+
+        mvc.perform(put("/api/v1/public-site")
+                        .header("Authorization", "Bearer " + thabo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"theme\":\"dark\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/public-site/submit").header("Authorization", "Bearer " + thabo))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/platform/public-sites/" + draft.get("tenantId").asText() + "/branding")
+                        .header("Authorization", "Bearer " + ops)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"approved\"}"))
+                .andExpect(status().isOk());
+        JsonNode restored = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
+        assertEquals("dark", restored.get("theme").asText());
     }
 
     private String token(String slug, String email) throws Exception {

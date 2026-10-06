@@ -44,7 +44,13 @@ export function PublicSiteRoot({ children }: { children: React.ReactNode }) {
     if (site?.firmName) document.title = site.firmName;
   }, [site]);
 
-  return <Ctx.Provider value={{ slug, site, error, loading }}>{children}</Ctx.Provider>;
+  const theme = site?.theme === "dark" ? "dark" : "light";
+
+  return (
+    <div data-theme={theme} className="ps-site min-h-screen bg-[var(--ps-paper)] text-[var(--ps-ink)] antialiased">
+      <Ctx.Provider value={{ slug, site, error, loading }}>{children}</Ctx.Provider>
+    </div>
+  );
 }
 
 export function usePublicSite() {

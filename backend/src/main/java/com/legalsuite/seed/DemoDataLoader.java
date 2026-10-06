@@ -435,7 +435,8 @@ public class DemoDataLoader implements CommandLineRunner {
                 Map.of("people", "pending", "insights", "pending", "booking", "pending"),
                 page.getAboutText(),
                 firm.getTagline(),
-                null);
+                null,
+                "light");
 
         notify(firm.getId(), john.getId(), "Hearing today", "Johnson v. Corp Inc. is on the 10:00 a.m. docket in Room 4B.", "calendar", "/calendar");
         notify(firm.getId(), john.getId(), "Invoice paid", "Invoice #1084 was marked paid.", "billing", "/billing");
@@ -748,7 +749,8 @@ public class DemoDataLoader implements CommandLineRunner {
                         "situations", "pending"),
                 page.getAboutText(),
                 firm.getTagline(),
-                "[{\"year\":\"2026\",\"source\":\"Firm record\",\"title\":\"Directors and an associate admitted to practise in Gauteng\"}]");
+                "[{\"year\":\"2026\",\"source\":\"Firm record\",\"title\":\"Directors and an associate admitted to practise in Gauteng\"}]",
+                "dark");
 
         DocumentTemplate mandate = new DocumentTemplate();
         mandate.setTenantId(firm.getId());

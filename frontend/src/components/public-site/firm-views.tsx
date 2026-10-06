@@ -40,21 +40,21 @@ export function FirmView({ view }: { view: FirmPage }) {
   const { site, error, loading } = usePublicSite();
   const base = useSiteBase(site?.slug || "");
 
-  if (loading) return <p className="px-6 py-16 text-sm text-[#78716c]">Loading…</p>;
+  if (loading) return <p className="px-6 py-16 text-sm text-[var(--ps-meta)]">Loading…</p>;
   if (error || !site) {
     return (
       <div className="mx-auto max-w-xl px-6 py-20">
         <h1 className="text-3xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>Firm not found</h1>
-        <p className="mt-3 text-sm text-[#44403c]">{error || "This address does not match a firm."}</p>
+        <p className="mt-3 text-sm text-[var(--ps-body)]">{error || "This address does not match a firm."}</p>
       </div>
     );
   }
   if (!site.published) {
     return (
       <div className="mx-auto max-w-xl px-6 py-24">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#78716c]">Public site</p>
+        <p className="ps-kicker text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ps-meta)]">Public site</p>
         <h1 className="mt-3 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{site.firmName}</h1>
-        <p className="mt-4 text-[#44403c]">This public site is not live yet.</p>
+        <p className="mt-4 text-[var(--ps-body)]">This public site is not live yet.</p>
       </div>
     );
   }
@@ -98,6 +98,24 @@ function place(site: PublicSite) {
   return [site.city, site.state].filter(Boolean).join(", ");
 }
 
+function HeroHeadline({ text }: { text: string }) {
+  const breakAt = text.indexOf(". ");
+  const lead = breakAt === -1 ? text : text.slice(0, breakAt + 1);
+  const rest = breakAt === -1 ? "" : text.slice(breakAt + 2);
+  return (
+    <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-[var(--ps-ink)] sm:text-7xl lg:text-8xl" style={serifStyle}>
+      {rest ? (
+        <>
+          <span className="ps-hero-lead">{lead}</span> <span className="ps-hero-accent">{rest}</span>
+        </>
+      ) : (
+        text
+      )}
+      <span className="ps-rule" aria-hidden="true" />
+    </h1>
+  );
+}
+
 const floatShadow = "shadow-[0_22px_40px_-22px_rgba(24,24,24,0.28)]";
 
 function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: string; index?: number }) {
@@ -106,9 +124,9 @@ function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: s
       <img
         src={portraitSrc(person.fullName, index)}
         alt=""
-        className={`aspect-[3/4] w-full object-cover object-[center_18%] ${floatShadow}`}
+        className={`ps-photo aspect-[3/4] w-full object-cover object-[center_18%] ${floatShadow}`}
       />
-      <div className={`relative z-10 -mt-14 mx-4 border border-[var(--ps-line)] bg-[var(--ps-card)] px-4 py-4 ${floatShadow}`}>
+      <div className={`ps-panel relative z-10 -mt-14 mx-4 border border-[var(--ps-line)] bg-[var(--ps-card)] px-4 py-4 ${floatShadow}`}>
         <p className="text-2xl font-semibold leading-tight tracking-tight text-[var(--ps-ink)]" style={serifStyle}>{person.fullName}</p>
         <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">{person.title}</p>
       </div>
@@ -125,16 +143,16 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
       <img
         src={READING_ROOM}
         alt="People working together beside a sunlit window"
-        className={`absolute right-0 top-12 h-[72%] w-[76%] object-cover ${floatShadow}`}
+        className={`ps-photo absolute right-0 top-12 h-[72%] w-[76%] object-cover ${floatShadow}`}
         style={{ transform: "rotate(-1.5deg)" }}
       />
       {lead ? (
         <Link
           href={href(base, `/people/${lead.id}`)}
-          className={`absolute left-0 top-0 z-10 w-[48%] bg-[var(--ps-card)] p-2 ${floatShadow}`}
+          className={`ps-panel absolute left-0 top-0 z-10 w-[48%] border border-[var(--ps-line)] bg-[var(--ps-card)] p-2 ${floatShadow}`}
           style={{ transform: "rotate(2.4deg)" }}
         >
-          <img src={portraitSrc(lead.fullName, 0)} alt="" className="aspect-[4/5] w-full object-cover object-[center_18%]" />
+          <img src={portraitSrc(lead.fullName, 0)} alt="" className="ps-photo aspect-[4/5] w-full object-cover object-[center_18%]" />
           <p className="px-1.5 pb-0.5 pt-2 text-lg font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{lead.fullName}</p>
           <p className="px-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{lead.title}</p>
         </Link>
@@ -142,10 +160,10 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
       {next ? (
         <Link
           href={href(base, `/people/${next.id}`)}
-          className={`absolute bottom-2 right-1 z-20 w-[40%] bg-[var(--ps-card)] p-1.5 ${floatShadow}`}
+          className={`ps-panel absolute bottom-2 right-1 z-20 w-[40%] border border-[var(--ps-line)] bg-[var(--ps-card)] p-1.5 ${floatShadow}`}
           style={{ transform: "rotate(-2.5deg)" }}
         >
-          <img src={portraitSrc(next.fullName, 1)} alt="" className="aspect-[4/5] w-full object-cover object-[center_15%]" />
+          <img src={portraitSrc(next.fullName, 1)} alt="" className="ps-photo aspect-[4/5] w-full object-cover object-[center_15%]" />
           <p className="px-1 pb-0.5 pt-1.5 text-base font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{next.fullName}</p>
           <p className="px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{next.title}</p>
         </Link>
@@ -153,7 +171,7 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
         <img
           src={DESK}
           alt=""
-          className={`absolute bottom-2 right-2 z-10 w-[42%] object-cover ${floatShadow}`}
+          className={`ps-photo absolute bottom-2 right-2 z-10 w-[42%] object-cover ${floatShadow}`}
           style={{ transform: "rotate(-3deg)" }}
         />
       )}
@@ -181,26 +199,24 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="bg-[var(--ps-paper)]">
+      <section className="ps-hero bg-[var(--ps-paper)]">
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-14 lg:grid-cols-12 lg:pb-28 lg:pt-20">
-          <div className="lg:col-span-7">
-            <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{place(site) || "Law firm"}</p>
-            <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-[var(--ps-ink)] sm:text-7xl lg:text-8xl" style={serifStyle}>
-              {site.tagline || site.firmName}
-            </h1>
+          <div className="ps-hero-copy lg:col-span-7">
+            <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{place(site) || "Law firm"}</p>
+            <HeroHeadline text={site.tagline || site.firmName} />
             {site.about ? <p className="mt-8 max-w-xl text-lg leading-relaxed text-[var(--ps-body)]">{site.about}</p> : null}
             <div className="mt-10 flex flex-wrap items-center gap-3">
               {features.has("booking") ? (
-                <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-7 py-3.5 text-base font-semibold text-white shadow-[0_14px_28px_-16px_rgba(24,24,24,0.22)]">
+                <Link href={href(base, "/contact")} className="ps-cta px-7 py-3.5 text-base font-semibold">
                   Make an enquiry
                 </Link>
               ) : null}
-              <Link href={href(base, "/expertise")} className="border border-[var(--ps-line)] px-5 py-3 text-sm font-medium text-[var(--ps-body)]">
+              <Link href={href(base, "/expertise")} className="ps-ghost px-5 py-3 text-sm font-medium">
                 View expertise
               </Link>
             </div>
-            <aside className="mt-12 max-w-sm border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
-              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--ps-meta)]">Office</p>
+            <aside className="ps-panel mt-12 max-w-sm border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
+              <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--ps-meta)]">Office</p>
               <p className="mt-3 text-xl font-normal leading-snug text-[var(--ps-ink)]" style={serifStyle}>
                 {[site.addressLine1, place(site)].filter(Boolean).join(", ")}
               </p>
@@ -216,7 +232,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
               ) : null}
             </aside>
           </div>
-          <div className="lg:col-span-5">
+          <div className="ps-hero-photos lg:col-span-5">
             <HeroCluster site={site} base={base} />
           </div>
         </div>
@@ -263,7 +279,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
             <SectionTitle kicker="Reading" title="Insights" />
             <div className="mt-12 grid gap-8 md:grid-cols-2">
               {site.insights.map((article) => (
-                <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
+                <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
                   <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
                   <h3 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[var(--ps-ink)]" style={serifStyle}>{article.title}</h3>
                   <p className="mt-4 text-base leading-relaxed text-[var(--ps-body)]">{article.summary}</p>
@@ -339,7 +355,7 @@ function Practice({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Expertise" title={practice.name} lede={`${site.firmName} advises on ${practice.name}. This page is a stub, not a full advice note.`} />
-      <div className="mx-auto max-w-3xl space-y-6 px-6 py-12 text-[#44403c]">
+      <div className="mx-auto max-w-3xl space-y-6 px-6 py-12 text-[var(--ps-body)]">
         <p>Work starts with a conflict check and, where the firm is instructed, a written mandate. Nothing on this page is a promise to act.</p>
         <ContactBlock site={site} base={base} person={contact} />
       </div>
@@ -410,7 +426,7 @@ function Person({ site, base }: { site: PublicSite; base: string }) {
         <div className="lg:col-span-8">
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{person.title}</p>
           <h1 className="mt-3 text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-[var(--ps-ink)] sm:text-6xl" style={serifStyle}>{person.fullName}</h1>
-          {person.bio ? <p className="mt-4 max-w-2xl text-lg text-[#44403c]">{person.bio}</p> : null}
+          {person.bio ? <p className="mt-4 max-w-2xl text-lg text-[var(--ps-body)]">{person.bio}</p> : null}
           <ul className="mt-6 space-y-2 text-sm">
             {person.phone ? <li><a href={`tel:${person.phone.replace(/\s/g, "")}`}>{person.phone}</a></li> : null}
             {person.email ? <li><a href={`mailto:${person.email}`}>{person.email}</a></li> : null}
@@ -453,10 +469,10 @@ function Insights({ site, base }: { site: PublicSite; base: string }) {
       <PageIntro kicker="Insights" title="Notes from the firm" lede="Short notes for general reading. They are not advice on your matter." />
       <div className="mx-auto grid max-w-6xl gap-6 px-6 py-12 md:grid-cols-2">
         {(site.insights || []).map((article) => (
-          <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
+          <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
             <h2 className="mt-4 text-3xl font-semibold leading-tight" style={serifStyle}>{article.title}</h2>
-            <p className="mt-4 text-base leading-relaxed text-[#57534e]">{article.summary}</p>
+            <p className="mt-4 text-base leading-relaxed text-[var(--ps-body)]">{article.summary}</p>
           </Link>
         ))}
       </div>
@@ -474,7 +490,7 @@ function Insight({ site, base }: { site: PublicSite; base: string }) {
     <article className="mx-auto max-w-3xl px-6 py-16">
       <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
       <h1 className="mt-3 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{article.title}</h1>
-      <p className="mt-6 text-lg leading-relaxed text-[#44403c]">{article.body}</p>
+      <p className="mt-6 text-lg leading-relaxed text-[var(--ps-body)]">{article.body}</p>
       <Link href={href(base, "/insights")} className="mt-8 inline-block text-sm underline">All insights</Link>
     </article>
   );
@@ -486,14 +502,14 @@ function Situations({ site, base }: { site: PublicSite; base: string }) {
       <PageIntro kicker="Who we help" title="Start with the situation" lede="Clients often arrive with a problem, not a practice name." />
       <ul className="mx-auto max-w-3xl space-y-6 px-6 py-12">
         {(site.situations || []).map((item) => (
-          <li key={item.slug} className="border-b border-[#e6e0d6] pb-6">
+          <li key={item.slug} className="border-b border-[var(--ps-line)] pb-6">
             <h2 className="text-2xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{item.title}</h2>
-            <p className="mt-2 text-[#44403c]">{item.summary}</p>
+            <p className="mt-2 text-[var(--ps-body)]">{item.summary}</p>
           </li>
         ))}
       </ul>
       <div className="mx-auto max-w-3xl px-6 pb-16">
-        <Link href={href(base, "/contact")} className="bg-[var(--ps-accent)] px-5 py-3 text-sm font-semibold text-white">Contact the firm</Link>
+        <Link href={href(base, "/contact")} className="ps-cta px-5 py-3 text-sm font-semibold">Contact the firm</Link>
       </div>
     </>
   );
@@ -503,7 +519,7 @@ function Fees({ site }: { site: PublicSite }) {
   return (
     <>
       <PageIntro kicker="Fees" title="How fees are agreed" lede={site.feesNote} />
-      <div className="mx-auto max-w-3xl px-6 py-12 text-[#44403c]">
+      <div className="mx-auto max-w-3xl px-6 py-12 text-[var(--ps-body)]">
         <p>A practitioner reviews the mandate before it is signed. This page does not compare the firm with any other practice.</p>
       </div>
     </>
@@ -515,16 +531,16 @@ function Contact({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Contact" title="Talk to the firm" lede={place(site) ? `The office is in ${place(site)}.` : undefined} />
-      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-12 lg:grid-cols-2">
-        <div className="text-sm text-[#44403c]">
+      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-2">
+        <div className="ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 text-sm text-[var(--ps-body)]">
           <p className="text-2xl text-[var(--ps-ink)]" style={serifStyle}>{site.firmName}</p>
           <p className="mt-4">{[site.addressLine1, site.city, site.state, site.zip].filter(Boolean).join(", ")}</p>
           {site.phone ? <p className="mt-3"><a href={`tel:${site.phone.replace(/\s/g, "")}`} className="text-lg font-semibold text-[var(--ps-ink)]">{site.phone}</a></p> : null}
           {site.email ? <p className="mt-2"><a href={`mailto:${site.email}`}>{site.email}</a></p> : null}
           {site.whatsappUrl ? <p className="mt-3 text-sm text-[var(--ps-meta)]"><a href={site.whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a></p> : null}
         </div>
-        <div>
-          {booking ? <EnquiryForm site={site} base={base} /> : <p>The enquiry form is not open. Call the office number on this page.</p>}
+        <div className="ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8">
+          {booking ? <EnquiryForm site={site} base={base} /> : <p className="text-[var(--ps-body)]">The enquiry form is not open. Call the office number on this page.</p>}
         </div>
       </div>
     </>
@@ -537,13 +553,13 @@ function Recognition({ site }: { site: PublicSite }) {
     <>
       <PageIntro kicker="Recognition" title="Credentials, with a year and a source" lede="The firm does not publish client names here." />
       {items.length === 0 ? (
-        <p className="mx-auto max-w-3xl px-6 py-12 text-[#44403c]">Nothing is listed yet.</p>
+        <p className="mx-auto max-w-3xl px-6 py-12 text-[var(--ps-body)]">Nothing is listed yet.</p>
       ) : (
         <ul className="mx-auto max-w-3xl space-y-4 px-6 py-12">
           {items.map((item) => (
-            <li key={`${item.year}-${item.title}`} className="border-b border-[#e6e0d6] pb-4">
+            <li key={`${item.year}-${item.title}`} className="border-b border-[var(--ps-line)] pb-4">
               <p className="text-xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{item.title}</p>
-              <p className="mt-1 text-sm text-[#57534e]">{item.year} / {item.source}</p>
+              <p className="mt-1 text-sm text-[var(--ps-body)]">{item.year} / {item.source}</p>
             </li>
           ))}
         </ul>
@@ -573,13 +589,13 @@ function Subscribe({ site, base }: { site: PublicSite; base: string }) {
           }
         }}
       >
-        {message ? <p className="border border-[#d6d0c6] bg-white p-4 text-sm">{message}</p> : null}
+        {message ? <p className="border border-[var(--ps-line)] bg-[var(--ps-card)] p-4 text-sm">{message}</p> : null}
         {error ? <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
         {!message ? (
           <>
             <label className="block text-sm">
               Email
-              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full border border-[#d6d0c6] bg-white px-3 py-2" />
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full border border-[var(--ps-line)] bg-[var(--ps-card)] px-3 py-2" />
             </label>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
@@ -588,7 +604,7 @@ function Subscribe({ site, base }: { site: PublicSite; base: string }) {
                 <Link href={href(base, "/legal/privacy")} className="underline">privacy notice</Link>.
               </span>
             </label>
-            <button type="submit" className="bg-[var(--ps-accent)] px-5 py-3 text-sm font-semibold text-white">Save opt-in</button>
+            <button type="submit" className="ps-cta px-5 py-3 text-sm font-semibold">Save opt-in</button>
           </>
         ) : null}
       </form>
@@ -602,7 +618,7 @@ function Legal({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Legal" title={copy.title} lede="A practitioner must review this text before it is used as the firm's live notice." />
-      <div className="mx-auto max-w-3xl space-y-4 px-6 py-12 text-[#44403c]">
+      <div className="mx-auto max-w-3xl space-y-4 px-6 py-12 text-[var(--ps-body)]">
         {copy.paragraphs.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
@@ -672,8 +688,8 @@ function legalCopy(doc: string, site: PublicSite) {
 
 function ContactBlock({ site, base, person }: { site: PublicSite; base: string; person?: PublicPerson }) {
   return (
-    <aside className="border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 text-sm shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#78716c]">Contact</p>
+    <aside className="ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-6 text-sm shadow-[0_16px_32px_-22px_rgba(24,24,24,0.16)]">
+      <p className="ps-kicker text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ps-meta)]">Contact</p>
       {person ? <p className="mt-2 font-semibold text-[var(--ps-ink)]">{person.fullName}, {person.title}</p> : null}
       {site.phone ? <p className="mt-2"><a href={`tel:${site.phone.replace(/\s/g, "")}`}>{site.phone}</a></p> : null}
       <p className="mt-2"><Link href={href(base, "/contact")} className="underline">Enquiry page</Link></p>

@@ -9,8 +9,8 @@ Schema is JPA on the same database the API already uses (`ddl-auto: create-drop`
 `tenant_public_sites` (one row per firm):
 
 - `publishStatus`: `draft`, `pending_approval`, `published`, or `rejected`
-- Draft branding: public name, tagline, about, and an accent key from a closed set (`navy`, `forest`, `oxblood`, `copper`)
-- Live branding: the name, tagline, about, and accent actually shown. A draft edit does not replace them until approval
+- Draft branding: public name, tagline, about, an accent key from a closed set (`navy`, `forest`, `oxblood`, `copper`), and an appearance (`light` or `dark`)
+- Live branding: the name, tagline, about, accent, and appearance actually shown. A draft edit does not replace them until approval
 - `brandingStatus`: `none`, `pending`, `approved`, or `rejected`
 
 `public_site_features` (one row per firm per feature):
@@ -47,9 +47,15 @@ Associates, client-portal users, and a firm owner acting on another firm cannot 
 
 The public payload does not include hourly rates, bar numbers, authenticator state, module flags, FFC numbers, or the approval map. An unpublished site returns the firm name and slug only.
 
+## Appearance
+
+The public site stays on the cool light theme unless the firm chooses dark and a platform operator approves that branding change. Dark is only the marketing site: a near-black navy field, cream headings, readable warm body text, a short gold rule under headings, and a glassy navigation bar. Primary buttons are a gold gradient with the firm accent tinting the edge. Photographs stay full colour. The staff desk is not restyled.
+
+A new firm starts on light. Ndlovu & Partners is seeded on dark so `/firm/ndlovu-partners` shows that appearance.
+
 ## Demo
 
-- Ndlovu & Partners is published. People, insights, recognition, WhatsApp, and enquiry are approved. Newsletter and Who we help are requested and still pending, so they are absent from `/firm/ndlovu-partners`.
+- Ndlovu & Partners is published on the dark appearance. People, insights, recognition, WhatsApp, and enquiry are approved. Newsletter and Who we help are requested and still pending, so they are absent from `/firm/ndlovu-partners`.
 - Smith & Associates is `pending_approval`, so `/firm/smith-associates` is not live.
 - Operator: firm slug `legalsuite`, `ops@legalsuite.pro`, password `password`. The queue is **Site approvals**.
 

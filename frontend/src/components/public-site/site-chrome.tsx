@@ -66,7 +66,7 @@ export function SiteFrame({
       >
         Skip to main content
       </a>
-      <header className="sticky top-0 z-30 border-b border-[var(--ps-line)] bg-[var(--ps-paper)]">
+      <header className="ps-nav sticky top-0 z-30 border-b border-[var(--ps-line)] bg-[var(--ps-paper)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3.5">
           <Link href={home} className="text-base font-semibold tracking-tight text-[var(--ps-ink)]" style={serifStyle}>
             {site.firmName}
@@ -76,7 +76,7 @@ export function SiteFrame({
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)] hover:text-[var(--ps-ink)]"
+                className="ps-nav-link text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)] hover:text-[var(--ps-ink)]"
               >
                 {item.label}
               </Link>
@@ -84,14 +84,14 @@ export function SiteFrame({
           </nav>
           <div className="flex items-center gap-4">
             {site.phone ? (
-              <a href={`tel:${site.phone.replace(/\s/g, "")}`} className="hidden text-sm font-normal text-[var(--ps-meta)] sm:inline">
+              <a href={`tel:${site.phone.replace(/\s/g, "")}`} className="ps-phone hidden text-sm font-normal text-[var(--ps-meta)] sm:inline">
                 {site.phone}
               </a>
             ) : null}
             {has(site, "booking") ? (
               <Link
                 href={href(base, "/contact")}
-                className="hidden bg-[var(--ps-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-card sm:inline"
+                className="ps-cta hidden px-4 py-2.5 text-sm font-semibold sm:inline"
               >
                 Make an enquiry
               </Link>
@@ -114,7 +114,7 @@ export function SiteFrame({
               </Link>
             ))}
             {has(site, "booking") ? (
-              <Link href={href(base, "/contact")} className="mt-2 inline-block bg-[var(--ps-accent)] px-4 py-2 text-sm font-semibold text-white" onClick={() => setOpen(false)}>
+              <Link href={href(base, "/contact")} className="ps-cta mt-2 inline-block px-4 py-2 text-sm font-semibold" onClick={() => setOpen(false)}>
                 Make an enquiry
               </Link>
             ) : null}
@@ -131,7 +131,7 @@ export function SiteFrame({
             <p className="mt-3 text-sm text-[var(--ps-body)]">{[site.addressLine1, site.city, site.state, site.zip].filter(Boolean).join(", ")}</p>
           </div>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Visit</p>
+            <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Visit</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link href={href(base, "/expertise")}>Expertise</Link></li>
               {has(site, "people") ? <li><Link href={href(base, "/people")}>People</Link></li> : null}
@@ -140,7 +140,7 @@ export function SiteFrame({
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Legal</p>
+            <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Legal</p>
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link href={href(base, "/legal/privacy")}>Privacy notice</Link></li>
               <li><Link href={href(base, "/legal/cookies")}>Cookie policy</Link></li>
@@ -151,7 +151,7 @@ export function SiteFrame({
             </ul>
           </div>
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Contact</p>
+            <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">Contact</p>
             <ul className="mt-3 space-y-2 text-sm">
               {site.phone ? <li><a href={`tel:${site.phone.replace(/\s/g, "")}`}>{site.phone}</a></li> : null}
               {site.email ? <li><a href={`mailto:${site.email}`}>{site.email}</a></li> : null}
@@ -169,17 +169,17 @@ export function SiteFrame({
         </p>
       </footer>
       {cookieChoice === null ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ps-line)] bg-[var(--ps-card)] px-6 py-4 shadow-[0_12px_30px_-18px_rgba(24,24,24,0.2)]" role="dialog" aria-label="Cookie choice">
+        <div className="ps-cookie fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ps-line)] bg-[var(--ps-card)] px-6 py-4 shadow-[0_12px_30px_-18px_rgba(24,24,24,0.2)]" role="dialog" aria-label="Cookie choice">
           <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-[var(--ps-body)]">
               This site can store your cookie choice on this browser. It does not load advertising or analytics scripts.{" "}
               <Link href={href(base, "/legal/cookies")} className="underline">Cookie policy</Link>
             </p>
             <div className="flex gap-2">
-              <button type="button" className="border border-[var(--ps-line)] bg-[var(--ps-card)] px-4 py-2 text-sm text-[var(--ps-body)]" onClick={() => chooseCookie("necessary")}>
+              <button type="button" className="ps-ghost px-4 py-2 text-sm" onClick={() => chooseCookie("necessary")}>
                 Necessary only
               </button>
-              <button type="button" className="bg-[var(--ps-accent)] px-4 py-2 text-sm font-semibold text-white" onClick={() => chooseCookie("accept")}>
+              <button type="button" className="ps-cta px-4 py-2 text-sm font-semibold" onClick={() => chooseCookie("accept")}>
                 Accept
               </button>
             </div>
@@ -198,13 +198,13 @@ export function Portrait({ initials, name, src }: { initials: string; name: stri
       <img
         src={src}
         alt=""
-        className="aspect-[4/5] w-full object-cover object-[center_18%]"
+        className="ps-photo aspect-[4/5] w-full object-cover object-[center_18%]"
       />
     );
   }
   return (
     <div
-      className="flex aspect-[4/5] items-end bg-[#e8eaed] p-5 text-5xl font-semibold text-[#5c5c5c]"
+      className="flex aspect-[4/5] items-end bg-[var(--ps-sand)] p-5 text-5xl font-semibold text-[var(--ps-meta)]"
       style={serifStyle}
       role="img"
       aria-label={`Portrait placeholder for ${name}`}
@@ -218,9 +218,10 @@ export function PageIntro({ kicker, title, lede }: { kicker: string; title: stri
   return (
     <header className="bg-[var(--ps-paper)]">
       <div className="mx-auto max-w-6xl px-6 pb-16 pt-16 lg:pb-20 lg:pt-24">
-        <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{kicker}</p>
+        <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{kicker}</p>
         <h1 className="mt-4 max-w-4xl text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-[var(--ps-ink)] sm:text-6xl lg:text-7xl" style={serifStyle}>
           {title}
+          <span className="ps-rule" aria-hidden="true" />
         </h1>
         {lede ? <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--ps-body)]">{lede}</p> : null}
       </div>
@@ -231,9 +232,10 @@ export function PageIntro({ kicker, title, lede }: { kicker: string; title: stri
 export function SectionTitle({ kicker, title }: { kicker?: string; title: string }) {
   return (
     <div>
-      {kicker ? <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{kicker}</p> : null}
+      {kicker ? <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{kicker}</p> : null}
       <h2 className={`${kicker ? "mt-3" : ""} text-4xl font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--ps-ink)] sm:text-5xl`} style={serifStyle}>
         {title}
+        <span className="ps-rule" aria-hidden="true" />
       </h2>
     </div>
   );

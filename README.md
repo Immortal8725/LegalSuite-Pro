@@ -18,7 +18,7 @@ South Africa is the default tenant. Texas remains on a second firm so both docke
 | Client portal (Texas) | `smith-associates` | `sarah@example.com` | `portal123` |
 | Platform operator | `legalsuite` | `ops@legalsuite.pro` | `password` |
 
-Public site (published): `/firm/ndlovu-partners`. Smith & Associates is waiting for platform approval, so `/firm/smith-associates` stays off. A firm owner edits features under Public site. The operator approves them under Site approvals. See [docs/tenant-public-site.md](docs/tenant-public-site.md).
+Public site (published, dark appearance): `/firm/ndlovu-partners`. Smith & Associates is waiting for platform approval, so `/firm/smith-associates` stays off. A firm owner edits features under Public site. The operator approves them under Site approvals. See [docs/tenant-public-site.md](docs/tenant-public-site.md).
 
 On the Sandton tenant, open **Practice fitness** and **Trust**. The section 86 three-way is deliberately unbalanced (bank short R11,750). C-2002 has an overdue Act 40 s 3 notice; trial status is blocked until you lodge, serve, or apply for condonation.
 
