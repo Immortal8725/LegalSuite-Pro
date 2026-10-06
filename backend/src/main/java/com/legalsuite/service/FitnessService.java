@@ -105,7 +105,7 @@ public class FitnessService {
         items.add(item("production-db", onPostgres, onPostgres ? "product" : "you",
                 "PostgreSQL for the practice database",
                 onPostgres
-                        ? "This process is on PostgreSQL. TLS, a public domain, Stripe keys, and Twilio KYC are still operator work. Forced 2FA is not on for demo users."
+                        ? "This process is on PostgreSQL. TLS, a public domain, PayFast merchant signup, and Twilio KYC are still operator work. Forced 2FA is not on for demo users."
                         : "This process is on H2. For a hosted pilot, start Postgres and set SPRING_PROFILES_ACTIVE=postgres. See the README hosted runbook. TLS and a real domain stay with the operator."));
         items.add(item("caselines", true, "product",
                 za ? "RAF 1 lodge pack" : "E-filing pack",
@@ -125,7 +125,7 @@ public class FitnessService {
         m.put("docket", dashboard.docket(tid));
         m.put("items", items);
         m.put("next", za
-                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Hosted Postgres is in the README. TLS, the domain, Stripe, and Twilio KYC remain operator work."
+                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Hosted Postgres is in the README. TLS, the domain, PayFast merchant signup, and Twilio KYC remain operator work."
                 : "Certify this month's three-way recon, then put the ledger on Postgres. That is what turns the demo into a practice.");
         return m;
     }
