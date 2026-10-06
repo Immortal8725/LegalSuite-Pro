@@ -61,7 +61,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | Surface | Route | Who |
 | --- | --- | --- |
 | Marketing | `/` | Public |
-| Firm site + intake | `/firm/{slug}` | Public |
+| Firm site + intake | `/firm/{slug}` | Public. Only published sites, and only features a platform operator has approved. |
 | Attorney login | `/login` (requires firm slug) | Staff |
 | Client portal | `/portal`, `/portal/login` | Clients |
 | Public sign | `/sign/{id}` | Signer (identity number required) |

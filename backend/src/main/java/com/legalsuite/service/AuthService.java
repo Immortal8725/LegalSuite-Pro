@@ -46,6 +46,7 @@ public class AuthService {
     private final ClientRepository clients;
     private final JwtService jwt;
     private final PasswordEncoder encoder;
+    private final PublicSiteService publicSites;
 
     public AuthService(
             TenantRepository tenants,
@@ -57,7 +58,8 @@ public class AuthService {
             LandingPageRepository landingPages,
             ClientRepository clients,
             JwtService jwt,
-            PasswordEncoder encoder) {
+            PasswordEncoder encoder,
+            PublicSiteService publicSites) {
         this.tenants = tenants;
         this.users = users;
         this.refreshTokens = refreshTokens;
@@ -68,6 +70,7 @@ public class AuthService {
         this.clients = clients;
         this.jwt = jwt;
         this.encoder = encoder;
+        this.publicSites = publicSites;
     }
 
     @Transactional
@@ -221,8 +224,9 @@ public class AuthService {
                 + " represents individuals and businesses with the same care a trusted counselor would give family.");
         page.setColorsJson("{\"primary\":\"#1a365d\",\"accent\":\"#c6a052\"}");
         page.setSeoTitle(req.firmName() + " | Law Firm");
-        page.setPublished(true);
+        page.setPublished(false);
         landingPages.save(page);
+        publicSites.ensureDraft(tenant);
 
         return tokens(admin, tenant);
     }

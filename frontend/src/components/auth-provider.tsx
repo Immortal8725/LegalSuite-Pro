@@ -75,7 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: data.user,
         tenant: data.tenant,
       });
-      router.push(data.tenant.onboardingCompleted === false ? "/onboarding" : "/dashboard");
+      const dest =
+        data.user.role === "superadmin"
+          ? "/platform/sites"
+          : data.tenant.onboardingCompleted === false
+            ? "/onboarding"
+            : "/dashboard";
+      router.push(dest);
       return { requiresTotp: false };
     },
     [apply, router]

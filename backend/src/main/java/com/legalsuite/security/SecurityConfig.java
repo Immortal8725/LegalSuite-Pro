@@ -44,6 +44,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/check-slug/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/landing/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/sites/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/public/sites/*/subscribe").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/intake/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/sign/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sign/**").permitAll()

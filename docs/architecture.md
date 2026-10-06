@@ -14,7 +14,9 @@ JPA  →  H2 (dev) / PostgreSQL (prod)
 
 ## Tenancy
 
-`JwtAuthFilter` parses the bearer token, writes `tenantId`, `userId`, `role`, and `email` into `TenantContext`, then clears them in `finally`. Repositories always query `findBy…AndTenantId`. Public routes (`/landing/{slug}`, `POST /intake/{slug}`, `/sign/{id}`, login/register) skip the filter's auth requirement but still never leak another firm's rows.
+`JwtAuthFilter` parses the bearer token, writes `tenantId`, `userId`, `role`, and `email` into `TenantContext`, then clears them in `finally`. Repositories always query `findBy…AndTenantId`. Public routes (`/landing/{slug}`, `/public/sites/{slug}`, `POST /intake/{slug}`, `/sign/{id}`, login/register) skip the filter's auth requirement but still never leak another firm's rows.
+
+The public marketing site is a separate surface from the staff desk. A firm owner toggles features. A platform operator (`superadmin`) approves an enable, and a publish, before that feature is returned by the public API. See [tenant-public-site.md](tenant-public-site.md).
 
 ## Modules
 

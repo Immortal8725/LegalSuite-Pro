@@ -468,6 +468,72 @@ export type Integration = {
   publicBaseUrlSet?: boolean;
 };
 
+export type PublicPerson = {
+  id: string;
+  fullName: string;
+  initials: string;
+  title: string;
+  phone?: string | null;
+  email?: string | null;
+  bio?: string | null;
+};
+
+export type PublicSite = {
+  published: boolean;
+  slug: string;
+  firmName: string;
+  tagline?: string;
+  accent?: string;
+  accentHex?: string;
+  phone?: string;
+  email?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+  about?: string;
+  features?: string[];
+  practices?: { name: string; slug: string }[];
+  people?: PublicPerson[];
+  insights?: { slug: string; title: string; type: string; date: string; summary: string; body: string }[];
+  situations?: { slug: string; title: string; summary: string }[];
+  recognition?: { year: string; source: string; title: string }[];
+  feesNote?: string;
+  whatsappUrl?: string | null;
+  informationOfficerName?: string | null;
+  informationOfficerEmail?: string | null;
+};
+
+export type PublicSiteFeatureState = {
+  key: string;
+  label: string;
+  description: string;
+  requested: boolean;
+  approvalStatus: string;
+  note?: string | null;
+  live: boolean;
+};
+
+export type PublicSiteAdmin = {
+  tenantId: string;
+  slug: string;
+  publishStatus: string;
+  publishNote?: string | null;
+  firmName: string;
+  tagline: string;
+  accent: string;
+  about: string;
+  liveFirmName?: string | null;
+  liveTagline?: string | null;
+  liveAccent?: string | null;
+  liveAbout?: string | null;
+  brandingStatus: string;
+  brandingNote?: string | null;
+  accents: { key: string; hex: string; label: string }[];
+  features: PublicSiteFeatureState[];
+};
+
 export type Landing = {
   tenant: {
     firmName: string;

@@ -102,6 +102,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [showNotifs, setShowNotifs] = useState(false);
 
   const enabled = new Set(tenant?.enabledModules || []);
+  const role = (user?.role || "").toLowerCase();
+  const tenantAdmin = role === "owner" || role === "partner" || role === "director";
+  const superadmin = role === "superadmin";
+  const nav = NAV.map((section) => {
+    if (section.section !== "Admin") return section;
+    const items = [...section.items];
+    if (tenantAdmin) {
+      items.splice(items.length - 1, 0, { href: "/website", label: "Public site", icon: Globe });
+    }
+    if (superadmin) {
+      items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
+    }
+    return { ...section, items };
+  });
 
   useEffect(() => {
     apiGet<Notice[]>("/api/v1/notifications")
@@ -142,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV.map((section) => (
+          {nav.map((section) => (
             <div key={section.section} className="mb-5">
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
                 {section.section}

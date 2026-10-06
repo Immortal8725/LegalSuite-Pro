@@ -8,7 +8,6 @@ import com.legalsuite.domain.Client;
 import com.legalsuite.domain.ConflictCheck;
 import com.legalsuite.domain.Contact;
 import com.legalsuite.domain.Conversation;
-import com.legalsuite.domain.LandingPage;
 import com.legalsuite.domain.Lead;
 import com.legalsuite.domain.LegalCase;
 import com.legalsuite.domain.Tenant;
@@ -19,7 +18,6 @@ import com.legalsuite.repo.ClientRepository;
 import com.legalsuite.repo.ConflictCheckRepository;
 import com.legalsuite.repo.ContactRepository;
 import com.legalsuite.repo.ConversationRepository;
-import com.legalsuite.repo.LandingPageRepository;
 import com.legalsuite.repo.LeadRepository;
 import com.legalsuite.repo.LegalCaseRepository;
 import com.legalsuite.repo.SignatureRequestRepository;
@@ -39,7 +37,6 @@ public class CommsService {
     private final ConversationRepository conversations;
     private final ChatMessageRepository messages;
     private final AppNotificationRepository notifications;
-    private final LandingPageRepository landingPages;
     private final TenantRepository tenants;
     private final LeadRepository leads;
     private final ClientRepository clients;
@@ -48,14 +45,12 @@ public class CommsService {
     private final ConflictCheckRepository conflicts;
     private final AppUserRepository users;
     private final PracticeService practice;
-    private final AuthService auth;
     private final SignatureRequestRepository signatures;
 
     public CommsService(
             ConversationRepository conversations,
             ChatMessageRepository messages,
             AppNotificationRepository notifications,
-            LandingPageRepository landingPages,
             TenantRepository tenants,
             LeadRepository leads,
             ClientRepository clients,
@@ -64,12 +59,10 @@ public class CommsService {
             ConflictCheckRepository conflicts,
             AppUserRepository users,
             PracticeService practice,
-            AuthService auth,
             SignatureRequestRepository signatures) {
         this.conversations = conversations;
         this.messages = messages;
         this.notifications = notifications;
-        this.landingPages = landingPages;
         this.tenants = tenants;
         this.leads = leads;
         this.clients = clients;
@@ -78,7 +71,6 @@ public class CommsService {
         this.conflicts = conflicts;
         this.users = users;
         this.practice = practice;
-        this.auth = auth;
         this.signatures = signatures;
     }
 
@@ -159,23 +151,6 @@ public class CommsService {
             n.setRead(true);
             notifications.save(n);
         });
-    }
-
-    public Map<String, Object> publicLanding(String slug) {
-        Tenant tenant = tenants.findBySlug(slug).orElseThrow(() -> com.legalsuite.common.ApiException.notFound("Firm not found"));
-        LandingPage page = landingPages.findByTenantId(tenant.getId()).orElse(new LandingPage());
-        Map<String, Object> m = new HashMap<>();
-        m.put("tenant", auth.tenantView(tenant));
-        m.put("template", page.getTemplate());
-        m.put("heroTitle", page.getHeroTitle() == null ? tenant.getFirmName() : page.getHeroTitle());
-        m.put("heroSubtitle", page.getHeroSubtitle());
-        m.put("aboutText", page.getAboutText());
-        m.put("colors", JsonLists.map(page.getColorsJson()));
-        m.put("attorneys", users.findByTenantIdOrderByLastNameAsc(tenant.getId()).stream()
-                .filter(u -> List.of("owner", "partner", "attorney", "associate").contains(u.getRole()))
-                .map(auth::userView).toList());
-        m.put("practiceAreas", JsonLists.strings(tenant.getPracticeAreasJson()));
-        return m;
     }
 
     @Transactional

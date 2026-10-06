@@ -74,11 +74,18 @@ export default function SettingsPage() {
         title="Firm settings"
         subtitle="FFC, information officer, and the fields that feed invoices and the public site."
         actions={
-          tenant?.slug ? (
-            <Link href={`/firm/${tenant.slug}`} className="text-sm font-semibold text-navy underline">
-              View public site
-            </Link>
-          ) : null
+          <span className="flex gap-4">
+            {user && ["owner", "partner", "director"].includes(user.role) ? (
+              <Link href="/website" className="text-sm font-semibold text-navy underline">
+                Public site features
+              </Link>
+            ) : null}
+            {tenant?.slug ? (
+              <Link href={`/firm/${tenant.slug}`} className="text-sm font-semibold text-navy underline">
+                View public site
+              </Link>
+            ) : null}
+          </span>
         }
       />
       <ErrorBanner error={error} />
