@@ -107,6 +107,7 @@ export default function TeamPage() {
             <Th>Role</Th>
             <Th>Rate</Th>
             <Th>Status</Th>
+            <Th>Website</Th>
           </tr>
         </thead>
         <tbody>
@@ -169,6 +170,29 @@ export default function TeamPage() {
                     </span>
                   ) : (
                     u.onlineStatus || "offline"
+                  )}
+                </Td>
+                <Td>
+                  {canManage ? (
+                    <label className="inline-flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={u.publicProfile !== false}
+                        aria-label={`Show ${u.fullName} on the public People page`}
+                        onChange={async (e) => {
+                          setError(null);
+                          try {
+                            await apiPatch(`/api/v1/users/${u.id}`, { publicProfile: e.target.checked });
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Could not update the website listing");
+                          }
+                          await load();
+                        }}
+                      />
+                      {u.publicProfile !== false ? "Listed" : "Hidden"}
+                    </label>
+                  ) : (
+                    <span className="text-xs">{u.publicProfile !== false ? "Listed" : "Hidden"}</span>
                   )}
                 </Td>
               </tr>

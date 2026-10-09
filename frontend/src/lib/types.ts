@@ -440,6 +440,7 @@ export type TeamMember = {
   hourlyRate?: number;
   onlineStatus?: string;
   mustChangePassword?: boolean;
+  publicProfile?: boolean;
 };
 
 export type InviteResult = {

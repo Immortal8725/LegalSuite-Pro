@@ -118,7 +118,9 @@ public class CommsService {
                             c.setType("direct");
                             return conversations.save(c);
                         })
-                : conversations.findById(conversationId).orElseThrow(() -> com.legalsuite.common.ApiException.notFound("Conversation not found"));
+                : conversations.findById(conversationId)
+                        .filter(c -> TenantContext.requireTenant().equals(c.getTenantId()))
+                        .orElseThrow(() -> com.legalsuite.common.ApiException.notFound("Conversation not found"));
         ChatMessage msg = new ChatMessage();
         msg.setTenantId(TenantContext.requireTenant());
         msg.setConversationId(conv.getId());
@@ -147,7 +149,10 @@ public class CommsService {
 
     @Transactional
     public void markRead(UUID id) {
-        notifications.findById(id).ifPresent(n -> {
+        notifications.findById(id)
+                .filter(n -> TenantContext.requireTenant().equals(n.getTenantId())
+                        && TenantContext.requireUser().equals(n.getUserId()))
+                .ifPresent(n -> {
             n.setRead(true);
             notifications.save(n);
         });

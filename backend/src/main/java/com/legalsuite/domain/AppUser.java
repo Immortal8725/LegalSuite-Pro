@@ -48,6 +48,8 @@ public class AppUser {
     private boolean totpEnabled;
     /** Set for invited users with a temporary password; cleared when they choose their own. */
     private Boolean passwordChangeRequired;
+    /** Listed on the firm's public People page. Null (older rows) counts as listed; new invites start hidden. */
+    private Boolean publicProfile;
     private Instant createdAt = Instant.now();
 
     public String getFullName() {
@@ -62,5 +64,9 @@ public class AppUser {
 
     public boolean mustChangePassword() {
         return Boolean.TRUE.equals(passwordChangeRequired);
+    }
+
+    public boolean listedPublicly() {
+        return !Boolean.FALSE.equals(publicProfile);
     }
 }

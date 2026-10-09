@@ -201,6 +201,8 @@ public class TenantService {
         String temporary = temporaryPassword();
         user.setPasswordHash(encoder.encode(temporary));
         user.setPasswordChangeRequired(true);
+        // Not on the public People page until a firm admin publishes the profile.
+        user.setPublicProfile(false);
         if (body.get("hourlyRate") != null) {
             user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         }
@@ -248,6 +250,7 @@ public class TenantService {
         if (body.get("status") != null) user.setStatus(String.valueOf(body.get("status")));
         if (body.get("title") != null) user.setTitle(String.valueOf(body.get("title")));
         if (body.get("hourlyRate") != null) user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
+        if (body.get("publicProfile") != null) user.setPublicProfile(Boolean.parseBoolean(String.valueOf(body.get("publicProfile"))));
         users.save(user);
         audit.record("user.update", "user", user.getId().toString(), user.getEmail() + " " + String.join(",", body.keySet()) + (body.get("role") == null ? "" : " role " + user.getRole()));
         return authService.userView(user);

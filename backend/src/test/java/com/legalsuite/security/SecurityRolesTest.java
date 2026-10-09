@@ -161,6 +161,21 @@ class SecurityRolesTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void crossTenantConversationCannotBePostedInto() throws Exception {
+        String thabo = token("ndlovu-partners", "thabo@ndlovulaw.co.za", "password");
+        String john = token("smith-associates", "john@smithlaw.com", "password");
+        String conversation = data(mvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + john))
+                .andExpect(status().isOk()).andReturn()).get(0).get("id").asText();
+        mvc.perform(post("/api/v1/messages").header("Authorization", "Bearer " + thabo)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"conversationId\":\"" + conversation + "\",\"body\":\"cross-tenant\"}"))
+                .andExpect(status().isNotFound());
+        String after = mvc.perform(get("/api/v1/conversations").header("Authorization", "Bearer " + john))
+                .andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertFalse(after.contains("cross-tenant"));
+    }
+
     private JsonNode me(String token) throws Exception {
         return data(mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andReturn()).get("user");

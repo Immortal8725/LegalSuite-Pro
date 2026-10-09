@@ -365,6 +365,7 @@ public class AuthService {
         m.put("barNumber", user.getBarNumber());
         m.put("totpEnabled", user.isTotpEnabled());
         m.put("mustChangePassword", user.mustChangePassword());
+        m.put("publicProfile", user.listedPublicly());
         return m;
     }
 
