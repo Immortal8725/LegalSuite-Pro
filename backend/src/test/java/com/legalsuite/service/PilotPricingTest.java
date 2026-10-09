@@ -24,6 +24,9 @@ class PilotPricingTest {
     @Autowired
     MockMvc mvc;
 
+    @Autowired
+    org.springframework.core.env.Environment env;
+
     @Test
     void capsUnlimitedVoiceAndDoesNotInventARetainer() {
         assertEquals(0, Pricing.capIncludedMinutes(null));
@@ -48,7 +51,7 @@ class PilotPricingTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("up"))
-                .andExpect(jsonPath("$.data.database").value("h2"))
+                .andExpect(jsonPath("$.data.database").value(env.matchesProfiles("postgres") ? "postgres" : "h2"))
                 .andExpect(jsonPath("$.data.databaseUp").value(true))
                 .andReturn()
                 .getResponse()
