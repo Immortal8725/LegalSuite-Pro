@@ -6,7 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select } from "@/components/ui/input";
-import type { TeamMember } from "@/lib/types";
+import type { InviteResult, TeamMember } from "@/lib/types";
 
 const ROLES = ["owner", "admin", "partner", "attorney", "associate", "paralegal", "receptionist", "staff"];
 // Same order as the server (Roles.RANK): lowest first.
@@ -33,7 +33,8 @@ export default function TeamPage() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
-  const [issued, setIssued] = useState<{ email: string; password: string } | null>(null);
+  const [issued, setIssued] = useState<InviteResult | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
 
   const load = () => apiGet<TeamMember[]>("/api/v1/users").then(setRows).catch((e) => setError(e.message));
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function TeamPage() {
         title="Team & roles"
         subtitle={
           canManage
-            ? "Invite attorneys and staff. Each invite gets a one-time password that must be changed at first sign-in."
+            ? "Invite attorneys and staff. They get an email link to choose their own password. If email is not set up, you get a one-time password to pass on."
             : "Your colleagues and their roles. Ask a firm owner or admin to invite people or change roles."
         }
         actions={
@@ -64,14 +65,32 @@ export default function TeamPage() {
         }
       />
       <ErrorBanner error={error} />
-      {issued && (
+      {issued && issued.inviteEmailSent && (
+        <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
+          <p className="font-semibold">Invite emailed to {issued.email}</p>
+          <p className="mt-1 text-xs">The link lets them choose their own password. It works once and expires in 72 hours.</p>
+          <button type="button" className="mt-2 text-xs font-semibold underline" onClick={() => setIssued(null)}>
+            Done
+          </button>
+        </div>
+      )}
+      {issued && !issued.inviteEmailSent && issued.temporaryPassword && (
         <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="status">
           <p className="font-semibold">One-time password for {issued.email}</p>
+          {issued.inviteEmailProblem && <p className="mt-1 text-xs">{issued.inviteEmailProblem}</p>}
           <p className="mt-1">
-            <code className="rounded bg-white px-2 py-1 font-mono text-base" data-testid="temporary-password">
-              {issued.password}
+            <code className="break-all rounded bg-white px-2 py-1 font-mono text-base" data-testid="temporary-password">
+              {issued.temporaryPassword}
             </code>
           </p>
+          {issued.inviteLink && (
+            <p className="mt-2 break-all text-xs">
+              Or send them this set-password link (works once, 72 hours):{" "}
+              <span className="font-mono" data-testid="invite-link">
+                {issued.inviteLink}
+              </span>
+            </p>
+          )}
           <p className="mt-2 text-xs">
             Share it with them privately. It is shown only once and they must choose their own password when they first sign in.
           </p>
@@ -123,7 +142,35 @@ export default function TeamPage() {
                   )}
                 </Td>
                 <Td>{u.hourlyRate ?? "n/a"}</Td>
-                <Td>{u.onlineStatus || "offline"}</Td>
+                <Td>
+                  {u.mustChangePassword ? (
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-amber-700">Invite pending</span>
+                      {canManage && u.id !== user?.id && (
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-navy underline disabled:opacity-50"
+                          disabled={resending === u.id}
+                          onClick={async () => {
+                            setError(null);
+                            setResending(u.id);
+                            try {
+                              setIssued(await apiPost<InviteResult>(`/api/v1/users/${u.id}/resend-invite`, {}));
+                            } catch (err) {
+                              setError(err instanceof Error ? err.message : "Could not resend the invite");
+                            } finally {
+                              setResending(null);
+                            }
+                          }}
+                        >
+                          {resending === u.id ? "Sending…" : "Resend invite"}
+                        </button>
+                      )}
+                    </span>
+                  ) : (
+                    u.onlineStatus || "offline"
+                  )}
+                </Td>
               </tr>
             );
           })}
@@ -140,8 +187,8 @@ export default function TeamPage() {
               setSaving(true);
               setDialogError(null);
               try {
-                const created = await apiPost<{ email: string; temporaryPassword?: string }>("/api/v1/users/invite", form);
-                if (created.temporaryPassword) setIssued({ email: created.email, password: created.temporaryPassword });
+                const created = await apiPost<InviteResult>("/api/v1/users/invite", form);
+                setIssued(created);
                 setOpen(false);
                 await load();
               } catch (err) {

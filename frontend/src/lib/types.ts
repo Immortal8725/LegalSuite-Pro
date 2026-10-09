@@ -439,6 +439,16 @@ export type TeamMember = {
   title?: string;
   hourlyRate?: number;
   onlineStatus?: string;
+  mustChangePassword?: boolean;
+};
+
+export type InviteResult = {
+  id: Id;
+  email: string;
+  inviteEmailSent?: boolean;
+  inviteEmailProblem?: string;
+  temporaryPassword?: string;
+  inviteLink?: string;
 };
 
 export type Lead = {

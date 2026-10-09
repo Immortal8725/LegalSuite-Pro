@@ -62,7 +62,7 @@ public class SmtpMailer implements MailGateway {
         mail.put("mail.smtp.writetimeout", "20000");
         if (props.getPort() == 465) {
             mail.put("mail.smtp.ssl.enable", "true");
-        } else if (props.getPort() != 25) {
+        } else if (props.getPort() != 25 && props.isStarttls()) {
             mail.put("mail.smtp.starttls.enable", "true");
             mail.put("mail.smtp.starttls.required", "true");
         }

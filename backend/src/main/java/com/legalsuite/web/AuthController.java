@@ -22,9 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthService auth;
+    private final com.legalsuite.service.InviteService invites;
 
-    public AuthController(AuthService auth) {
+    public AuthController(AuthService auth, com.legalsuite.service.InviteService invites) {
         this.auth = auth;
+        this.invites = invites;
+    }
+
+    /** Public. The token travels in the body, not the URL, so it stays out of access logs. */
+    @PostMapping("/invite/lookup")
+    public ApiResponse<Map<String, Object>> inviteLookup(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(invites.describe(body == null || body.get("token") == null ? "" : String.valueOf(body.get("token"))));
+    }
+
+    @PostMapping("/invite/accept")
+    public ApiResponse<Map<String, Object>> inviteAccept(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(invites.accept(body), "Password set");
     }
 
     @PostMapping("/login")

@@ -38,6 +38,7 @@ public class TenantService {
     private final PasswordEncoder encoder;
     private final AuthService authService;
     private final AuditService audit;
+    private final InviteService inviteService;
 
     public TenantService(
             TenantRepository tenants,
@@ -48,8 +49,10 @@ public class TenantService {
             LandingPageRepository landingPages,
             PasswordEncoder encoder,
             AuthService authService,
-            AuditService audit) {
+            AuditService audit,
+            InviteService inviteService) {
         this.audit = audit;
+        this.inviteService = inviteService;
         this.tenants = tenants;
         this.plans = plans;
         this.modules = modules;
@@ -203,8 +206,25 @@ public class TenantService {
         }
         users.save(user);
         Map<String, Object> view = new HashMap<>(authService.userView(user));
-        view.put("temporaryPassword", temporary);
         audit.record("user.invite", "user", user.getId().toString(), email + " as " + role);
+        view.putAll(inviteService.deliver(user, temporary));
+        return view;
+    }
+
+    /** Send a fresh invite to someone who has not yet chosen a password. Older links stop working. */
+    @Transactional
+    public Map<String, Object> resendInvite(UUID id) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can resend an invite.");
+        AppUser user = users.findByIdAndTenantId(id, TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        if (!user.mustChangePassword()) {
+            throw ApiException.badRequest("This person has already set their password.");
+        }
+        String temporary = temporaryPassword();
+        user.setPasswordHash(encoder.encode(temporary));
+        users.save(user);
+        Map<String, Object> view = new HashMap<>(authService.userView(user));
+        view.putAll(inviteService.deliver(user, temporary));
         return view;
     }
 

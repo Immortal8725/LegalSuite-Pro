@@ -331,7 +331,7 @@ public class AuthService {
         return out;
     }
 
-    private Map<String, Object> tokens(AppUser user, Tenant tenant) {
+    Map<String, Object> tokens(AppUser user, Tenant tenant) {
         String access = jwt.accessToken(user);
         String refresh = jwt.refreshToken(user);
         RefreshToken rt = new RefreshToken();

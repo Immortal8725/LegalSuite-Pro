@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/voice/twilio/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/outbound/twilio/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/product-billing/payfast/itn").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/invite/lookup", "/api/v1/auth/invite/accept").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
