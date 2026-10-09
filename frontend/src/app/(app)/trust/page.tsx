@@ -9,6 +9,7 @@ import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Invoice, Matter, TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
+import { useLatest } from "@/lib/use-latest";
 
 export default function TrustPage() {
   const { tenant } = useAuth();
@@ -54,11 +55,11 @@ export default function TrustPage() {
     }
     setRecon(await apiGet<TrustRecon>("/api/v1/trust/recon"));
   };
+  const loadLatest = useLatest(load);
   useEffect(() => {
-    load().catch((e) => setError(e.message));
     // Load once on mount. load() picks the selected account itself, so re-running on every change would loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadLatest.current().catch((e) => setError(e.message));
+  }, [loadLatest]);
 
   const acct = accounts.find((a) => a.id === selected);
   const live = acct?.recon;
@@ -295,7 +296,7 @@ export default function TrustPage() {
           Withdraws from this client&apos;s ledger on {acct?.accountName || "the selected account"} and records the matching fee payment. Only this client&apos;s ledger is used. The amount starts at the smaller of the invoice balance and this client&apos;s ledger.
         </p>
         <Label>Invoice</Label>
-        <Select
+        <Select aria-label="Invoice"
           value={fee.invoiceId}
           onChange={(e) => {
             const invoiceId = e.target.value;
@@ -352,7 +353,7 @@ export default function TrustPage() {
           disagree unless you write a full explanation.
         </p>
         <Label>Bank statement balance</Label>
-        <Input
+        <Input aria-label="Bank statement balance"
           type="number"
           value={bank.bankBalance}
           onChange={(e) => setBank({ ...bank, bankBalance: e.target.value })}
@@ -388,7 +389,7 @@ export default function TrustPage() {
           not Open Banking.
         </p>
         <Label>Statement file</Label>
-        <input
+        <input aria-label="Statement file"
           type="file"
           accept=".csv,text/csv,text/plain"
           className="mb-3 block text-sm"
@@ -399,7 +400,7 @@ export default function TrustPage() {
           }}
         />
         <Label>CSV</Label>
-        <Textarea className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
+        <Textarea aria-label="CSV" className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
       </Dialog>
     </div>
   );

@@ -124,15 +124,15 @@ export default function WebsiteSettingsPage() {
             <CardBody className="grid gap-4">
               <div>
                 <Label>Public name</Label>
-                <Input value={firmName} onChange={(e) => setFirmName(e.target.value)} />
+                <Input aria-label="Public name" value={firmName} onChange={(e) => setFirmName(e.target.value)} />
               </div>
               <div>
                 <Label>Tagline</Label>
-                <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
+                <Input aria-label="Tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} />
               </div>
               <div>
                 <Label>About</Label>
-                <Textarea rows={4} value={about} onChange={(e) => setAbout(e.target.value)} />
+                <Textarea aria-label="About" rows={4} value={about} onChange={(e) => setAbout(e.target.value)} />
               </div>
               <div>
                 <Label>Accent</Label>

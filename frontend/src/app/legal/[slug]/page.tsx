@@ -35,13 +35,13 @@ export default function LegalPage() {
         </Link>
       </nav>
       <article className="mx-auto max-w-3xl px-6 pb-16">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">PRODUCT.md §{doc.section}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">PRODUCT.md §{doc.section}</p>
         <h1 className="mt-2 text-3xl font-extrabold text-navy">{doc.title}</h1>
         <p className="mt-2 text-sm text-slate-500">
           Effective 16 September 2026. Binding long-form text is in PRODUCT.md. This page is the public copy.
         </p>
         <aside className="mt-8 rounded-xl border bg-slate-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Also in this pack</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Also in this pack</p>
           <ul className="mt-2 columns-1 gap-x-8 text-sm sm:columns-2">
             {LEGAL_DOCS.map((d) => (
               <li key={d.slug} className="break-inside-avoid py-0.5">

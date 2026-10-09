@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { PublicSite } from "@/lib/types";
@@ -195,11 +196,9 @@ export const serifStyle = { fontFamily: "var(--font-public-serif), Georgia, seri
 export function Portrait({ initials, name, src }: { initials: string; name: string; src?: string }) {
   if (src) {
     return (
-      <img
-        src={src}
-        alt=""
-        className="ps-photo aspect-[4/5] w-full object-cover object-[center_18%]"
-      />
+      <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
+        <Image src={src} alt={`Portrait of ${name}`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover object-[center_18%]" />
+      </div>
     );
   }
   return (

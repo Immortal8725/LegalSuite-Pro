@@ -128,21 +128,21 @@ export default function ProductBillingPage() {
               <p className="mb-4 text-sm text-slate-500">{status.note}</p>
               <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs text-slate-400">Seat price</p>
+                  <p className="text-xs text-slate-500">Seat price</p>
                   <p className="text-xl font-extrabold text-navy">{moneyExact(status.seatPrice, "ZAR")} / month</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">Seats on the account</p>
+                  <p className="text-xs text-slate-500">Seats on the account</p>
                   <p className="text-xl font-extrabold text-navy">{status.seatCount}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">Last payment</p>
+                  <p className="text-xs text-slate-500">Last payment</p>
                   <p className="text-xl font-extrabold text-navy">
                     {status.lastAmount ? moneyExact(status.lastAmount, "ZAR") : "None"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">Card token</p>
+                  <p className="text-xs text-slate-500">Card token</p>
                   <p className="text-xl font-extrabold text-navy">
                     {status.tokenPresent ? `On file, ending ${status.tokenHint || ""}` : "Not saved"}
                   </p>
@@ -163,7 +163,7 @@ export default function ProductBillingPage() {
                 <div className="flex flex-wrap items-end gap-3">
                   <div>
                     <Label>Seats</Label>
-                    <Input
+                    <Input aria-label="Seats"
                       type="number"
                       min={1}
                       max={100}
@@ -205,7 +205,7 @@ export default function ProductBillingPage() {
                 <div className="mb-4 flex flex-wrap items-end gap-3">
                   <div>
                     <Label>Period</Label>
-                    <Input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="w-44" />
+                    <Input aria-label="Period" type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className="w-44" />
                   </div>
                   <Button
                     variant="outline"

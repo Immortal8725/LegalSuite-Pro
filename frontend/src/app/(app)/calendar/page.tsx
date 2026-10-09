@@ -41,7 +41,7 @@ export default function CalendarPage() {
         {byDay.map(([day, list]) => (
           <Card key={day}>
             <CardBody>
-              <p className="mb-3 text-xs font-bold uppercase text-slate-400">{day}</p>
+              <p className="mb-3 text-xs font-bold uppercase text-slate-500">{day}</p>
               <div className="space-y-3">
                 {list.map((e) => (
                   <div key={e.id} className="flex flex-wrap justify-between gap-2 border-l-4 border-gold pl-3">
@@ -90,7 +90,7 @@ export default function CalendarPage() {
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Title</Label>
-          <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <Input aria-label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="hearing">Hearing</option>
             <option value="deadline">Deadline</option>

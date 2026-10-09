@@ -56,7 +56,7 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
       {fees.length > 0 && (
         <Section title="Fees">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400">
+            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
               <th className="py-1 pr-3 font-semibold">Date</th>
               <th className="py-1 pr-3 font-semibold">Description</th>
               <th className="py-1 pr-3 font-semibold">Time</th>
@@ -78,7 +78,7 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
       {disbursements.length > 0 && (
         <Section title="Disbursements">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400">
+            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
               <th className="py-1 pr-3 font-semibold">Date</th>
               <th className="py-1 pr-3 font-semibold">Description</th>
               <th className="py-1 pr-3 font-semibold">Vendor</th>
@@ -91,7 +91,7 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
                 <td className="py-1.5 pr-3">{showDate(line.date)}</td>
                 <td className="py-1.5 pr-3">
                   {line.description}
-                  {line.category ? <span className="ml-2 text-xs text-slate-400">{line.category}</span> : null}
+                  {line.category ? <span className="ml-2 text-xs text-slate-500">{line.category}</span> : null}
                 </td>
                 <td className="py-1.5 pr-3">{line.vendor || ""}</td>
                 <td className="py-1.5 text-right">{moneyExact(line.amount)}</td>

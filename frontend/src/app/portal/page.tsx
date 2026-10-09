@@ -167,7 +167,7 @@ export default function PortalHome() {
                                   }}
                                 >
                                   <Label>File</Label>
-                                  <Input
+                                  <Input aria-label="File"
                                     type="file"
                                     accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
                                     onChange={(e) => setProofFile(e.target.files?.[0] || null)}

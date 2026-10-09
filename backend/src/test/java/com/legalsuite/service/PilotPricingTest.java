@@ -89,4 +89,27 @@ class PilotPricingTest {
         MockEnvironment demo = new MockEnvironment();
         new ProdSecretsGuard(demo, "change-in-production").run(null);
     }
+
+    @Test
+    void postgresProfileNeedsDatabaseSecretsAndExactCorsOrigins() {
+        String secret = "a-real-secret-from-the-environment-0123456789";
+        MockEnvironment noDb = new MockEnvironment();
+        noDb.setActiveProfiles("postgres");
+        assertThrows(IllegalStateException.class, () -> new ProdSecretsGuard(noDb, secret).run(null));
+
+        MockEnvironment wildcard = new MockEnvironment();
+        wildcard.setActiveProfiles("postgres");
+        wildcard.setProperty("spring.datasource.url", "jdbc:postgresql://db/legalsuite");
+        wildcard.setProperty("spring.datasource.password", "from-env");
+        wildcard.setProperty("legalsuite.cors.allowed-origins", "*");
+        assertThrows(IllegalStateException.class, () -> new ProdSecretsGuard(wildcard, secret).run(null));
+
+        MockEnvironment good = new MockEnvironment();
+        good.setActiveProfiles("postgres");
+        good.setProperty("spring.datasource.url", "jdbc:postgresql://db/legalsuite");
+        good.setProperty("spring.datasource.password", "from-env");
+        good.setProperty("legalsuite.cors.allowed-origins", "https://app.example.co.za");
+        good.setProperty("legalsuite.app-url", "https://app.example.co.za");
+        new ProdSecretsGuard(good, secret).run(null);
+    }
 }

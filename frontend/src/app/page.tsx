@@ -85,7 +85,7 @@ export default function MarketingPage() {
           <p className="mb-2 text-xs font-bold uppercase text-gold">Solo launch</p>
           <h3 className="text-lg font-bold">{LIGHT.name}</h3>
           <p className="mt-2 text-3xl font-extrabold text-navy">{LIGHT.price}</p>
-          <p className="text-xs text-slate-400">{LIGHT.note}</p>
+          <p className="text-xs text-slate-500">{LIGHT.note}</p>
           <ul className="mt-4 space-y-2 text-sm">
             {LIGHT.items.map((item) => (
               <li key={item} className="flex gap-2">

@@ -79,7 +79,7 @@ export default function FitnessPage() {
           </Card>
         ))}
       </div>
-      <p className="mt-8 text-xs text-slate-400">
+      <p className="mt-8 text-xs text-slate-500">
         {za
           ? "Clocks cite the Prescription Act, RAF Act, Act 40 of 2002, LRA, and LPA. Confirm interruptions and condonation before you rely on a date."
           : "Texas clocks cite the Civil Practice and Remedies Code. Confirm tolling before you rely on a date."}{" "}

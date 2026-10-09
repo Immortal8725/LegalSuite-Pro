@@ -29,12 +29,12 @@ export default function IntegrationsPage() {
             <CardHeader>
               <CardTitle>
                 {row.name}{" "}
-                <span className="ml-2 text-[11px] font-bold uppercase text-slate-400">{row.category}</span>
+                <span className="ml-2 text-[11px] font-bold uppercase text-slate-500">{row.category}</span>
               </CardTitle>
             </CardHeader>
             <CardBody>
               <p className="mb-3 text-sm text-slate-500">{row.description}</p>
-              <p className="mb-4 text-xs text-slate-400">{row.statusNote}</p>
+              <p className="mb-4 text-xs text-slate-500">{row.statusNote}</p>
               {row.provider === "payfast" && (
                 <p className="mb-4 text-xs text-slate-500">
                   {row.credentialsPresent

@@ -86,7 +86,8 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function TableWrap({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl bg-white shadow-card">
+    // Focusable so keyboard users can scroll a wide table sideways on a phone.
+    <div className="overflow-x-auto rounded-xl bg-white shadow-card" tabIndex={0} role="region" aria-label="Table">
       <table className="w-full text-sm">{children}</table>
     </div>
   );
@@ -94,7 +95,7 @@ export function TableWrap({ children }: { children: ReactNode }) {
 
 export function Th({ children }: { children?: ReactNode }) {
   return (
-    <th className="bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">
+    <th className="bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600">
       {children}
     </th>
   );

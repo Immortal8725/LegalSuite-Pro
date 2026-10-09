@@ -102,16 +102,16 @@ export default function ClientsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>First name</Label>
-              <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+              <Input aria-label="First name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
             </div>
             <div>
               <Label>Last name</Label>
-              <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+              <Input aria-label="Last name" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
             </div>
           </div>
           <div>
             <Label>Company</Label>
-            <Input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
+            <Input aria-label="Company" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
           </div>
           <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />

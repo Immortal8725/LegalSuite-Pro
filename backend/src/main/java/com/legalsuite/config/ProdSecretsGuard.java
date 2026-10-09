@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
  * A Postgres process must not.
  */
 @Component
-public class ProdSecretsGuard implements ApplicationRunner {
+public class ProdSecretsGuard implements ApplicationRunner, org.springframework.beans.factory.InitializingBean {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProdSecretsGuard.class);
     static final String DEV_SECRET_MARK = "change-in-production";
 
     private final Environment env;
@@ -23,7 +24,16 @@ public class ProdSecretsGuard implements ApplicationRunner {
     }
 
     @Override
+    public void afterPropertiesSet() {
+        check();
+    }
+
+    @Override
     public void run(ApplicationArguments args) {
+        check();
+    }
+
+    private void check() {
         boolean postgres = false;
         for (String profile : env.getActiveProfiles()) {
             if ("postgres".equals(profile)) postgres = true;
@@ -33,5 +43,27 @@ public class ProdSecretsGuard implements ApplicationRunner {
             throw new IllegalStateException(
                     "Postgres profile refused to start. Set LEGALSUITE_JWT_SECRET to a unique value of at least 32 characters. Do not commit it.");
         }
+        if (blank(env.getProperty("spring.datasource.url")) || blank(env.getProperty("spring.datasource.password"))) {
+            throw new IllegalStateException(
+                    "Postgres profile refused to start. Set DATABASE_URL, DB_USER and DB_PASSWORD in the environment.");
+        }
+        String origins = env.getProperty("legalsuite.cors.allowed-origins", "");
+        if (origins.contains("*")) {
+            throw new IllegalStateException("CORS_ALLOWED_ORIGINS must list exact origins, not *.");
+        }
+        if ("true".equalsIgnoreCase(env.getProperty("legalsuite.demo-data", "false"))) {
+            log.warn("LEGALSUITE_DEMO_DATA=true on the postgres profile. Use this only for a staging or demo database.");
+        }
+        if ("true".equalsIgnoreCase(env.getProperty("legalsuite.payfast.sandbox-local", "false"))) {
+            log.warn("PAYFAST_SANDBOX_LOCAL=true: PayFast confirmations are answered locally. Never on a live system.");
+        }
+        String appUrl = env.getProperty("legalsuite.app-url", "");
+        if (!appUrl.startsWith("https://")) {
+            log.warn("APP_URL is {}. Invite links should use the public https address.", appUrl);
+        }
+    }
+
+    private static boolean blank(String s) {
+        return s == null || s.isBlank();
     }
 }

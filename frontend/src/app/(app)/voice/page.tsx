@@ -11,6 +11,7 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select } from "@/components/ui/input";
 import type { AvailableNumber, CallRow, FirmNumber, Matter, PstnReadiness, TeamMember } from "@/lib/types";
 import { formatDateTime, moneyExact } from "@/lib/utils";
+import { useLatest } from "@/lib/use-latest";
 
 type Ethics = { state: string; country?: string; allPartyConsent: boolean; notice: string; statute?: string; pstnNotice?: string };
 
@@ -84,11 +85,11 @@ export default function VoicePage() {
       })
       .catch((e) => setError(e.message));
 
+  const loadLatest = useLatest(load);
   useEffect(() => {
-    load();
     // Load once on mount; later reloads are triggered by the actions on the page.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadLatest.current();
+  }, [loadLatest]);
 
   useEffect(() => {
     if (user?.phone && !callback) setCallback(user.phone);
@@ -262,11 +263,11 @@ export default function VoicePage() {
               <div className="grid gap-3">
                 <div>
                   <Label>Mobile or landline</Label>
-                  <Input value={landline} onChange={(e) => setLandline(e.target.value)} placeholder="082 555 0100" />
+                  <Input aria-label="Mobile or landline" value={landline} onChange={(e) => setLandline(e.target.value)} placeholder="082 555 0100" />
                 </div>
                 <div>
                   <Label>Label</Label>
-                  <Input value={landlineName} onChange={(e) => setLandlineName(e.target.value)} />
+                  <Input aria-label="Label" value={landlineName} onChange={(e) => setLandlineName(e.target.value)} />
                 </div>
               </div>
               <Button
@@ -291,7 +292,7 @@ export default function VoicePage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <Label>Country</Label>
-                  <Select value={country} onChange={(e) => setCountry(e.target.value)}>
+                  <Select aria-label="Country" value={country} onChange={(e) => setCountry(e.target.value)}>
                     <option value="ZA">ZA</option>
                     <option value="US">US</option>
                     <option value="GB">GB</option>
@@ -301,11 +302,11 @@ export default function VoicePage() {
                 </div>
                 <div>
                   <Label>Area code</Label>
-                  <Input value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="011 or 415" />
+                  <Input aria-label="Area code" value={areaCode} onChange={(e) => setAreaCode(e.target.value)} placeholder="011 or 415" />
                 </div>
                 <div>
                   <Label>City</Label>
-                  <Input value={locality} onChange={(e) => setLocality(e.target.value)} placeholder="Sandton" />
+                  <Input aria-label="City" value={locality} onChange={(e) => setLocality(e.target.value)} placeholder="Sandton" />
                 </div>
               </div>
               <Button
@@ -364,15 +365,15 @@ export default function VoicePage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div>
                 <Label>Number to call</Label>
-                <Input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="082 555 0199" />
+                <Input aria-label="Number to call" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="082 555 0199" />
               </div>
               <div>
                 <Label>Your phone (rings first)</Label>
-                <Input value={callback} onChange={(e) => setCallback(e.target.value)} placeholder="083 555 0100" />
+                <Input aria-label="Your phone (rings first)" value={callback} onChange={(e) => setCallback(e.target.value)} placeholder="083 555 0100" />
               </div>
               <div>
                 <Label>Caller ID</Label>
-                <Select value={callerId} onChange={(e) => setCallerId(e.target.value)}>
+                <Select aria-label="Caller ID" value={callerId} onChange={(e) => setCallerId(e.target.value)}>
                   <option value="">Automatic caller ID</option>
                   {activeIds.map((n) => (
                     <option key={n.id} value={n.id}>
@@ -383,7 +384,7 @@ export default function VoicePage() {
               </div>
               <div>
                 <Label>Matter</Label>
-                <Select
+                <Select aria-label="Matter"
                   value={matterId}
                   disabled={nonMatter}
                   onChange={(e) => {

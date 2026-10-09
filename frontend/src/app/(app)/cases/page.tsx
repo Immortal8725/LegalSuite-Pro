@@ -112,11 +112,11 @@ export default function CasesPage() {
         <div className="space-y-3">
           <div>
             <Label>Title</Label>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <Input aria-label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
           <div>
             <Label>Client</Label>
-            <Select value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+            <Select aria-label="Client" value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
               <option value="">Select…</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -127,15 +127,15 @@ export default function CasesPage() {
           </div>
           <div>
             <Label>Practice area</Label>
-            <Input value={form.practiceArea} onChange={(e) => setForm({ ...form, practiceArea: e.target.value })} />
+            <Input aria-label="Practice area" value={form.practiceArea} onChange={(e) => setForm({ ...form, practiceArea: e.target.value })} />
           </div>
           <div>
             <Label>Opposing party</Label>
-            <Input value={form.opposingParty} onChange={(e) => setForm({ ...form, opposingParty: e.target.value })} />
+            <Input aria-label="Opposing party" value={form.opposingParty} onChange={(e) => setForm({ ...form, opposingParty: e.target.value })} />
           </div>
           <div>
             <Label>Incident / accrual date</Label>
-            <Input type="date" value={form.accrualDate} onChange={(e) => setForm({ ...form, accrualDate: e.target.value })} />
+            <Input aria-label="Incident / accrual date" type="date" value={form.accrualDate} onChange={(e) => setForm({ ...form, accrualDate: e.target.value })} />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -147,7 +147,7 @@ export default function CasesPage() {
           </label>
           <div>
             <Label>Facts / assignment</Label>
-            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <Textarea aria-label="Facts / assignment" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
         </div>
       </Dialog>

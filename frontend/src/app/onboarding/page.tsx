@@ -54,15 +54,15 @@ export default function OnboardingPage() {
               <h2 className="sm:col-span-2 text-xl font-bold">Where should clients find you?</h2>
               <div>
                 <Label>Phone</Label>
-                <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                <Input aria-label="Phone" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
               </div>
               <div>
                 <Label>Website</Label>
-                <Input value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} />
+                <Input aria-label="Website" value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Street</Label>
-                <Input value={profile.addressLine1} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} />
+                <Input aria-label="Street" value={profile.addressLine1} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} />
               </div>
               <Input placeholder="City" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
               <Input placeholder="State" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
@@ -74,7 +74,7 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-bold">Public site template</h2>
               <div>
                 <Label>Tagline</Label>
-                <Input value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
+                <Input aria-label="Tagline" value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {TEMPLATES.map((t) => (
@@ -107,11 +107,11 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-bold">Default billing</h2>
               <div>
                 <Label>Hourly rate</Label>
-                <Input type="number" value={profile.defaultRate} onChange={(e) => setProfile({ ...profile, defaultRate: e.target.value })} />
+                <Input aria-label="Hourly rate" type="number" value={profile.defaultRate} onChange={(e) => setProfile({ ...profile, defaultRate: e.target.value })} />
               </div>
               <div>
                 <Label>Increment</Label>
-                <Select defaultValue="6">
+                <Select aria-label="Increment" defaultValue="6">
                   <option value="6">6 minutes (1/10 hour)</option>
                   <option value="15">15 minutes</option>
                 </Select>

@@ -8,6 +8,7 @@ import { Button, StatusBadge } from "@/components/page";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import type { SignReq } from "@/lib/types";
+import Image from "next/image";
 
 export default function PublicSignPage() {
   const params = useParams<{ id: string }>();
@@ -72,8 +73,14 @@ export default function PublicSignPage() {
                   </p>
                 )}
                 {doc.signatureDataUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="Signature" src={doc.signatureDataUrl} className="h-24 rounded border bg-white" />
+                  <Image
+                    alt="Signature"
+                    src={doc.signatureDataUrl}
+                    width={288}
+                    height={96}
+                    unoptimized
+                    className="h-24 w-auto rounded border bg-white"
+                  />
                 )}
               </div>
             ) : doc.status === "void" ? (
@@ -81,9 +88,9 @@ export default function PublicSignPage() {
             ) : (
               <div className="space-y-3">
                 <Label>Type your name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Input aria-label="Type your name" value={name} onChange={(e) => setName(e.target.value)} />
                 <Label>Identity number (SA ID, passport, or equivalent)</Label>
-                <Input
+                <Input aria-label="Identity number (SA ID, passport, or equivalent)"
                   value={identity}
                   onChange={(e) => setIdentity(e.target.value)}
                   placeholder="Required. Hashed into the instrument"

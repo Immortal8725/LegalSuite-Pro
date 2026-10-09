@@ -132,8 +132,8 @@ export default function DashboardPage() {
                 {item.title}
               </p>
               {item.citation && <p className="mt-1 text-[11px] font-semibold opacity-90">{item.citation}</p>}
-              {item.reason && <p className="mt-1 text-xs opacity-80">{item.reason}</p>}
-              <p className="text-xs opacity-80">
+              {item.reason && <p className="mt-1 text-xs">{item.reason}</p>}
+              <p className="text-xs">
                 {item.kind === "sol" ||
                 item.kind === "notice" ||
                 item.kind === "repose" ||

@@ -99,7 +99,7 @@ export default function TimePage() {
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Matter</Label>
-          <Select value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
+          <Select aria-label="Matter" value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
             <option value="">Unassigned</option>
             {cases.map((c) => (
               <option key={c.id} value={c.id}>
@@ -108,7 +108,7 @@ export default function TimePage() {
             ))}
           </Select>
           <Label>Minutes</Label>
-          <Input type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
+          <Input aria-label="Minutes" type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
           <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </div>
       </Dialog>

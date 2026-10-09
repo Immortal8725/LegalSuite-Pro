@@ -52,16 +52,16 @@ export default function ChangePasswordPage() {
         <ErrorBanner error={error} />
         <div>
           <Label>Current password</Label>
-          <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+          <Input aria-label="Current password" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
         </div>
         <div>
           <Label>New password</Label>
-          <Input type="password" autoComplete="new-password" minLength={10} value={next} onChange={(e) => setNext(e.target.value)} required />
+          <Input aria-label="New password" type="password" autoComplete="new-password" minLength={10} value={next} onChange={(e) => setNext(e.target.value)} required />
           <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>
         </div>
         <div>
           <Label>Confirm new password</Label>
-          <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+          <Input aria-label="Confirm new password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </div>
         <Button className="w-full" disabled={saving}>
           {saving ? "Saving…" : "Save password"}

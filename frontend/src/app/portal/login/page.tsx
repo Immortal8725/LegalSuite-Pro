@@ -37,15 +37,15 @@ export default function PortalLoginPage() {
         <ErrorBanner error={error} />
         <div>
           <Label>Firm ID</Label>
-          <Input value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
+          <Input aria-label="Firm ID" value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
         </div>
         <div>
           <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input aria-label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div>
           <Label>Password</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input aria-label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <Button className="w-full" disabled={loading}>
           {loading ? "Signing in…" : "Enter portal"}

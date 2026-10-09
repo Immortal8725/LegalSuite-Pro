@@ -160,7 +160,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {nav.map((section) => (
             <div key={section.section} className="mb-5">
-              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
                 {section.section}
               </p>
               {section.items.map((item) => {
@@ -202,11 +202,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-white px-4 sm:px-6">
-          <button className="rounded-full bg-slate-100 p-2 lg:hidden" onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className="rounded-full bg-slate-100 p-2 lg:hidden"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
             <Menu className="h-4 w-4" />
           </button>
           <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -236,7 +242,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       setQ("");
                     }}
                   >
-                    {c.displayName} <span className="text-slate-400">{c.email}</span>
+                    {c.displayName} <span className="text-slate-500">{c.email}</span>
                   </button>
                 ))}
                 {hits.cases.length === 0 && hits.clients.length === 0 && (
@@ -251,6 +257,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Button>
             <button
               className="relative rounded-full p-2 hover:bg-slate-100"
+              aria-label="Notifications"
+              aria-expanded={showNotifs}
               onClick={() => setShowNotifs((v) => !v)}
             >
               <Bell className="h-4 w-4" />

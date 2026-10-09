@@ -271,7 +271,7 @@ export default function BillingPage() {
                     {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
                     <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Payments</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Payments</p>
                         {(i.payments || []).length === 0 ? (
                           <p className="text-sm text-slate-500">No payments recorded.</p>
                         ) : (
@@ -290,7 +290,7 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Write-offs</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Write-offs</p>
                         {(i.writeOffs || []).length === 0 ? (
                           <p className="text-sm text-slate-500">No write-offs.</p>
                         ) : (
@@ -304,7 +304,7 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div className="md:col-span-2">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Proof of payment</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Proof of payment</p>
                         {(i.proofs || []).length === 0 ? (
                           <p className="text-sm text-slate-500">No slips on this invoice.</p>
                         ) : (
@@ -418,7 +418,7 @@ export default function BillingPage() {
           Balance due on {payFor?.invoiceNumber} is {moneyExact(payFor?.balanceDue)}. A payment cannot exceed that balance.
         </p>
         <Label>Amount</Label>
-        <Input value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
         <Select value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}>
           <option value="eft">EFT</option>
@@ -461,7 +461,7 @@ export default function BillingPage() {
           This writes off {writeForm.amount || asMoney(writeFor?.balanceDue)} on {writeFor?.invoiceNumber}. The invoice total stays {moneyExact(writeFor?.total)}. Amount already paid stays {moneyExact(writeFor?.amountPaid)}. The write-off is stored on its own so the original total, payments, and write-off still reconcile.
         </p>
         <Label>Amount</Label>
-        <Input value={writeForm.amount} onChange={(e) => setWriteForm({ ...writeForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={writeForm.amount} onChange={(e) => setWriteForm({ ...writeForm, amount: e.target.value })} />
         <Label className="mt-3">Reason</Label>
         <Textarea value={writeForm.reason} onChange={(e) => setWriteForm({ ...writeForm, reason: e.target.value })} placeholder="Why this balance is being written off" />
       </Dialog>
@@ -492,7 +492,7 @@ export default function BillingPage() {
           This withdraws the amount from this client&apos;s trust ledger and records one payment on {trustFor?.invoiceNumber}. Only this client&apos;s ledger is used.
         </p>
         <Label>Trust account</Label>
-        <Select
+        <Select aria-label="Trust account"
           value={trustForm.accountId}
           onChange={(e) => {
             const accountId = e.target.value;
@@ -550,7 +550,7 @@ export default function BillingPage() {
           Upload the deposit slip or EFT confirmation for {proofFor?.invoiceNumber}. It stays pending until a staff member accepts or rejects it. Accepting records the payment. PDF, JPEG, or PNG, up to 10 MB.
         </p>
         <Label>File</Label>
-        <Input
+        <Input aria-label="File"
           type="file"
           accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
           onChange={(e) => setProofFile(e.target.files?.[0] || null)}
@@ -589,7 +589,7 @@ export default function BillingPage() {
           Accepting records one payment on {acceptFor?.invoiceNumber} for the amount below. The invoice balance updates once. A later accept of the same proof leaves that payment in place.
         </p>
         <Label>Amount</Label>
-        <Input value={acceptForm.amount} onChange={(e) => setAcceptForm({ ...acceptForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={acceptForm.amount} onChange={(e) => setAcceptForm({ ...acceptForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
         <Select value={acceptForm.method} onChange={(e) => setAcceptForm({ ...acceptForm, method: e.target.value })}>
           <option value="eft">EFT</option>
@@ -628,7 +628,7 @@ export default function BillingPage() {
           Reject this proof on {rejectFor?.invoiceNumber}. The file stays on the invoice for the audit trail. The invoice balance stays as it was. A note is required.
         </p>
         <Label>Note</Label>
-        <Textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} placeholder="Why this proof is rejected" />
+        <Textarea aria-label="Note" value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} placeholder="Why this proof is rejected" />
       </Dialog>
     </div>
   );

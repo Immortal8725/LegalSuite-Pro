@@ -63,7 +63,7 @@ export default function EsignPage() {
                 <Td className="font-semibold">{r.title}</Td>
                 <Td>
                   {r.signerName}
-                  <div className="text-xs text-slate-400">{r.signerEmail}</div>
+                  <div className="text-xs text-slate-500">{r.signerEmail}</div>
                 </Td>
                 <Td>
                   <StatusBadge status={r.status} />
@@ -119,15 +119,15 @@ export default function EsignPage() {
       >
         <ErrorBanner error={dialogError} />
         <Label>Title</Label>
-        <Input className="mb-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <Input aria-label="Title" className="mb-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         <div className="mb-3 grid gap-3 sm:grid-cols-2">
           <div>
             <Label>Signer name</Label>
-            <Input value={form.signerName} onChange={(e) => setForm({ ...form, signerName: e.target.value })} />
+            <Input aria-label="Signer name" value={form.signerName} onChange={(e) => setForm({ ...form, signerName: e.target.value })} />
           </div>
           <div>
             <Label>Signer email</Label>
-            <Input value={form.signerEmail} onChange={(e) => setForm({ ...form, signerEmail: e.target.value })} />
+            <Input aria-label="Signer email" value={form.signerEmail} onChange={(e) => setForm({ ...form, signerEmail: e.target.value })} />
           </div>
         </div>
         <div className="mb-3 grid gap-3 sm:grid-cols-2">
@@ -161,7 +161,7 @@ export default function EsignPage() {
           </Select>
         </div>
         <Label>Document</Label>
-        <Textarea rows={8} value={form.documentBody} onChange={(e) => setForm({ ...form, documentBody: e.target.value })} />
+        <Textarea aria-label="Document" rows={8} value={form.documentBody} onChange={(e) => setForm({ ...form, documentBody: e.target.value })} />
       </Dialog>
     </div>
   );

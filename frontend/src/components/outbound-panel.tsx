@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { Matter, OutboundMessage, OutboundReadiness } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
+import { useLatest } from "@/lib/use-latest";
 
 type Channel = "sms" | "whatsapp" | "email";
 
@@ -63,11 +64,11 @@ export function OutboundPanel({
       .catch((e) => setLoadError(e instanceof Error ? e.message : "Could not load messages"));
   };
 
+  const loadLatest = useLatest(load);
   useEffect(() => {
-    load();
     // Reload only when the matter this panel is locked to changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lockedMatterId]);
+    loadLatest.current();
+  }, [lockedMatterId, loadLatest]);
 
   useEffect(() => {
     setSmsPhone(defaultPhone);
@@ -155,7 +156,7 @@ export function OutboundPanel({
         ) : (
           <div>
             <Label>Matter</Label>
-            <Select
+            <Select aria-label="Matter"
               value={matterId}
               onChange={(e) => {
                 const id = e.target.value;
@@ -185,11 +186,11 @@ export function OutboundPanel({
             <p className="text-xs text-slate-500">{readiness?.smsHint || "Checking the SMS sender."}</p>
             <div>
               <Label>Mobile number</Label>
-              <Input value={smsPhone} onChange={(e) => setSmsPhone(e.target.value)} placeholder="082 555 0144" />
+              <Input aria-label="Mobile number" value={smsPhone} onChange={(e) => setSmsPhone(e.target.value)} placeholder="082 555 0144" />
             </div>
             <div>
               <Label>Message</Label>
-              <Textarea value={smsBody} onChange={(e) => setSmsBody(e.target.value)} placeholder="Short update for the client" />
+              <Textarea aria-label="Message" value={smsBody} onChange={(e) => setSmsBody(e.target.value)} placeholder="Short update for the client" />
             </div>
             {beside("sms", !!readiness?.smsReady, readiness?.smsHint)}
             <Button disabled={busy !== null || !smsPhone || !smsBody.trim()} onClick={() => send("sms")}>
@@ -202,22 +203,22 @@ export function OutboundPanel({
             <p className="text-xs text-slate-500">{readiness?.whatsappHint || "Checking WhatsApp."}</p>
             <div>
               <Label>WhatsApp number</Label>
-              <Input value={waPhone} onChange={(e) => setWaPhone(e.target.value)} placeholder="082 555 0144" />
+              <Input aria-label="WhatsApp number" value={waPhone} onChange={(e) => setWaPhone(e.target.value)} placeholder="082 555 0144" />
             </div>
             <div>
               <Label>Message</Label>
-              <Textarea value={waBody} onChange={(e) => setWaBody(e.target.value)} placeholder="Freeform text, or leave blank when you send a template" />
+              <Textarea aria-label="Message" value={waBody} onChange={(e) => setWaBody(e.target.value)} placeholder="Freeform text, or leave blank when you send a template" />
             </div>
             <details className="text-sm">
               <summary className="cursor-pointer text-xs font-semibold text-slate-600">Approved template</summary>
               <div className="mt-2 space-y-2">
                 <div>
                   <Label>Content SID</Label>
-                  <Input value={templateSid} onChange={(e) => setTemplateSid(e.target.value)} placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+                  <Input aria-label="Content SID" value={templateSid} onChange={(e) => setTemplateSid(e.target.value)} placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
                 </div>
                 <div>
                   <Label>Variables JSON</Label>
-                  <Input value={templateVars} onChange={(e) => setTemplateVars(e.target.value)} placeholder='{"1":"Nomsa"}' />
+                  <Input aria-label="Variables JSON" value={templateVars} onChange={(e) => setTemplateVars(e.target.value)} placeholder='{"1":"Nomsa"}' />
                 </div>
               </div>
             </details>
@@ -235,15 +236,15 @@ export function OutboundPanel({
             <p className="text-xs text-slate-500">{readiness?.emailHint || "Checking email."}</p>
             <div>
               <Label>Email address</Label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nomsa@example.com" />
+              <Input aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nomsa@example.com" />
             </div>
             <div>
               <Label>Subject</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Consultation" />
+              <Input aria-label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Consultation" />
             </div>
             <div>
               <Label>Message</Label>
-              <Textarea value={emailBody} onChange={(e) => setEmailBody(e.target.value)} placeholder="Write the note you want the client to read" />
+              <Textarea aria-label="Message" value={emailBody} onChange={(e) => setEmailBody(e.target.value)} placeholder="Write the note you want the client to read" />
             </div>
             {beside("email", !!readiness?.emailReady, readiness?.emailHint)}
             <Button disabled={busy !== null || !email || !subject.trim() || !emailBody.trim()} onClick={() => send("email")}>

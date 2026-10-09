@@ -87,7 +87,7 @@ export default function ContactsPage() {
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Type</Label>
-          <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+          <Select aria-label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="opposing_counsel">Opposing counsel</option>
             <option value="judge">Judge</option>
             <option value="expert_witness">Expert</option>

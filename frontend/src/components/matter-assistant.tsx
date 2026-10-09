@@ -77,7 +77,7 @@ export function MatterAssistant({
         {matters && onCaseId && (
           <div className="space-y-1">
             <Label>Matter</Label>
-            <Select value={caseId || ""} onChange={(e) => onCaseId(e.target.value)}>
+            <Select aria-label="Matter" value={caseId || ""} onChange={(e) => onCaseId(e.target.value)}>
               <option value="">Whole docket, no single file</option>
               {matters.map((matter) => (
                 <option key={matter.id} value={matter.id}>

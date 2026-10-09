@@ -73,7 +73,7 @@ set -a && source .env && set +a
 cd backend && ./mvnw -DskipTests spring-boot:run
 ```
 
-`DATABASE_URL` defaults to `jdbc:postgresql://127.0.0.1:5432/legalsuite` when `SPRING_PROFILES_ACTIVE=postgres`.
+On the Postgres profile `DATABASE_URL`, `DB_USER` and `DB_PASSWORD` have no defaults and must be set, for example `DATABASE_URL=jdbc:postgresql://127.0.0.1:5432/legalsuite`. Flyway creates or upgrades the schema on start. The full go-live checklist is [DEPLOY.md](DEPLOY.md).
 
 4. Run the web app with the API origin the browser should use.
 
@@ -95,7 +95,7 @@ PayFast Aggregation bills the firm for the Light seat and for public-network min
 
 ### All-in Docker (optional)
 
-`docker compose --profile hosted up --build` builds the API and the web image and starts them with Postgres. It requires `LEGALSUITE_JWT_SECRET` in `.env`. The web container rewrites `/api` to `http://api:18081`. Publish that through your TLS proxy on port 3000. This path is for a single host. It is not a multi-region deploy.
+`docker compose --profile hosted up --build` builds the API and the web image and starts them with Postgres. It requires `DB_PASSWORD`, `LEGALSUITE_JWT_SECRET` and `APP_URL` in `.env`. The web container rewrites `/api` to `http://api:18081`. Publish that through your TLS proxy on port 3000. This path is for a single host. It is not a multi-region deploy.
 
 ## What shipped (all eight phases)
 

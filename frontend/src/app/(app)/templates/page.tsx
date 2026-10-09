@@ -49,7 +49,7 @@ export default function TemplatesPage() {
                 }}
               >
                 <p className="font-semibold text-navy">{t.name}</p>
-                <p className="text-xs uppercase text-slate-400">{t.category}</p>
+                <p className="text-xs uppercase text-slate-500">{t.category}</p>
               </button>
             ))}
           </div>
@@ -130,16 +130,16 @@ export default function TemplatesPage() {
         }
       >
         <Label>Name</Label>
-        <Input className="mb-3" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <Input aria-label="Name" className="mb-3" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <Label>Category</Label>
-        <Select className="mb-3" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+        <Select aria-label="Category" className="mb-3" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
           <option value="correspondence">Correspondence</option>
           <option value="retainer">Retainer</option>
           <option value="demand">Demand</option>
           <option value="pleading">Pleading</option>
         </Select>
         <Label>Body</Label>
-        <Textarea rows={8} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+        <Textarea aria-label="Body" rows={8} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
       </Dialog>
     </div>
   );

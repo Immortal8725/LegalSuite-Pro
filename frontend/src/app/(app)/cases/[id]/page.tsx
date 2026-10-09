@@ -216,11 +216,11 @@ export default function CaseDetailPage() {
       <ErrorBanner error={error} />
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Client</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Client</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.clientName || "Client not named"}</p>
         </div>
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Other side</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Other side</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.opposingParty || "No opposing party on the file"}</p>
           {c.opposingCounsel && <p className="mt-1 text-sm text-slate-500">Counsel: {c.opposingCounsel}</p>}
         </div>
@@ -259,38 +259,38 @@ export default function CaseDetailPage() {
           </CardHeader>
           <CardBody className="grid gap-3 text-sm sm:grid-cols-2">
             <p>
-              <span className="text-slate-400">Court</span>
+              <span className="text-slate-500">Court</span>
               <br />
               {c.courtName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Judge</span>
+              <span className="text-slate-500">Judge</span>
               <br />
               {c.judgeName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Client</span>
+              <span className="text-slate-500">Client</span>
               <br />
               {c.clientName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Opposing party</span>
+              <span className="text-slate-500">Opposing party</span>
               <br />
               {c.opposingParty || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Opposing counsel</span>
+              <span className="text-slate-500">Opposing counsel</span>
               <br />
               {c.opposingCounsel || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Limitations</span>
+              <span className="text-slate-500">Limitations</span>
               <br />
               {c.solCitation || (za ? "South African docket" : c.jurisdiction === "TX" ? "Texas docket" : "Docket")}
               {c.statuteOfLimitations ? ` · ${formatDate(c.statuteOfLimitations)}` : ""}
             </p>
             <p className="sm:col-span-2">
-              <span className="text-slate-400">Assignment</span>
+              <span className="text-slate-500">Assignment</span>
               <br />
               {c.description || "No narrative on file."}
             </p>
@@ -457,7 +457,7 @@ export default function CaseDetailPage() {
           {(c.notes || []).length === 0 && <p className="text-sm text-slate-500">No notes yet.</p>}
           {(c.notes || []).map((n) => (
             <div key={n.id}>
-              <p className="text-xs text-slate-400">{formatDateTime(n.createdAt)}</p>
+              <p className="text-xs text-slate-500">{formatDateTime(n.createdAt)}</p>
               <p className="font-semibold">{n.title}</p>
               <p className="text-sm">{n.body}</p>
             </div>
