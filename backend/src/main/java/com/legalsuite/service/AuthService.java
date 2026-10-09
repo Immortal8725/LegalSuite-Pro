@@ -260,6 +260,34 @@ public class AuthService {
         return !tenants.existsBySlug(slugify(slug));
     }
 
+    /**
+     * Replace the signed-in user's password. Invited users must do this before anything else;
+     * the new tokens no longer carry the password-change flag.
+     */
+    @Transactional
+    public Map<String, Object> changePassword(Map<String, Object> body) {
+        AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        String current = body.get("currentPassword") == null ? "" : String.valueOf(body.get("currentPassword"));
+        String next = body.get("newPassword") == null ? "" : String.valueOf(body.get("newPassword"));
+        if (!encoder.matches(current, user.getPasswordHash())) {
+            throw ApiException.badRequest("Your current password is not correct.");
+        }
+        if (next.length() < 10) {
+            throw ApiException.badRequest("Choose a password of at least 10 characters.");
+        }
+        if (encoder.matches(next, user.getPasswordHash())) {
+            throw ApiException.badRequest("Choose a password different from the temporary one.");
+        }
+        user.setPasswordHash(encoder.encode(next));
+        user.setPasswordChangeRequired(false);
+        users.save(user);
+        refreshTokens.deleteByUserId(user.getId());
+        Tenant tenant = tenants.findById(user.getTenantId())
+                .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        return tokens(user, tenant);
+    }
+
     public Map<String, Object> me() {
         AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
@@ -336,6 +364,7 @@ public class AuthService {
         m.put("onlineStatus", user.getOnlineStatus());
         m.put("barNumber", user.getBarNumber());
         m.put("totpEnabled", user.isTotpEnabled());
+        m.put("mustChangePassword", user.mustChangePassword());
         return m;
     }
 

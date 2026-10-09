@@ -32,6 +32,7 @@ type AuthCtx = {
   logout: () => void;
   refreshTenant: (tenant: Tenant) => void;
   reloadMe: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -75,8 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: data.user,
         tenant: data.tenant,
       });
-      const dest =
-        data.user.role === "superadmin"
+      const dest = data.user.mustChangePassword
+        ? "/change-password"
+        : data.user.role === "superadmin"
           ? "/platform/sites"
           : data.tenant.onboardingCompleted === false
             ? "/onboarding"
@@ -132,6 +134,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshTenant(data.tenant);
   }, [refreshTenant]);
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      const data = await apiPost<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>(
+        "/api/v1/auth/password",
+        { currentPassword, newPassword }
+      );
+      apply(data);
+      router.replace(data.tenant.onboardingCompleted === false ? "/onboarding" : "/dashboard");
+    },
+    [apply, router]
+  );
+
   useEffect(() => {
     if (!ready) return;
     const isPublic =
@@ -157,8 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshTenant,
       reloadMe,
+      changePassword,
     }),
-    [user, tenant, ready, login, registerFirm, portalLogin, logout, refreshTenant, reloadMe]
+    [user, tenant, ready, login, registerFirm, portalLogin, logout, refreshTenant, reloadMe, changePassword]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

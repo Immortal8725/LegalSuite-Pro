@@ -46,6 +46,8 @@ public class AppUser {
     private boolean emailVerified;
     private String totpSecret;
     private boolean totpEnabled;
+    /** Set for invited users with a temporary password; cleared when they choose their own. */
+    private Boolean passwordChangeRequired;
     private Instant createdAt = Instant.now();
 
     public String getFullName() {
@@ -56,5 +58,9 @@ public class AppUser {
         String a = firstName == null || firstName.isBlank() ? "U" : firstName.substring(0, 1);
         String b = lastName == null || lastName.isBlank() ? "" : lastName.substring(0, 1);
         return (a + b).toUpperCase();
+    }
+
+    public boolean mustChangePassword() {
+        return Boolean.TRUE.equals(passwordChangeRequired);
     }
 }

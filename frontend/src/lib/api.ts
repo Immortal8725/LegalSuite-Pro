@@ -16,6 +16,7 @@ export type User = {
   hourlyRate?: number;
   onlineStatus?: string;
   totpEnabled?: boolean;
+  mustChangePassword?: boolean;
 };
 
 export type Tenant = {

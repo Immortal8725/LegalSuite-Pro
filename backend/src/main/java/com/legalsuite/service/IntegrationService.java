@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Roles;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.ConnectedIntegration;
 import com.legalsuite.repo.ConnectedIntegrationRepository;
@@ -75,6 +76,7 @@ public class IntegrationService {
 
     @Transactional
     public Map<String, Object> setConnected(String provider, boolean connected) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can connect or disconnect integrations.");
         String slug = provider.toLowerCase();
         boolean known = CATALOG.stream().anyMatch(p -> p.get("provider").equals(slug));
         if (!known) {

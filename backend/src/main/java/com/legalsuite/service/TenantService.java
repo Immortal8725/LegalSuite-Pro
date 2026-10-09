@@ -2,6 +2,7 @@ package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
+import com.legalsuite.common.Roles;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppModule;
 import com.legalsuite.domain.AppUser;
@@ -16,6 +17,7 @@ import com.legalsuite.repo.PlanRepository;
 import com.legalsuite.repo.TenantModuleRepository;
 import com.legalsuite.repo.TenantRepository;
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +81,7 @@ public class TenantService {
     @Transactional
     public Map<String, Object> toggleModule(UUID tenantId, UUID moduleId, boolean enabled) {
         assertTenant(tenantId);
+        Roles.requireTenantAdmin("Only a firm owner or admin can switch modules.");
         AppModule module = modules.findById(moduleId).orElseThrow(() -> ApiException.notFound("Module not found"));
         if (module.isCore() && !enabled) {
             throw ApiException.badRequest("Core modules stay on. Upgrade or keep using them.");
@@ -97,6 +100,7 @@ public class TenantService {
 
     @Transactional
     public Map<String, Object> updateFirm(Map<String, Object> body) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can change firm settings.");
         Tenant tenant = tenants.findById(TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
         if (body.get("firmName") != null) tenant.setFirmName(String.valueOf(body.get("firmName")));
@@ -146,6 +150,7 @@ public class TenantService {
 
     @Transactional
     public Map<String, Object> generatePaia() {
+        Roles.requireTenantAdmin("Only a firm owner or admin can generate the PAIA manual.");
         Tenant tenant = tenants.findById(TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
         if (tenant.getInformationOfficerName() == null || tenant.getInformationOfficerName().isBlank()) {
@@ -165,33 +170,53 @@ public class TenantService {
 
     @Transactional
     public Map<String, Object> invite(Map<String, Object> body) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can invite people.");
         UUID tenantId = TenantContext.requireTenant();
         String email = String.valueOf(body.get("email"));
         if (users.existsByTenantIdAndEmailIgnoreCase(tenantId, email)) {
             throw ApiException.conflict("A user with that email already exists");
         }
         rejectPlatformRole(body.get("role"));
+        String role = String.valueOf(body.getOrDefault("role", "associate"));
+        Roles.requireCanGrant(role);
         AppUser user = new AppUser();
         user.setTenantId(tenantId);
         user.setEmail(email);
         user.setFirstName(String.valueOf(body.getOrDefault("firstName", "New")));
         user.setLastName(String.valueOf(body.getOrDefault("lastName", "Hire")));
-        user.setRole(String.valueOf(body.getOrDefault("role", "associate")));
+        user.setRole(role);
         user.setTitle(body.get("title") == null ? null : String.valueOf(body.get("title")));
         user.setStatus("active");
-        user.setPasswordHash(encoder.encode(body.get("password") == null ? "changeme123" : String.valueOf(body.get("password"))));
+        // A fresh one-time password per invite. It is shown once to the inviting admin and must be
+        // replaced at first sign-in, so no two invited users ever share a known password.
+        String temporary = temporaryPassword();
+        user.setPasswordHash(encoder.encode(temporary));
+        user.setPasswordChangeRequired(true);
         if (body.get("hourlyRate") != null) {
             user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         }
         users.save(user);
-        return authService.userView(user);
+        Map<String, Object> view = new HashMap<>(authService.userView(user));
+        view.put("temporaryPassword", temporary);
+        return view;
     }
 
     @Transactional
     public Map<String, Object> updateUser(UUID id, Map<String, Object> body) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can change a team member.");
         AppUser user = users.findByIdAndTenantId(id, TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
         rejectPlatformRole(body.get("role"));
+        if (body.get("role") != null) {
+            String next = String.valueOf(body.get("role"));
+            Roles.requireCanGrant(next);
+            if ("owner".equalsIgnoreCase(user.getRole()) && !"owner".equals(Roles.current())) {
+                throw ApiException.forbidden("Only an owner can change another owner's role.");
+            }
+            if (id.equals(TenantContext.getUserId()) && !next.equalsIgnoreCase(user.getRole())) {
+                throw ApiException.badRequest("You cannot change your own role. Ask another owner.");
+            }
+        }
         if (body.get("role") != null) user.setRole(String.valueOf(body.get("role")));
         if (body.get("status") != null) user.setStatus(String.valueOf(body.get("status")));
         if (body.get("title") != null) user.setTitle(String.valueOf(body.get("title")));
@@ -247,5 +272,14 @@ public class TenantService {
         m.put("core", p.isCore());
         m.put("minPlanSlug", p.getMinPlanSlug());
         return m;
+    }
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+    static String temporaryPassword() {
+        StringBuilder sb = new StringBuilder(14);
+        for (int i = 0; i < 14; i++) sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+        return sb.toString();
     }
 }
