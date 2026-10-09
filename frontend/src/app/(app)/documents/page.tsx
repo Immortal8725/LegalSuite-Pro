@@ -88,6 +88,7 @@ export default function DocumentsPage() {
                   <button
                     className="text-sm font-semibold text-navy"
                     type="button"
+                    aria-label={`Download ${d.name}`}
                     onClick={async () => {
                       setError(null);
                       try {
