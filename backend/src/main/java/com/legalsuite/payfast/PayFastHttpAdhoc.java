@@ -37,6 +37,10 @@ public class PayFastHttpAdhoc implements PayFastAdhocGateway {
         if (!props.merchantPresent() || !props.envKnown()) {
             return AdhocReceipt.failed("PayFast merchant id and key are not set");
         }
+        if (props.sandboxLocalActive()) {
+            return AdhocReceipt.ok("sandbox-local-" + java.util.UUID.randomUUID().toString().substring(0, 8),
+                    "Sandbox local mode: charge accepted without calling PayFast");
+        }
         String timestamp = TIMESTAMP.format(java.time.Instant.now().truncatedTo(ChronoUnit.SECONDS));
         PayFastAdhocRequest.Prepared prepared = PayFastAdhocRequest.prepare(
                 props.getMerchantId(),

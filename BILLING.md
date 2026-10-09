@@ -106,3 +106,7 @@ There is no cron. The minute charge is the pilot job. Run it from the product bi
 - Live keys only after KYC, with `PAYFAST_ENV=live`
 - The operator's own VAT tax invoices
 - A per-minute carrier rate, or minute invoices stay at zero and are not sent to PayFast
+
+## Local sandbox testing without a PayFast payment
+
+Set `PAYFAST_ENV=sandbox` and `PAYFAST_SANDBOX_LOCAL=true` to exercise the whole seat and minutes flow on a laptop or CI box. In this mode the ITN server confirm and the adhoc token charge are answered locally instead of calling PayFast. Signature, merchant id, amount and duplicate checks still run, so a test ITN must be signed with the configured passphrase. The switch is ignored when `PAYFAST_ENV=live`. Never set it on a hosted environment. The public PayFast sandbox merchant (`10000100` / `46f0cd694581a`) can be used for the form fields.

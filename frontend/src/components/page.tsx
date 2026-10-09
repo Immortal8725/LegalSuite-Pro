@@ -72,7 +72,6 @@ export function StatusBadge({ status }: { status: string }) {
     cancelled: "bg-slate-100 text-slate-600",
     complete: "bg-emerald-50 text-emerald-700",
     charged: "bg-emerald-50 text-emerald-700",
-    rejected: "bg-red-50 text-red-700",
     nothing_due: "bg-slate-100 text-slate-600",
     signed: "bg-emerald-50 text-emerald-700",
     void: "bg-slate-100 text-slate-600",

@@ -70,6 +70,11 @@ public class PayFastItnService {
             log.info("PayFast ITN rejected: signature");
             return ItnOutcome.reject("signature");
         }
+        String postedMerchant = PayFastSignature.value(posted, "merchant_id");
+        if (!postedMerchant.isBlank() && !postedMerchant.equals(props.getMerchantId())) {
+            log.info("PayFast ITN rejected: merchant");
+            return ItnOutcome.reject("merchant");
+        }
         String pfPaymentId = PayFastSignature.value(posted, "pf_payment_id");
         if (!pfPaymentId.isBlank() && payments.findByPfPaymentId(pfPaymentId).isPresent()) {
             return ItnOutcome.ok("duplicate");

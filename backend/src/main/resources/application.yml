@@ -45,6 +45,7 @@ legalsuite:
     return-url: ${PAYFAST_RETURN_URL:}
     cancel-url: ${PAYFAST_CANCEL_URL:}
     notify-url: ${PAYFAST_NOTIFY_URL:}
+    sandbox-local: ${PAYFAST_SANDBOX_LOCAL:false}
   twilio:
     account-sid: ${TWILIO_ACCOUNT_SID:}
     auth-token: ${TWILIO_AUTH_TOKEN:}

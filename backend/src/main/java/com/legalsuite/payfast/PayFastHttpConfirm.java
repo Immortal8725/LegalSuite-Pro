@@ -25,6 +25,7 @@ public class PayFastHttpConfirm implements PayFastServerConfirm {
     @Override
     public boolean confirmed(List<PayFastSignature.Field> fieldsInOrder) {
         if (!props.envKnown() || !props.merchantPresent()) return false;
+        if (props.sandboxLocalActive()) return true;
         String body = PayFastSignature.formBody(fieldsInOrder);
         if (body.isBlank()) return false;
         try {

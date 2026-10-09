@@ -17,6 +17,12 @@ public class PayFastProperties {
     private String returnUrl = "";
     private String cancelUrl = "";
     private String notifyUrl = "";
+    /**
+     * Sandbox only. When true, ITN server confirm and adhoc token charges are answered locally instead of
+     * calling PayFast, so the full seat and minutes flow can be exercised without a real sandbox payment.
+     * Ignored when env is live.
+     */
+    private boolean sandboxLocal = false;
 
     public boolean sandbox() {
         return env == null || env.isBlank() || "sandbox".equalsIgnoreCase(env.trim());
@@ -80,6 +86,12 @@ public class PayFastProperties {
         return lower.startsWith("https://") || lower.startsWith("http://");
     }
 
+    public boolean sandboxLocalActive() {
+        return sandboxLocal && sandbox() && !live();
+    }
+
+    public boolean isSandboxLocal() { return sandboxLocal; }
+    public void setSandboxLocal(boolean sandboxLocal) { this.sandboxLocal = sandboxLocal; }
     public String getMerchantId() { return merchantId; }
     public void setMerchantId(String merchantId) { this.merchantId = merchantId == null ? "" : merchantId.trim(); }
     public String getMerchantKey() { return merchantKey; }

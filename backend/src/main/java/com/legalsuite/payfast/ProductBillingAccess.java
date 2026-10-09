@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class ProductBillingAccess {
-    private static final Set<String> MANAGERS = Set.of("owner", "attorney", "director", "admin", "partner");
+    private static final Set<String> MANAGERS = com.legalsuite.common.Roles.TENANT_ADMINS;
 
     private ProductBillingAccess() {}
 
