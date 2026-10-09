@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost, getToken } from "@/lib/api";
+import { useAuth } from "@/components/auth-provider";
 
 type TimerState = {
   running: boolean;
@@ -23,15 +24,19 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timer, setTimer] = useState<TimerState>({ running: false });
   const [tick, setTick] = useState(0);
 
+  const { user } = useAuth();
+  const staff = !!user && user.role !== "client";
+
+  // Timers are a staff feature; portal clients have no access to the endpoint.
   const refresh = useCallback(async () => {
-    if (!getToken()) return;
+    if (!staff || !getToken()) return;
     try {
       const data = await apiGet<TimerState>("/api/v1/timers/active");
       setTimer(data);
     } catch {
       /* not signed in yet */
     }
-  }, []);
+  }, [staff]);
 
   useEffect(() => {
     refresh();
