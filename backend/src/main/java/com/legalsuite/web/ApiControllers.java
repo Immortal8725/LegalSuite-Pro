@@ -1,6 +1,7 @@
 package com.legalsuite.web;
 
 import com.legalsuite.common.ApiResponse;
+import com.legalsuite.common.Ids;
 import com.legalsuite.service.CommsService;
 import com.legalsuite.service.DashboardService;
 import com.legalsuite.service.FinanceService;
@@ -218,8 +219,8 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/invoices/generate")
     public ApiResponse<?> generate(@RequestBody Map<String, Object> body) {
-        UUID clientId = UUID.fromString(String.valueOf(body.get("clientId")));
-        UUID caseId = body.get("caseId") == null ? null : UUID.fromString(String.valueOf(body.get("caseId")));
+        UUID clientId = Ids.requireUuid(body.get("clientId"), "client", "Choose the client to invoice.");
+        UUID caseId = Ids.optUuid(body.get("caseId"), "matter");
         return ApiResponse.ok(finance.generateInvoice(clientId, caseId));
     }
 

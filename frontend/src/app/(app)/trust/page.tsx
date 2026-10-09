@@ -5,10 +5,10 @@ import { apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
-import type { TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
+import type { Invoice, Matter, TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
 
 export default function TrustPage() {
   const { tenant } = useAuth();
@@ -20,7 +20,25 @@ export default function TrustPage() {
   const [open, setOpen] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
-  const [move, setMove] = useState({ type: "deposit", amount: "5000", description: "Retainer deposit" });
+  const [move, setMove] = useState({ type: "deposit", amount: "5000", description: "Retainer deposit", caseId: "", invoiceId: "" });
+  const [matters, setMatters] = useState<Matter[]>([]);
+  const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [posting, setPosting] = useState(false);
+  const moveMatter = matters.find((m) => m.id === move.caseId);
+  const moveClientId = moveMatter?.clientId || "";
+  const clientInvoices = openInvoices.filter((i) => i.clientId === moveClientId);
+  const openMove = async () => {
+    setMoveError(null);
+    setOpen(true);
+    try {
+      const [m, inv] = await Promise.all([apiGet<Matter[]>("/api/v1/cases"), apiGet<Invoice[]>("/api/v1/invoices")]);
+      setMatters(m);
+      setOpenInvoices(inv.filter((i) => i.status !== "draft" && i.status !== "paid"));
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Could not load matters");
+    }
+  };
   const [bank, setBank] = useState({ bankBalance: "", notes: "" });
   const [csv, setCsv] = useState(
     "Date,Description,Amount,Balance\n2026-09-01,Balance brought forward,0,438250.00\n2026-09-02,Unidentified transfer,-11750.00,438250.00"
@@ -62,7 +80,7 @@ export default function TrustPage() {
             <Button variant="outline" onClick={() => setBankOpen(true)}>
               Enter bank balance
             </Button>
-            <Button onClick={() => setOpen(true)}>Record movement</Button>
+            <Button onClick={openMove}>Record movement</Button>
           </div>
         }
       />
@@ -167,21 +185,70 @@ export default function TrustPage() {
         title="Trust movement"
         footer={
           <Button
+            disabled={posting}
             onClick={async () => {
-              await apiPost("/api/v1/trust/move", { ...move, accountId: acct?.id });
-              setOpen(false);
-              load();
+              setPosting(true);
+              setMoveError(null);
+              try {
+                await apiPost("/api/v1/trust/move", {
+                  accountId: acct?.id,
+                  type: move.type,
+                  amount: move.amount,
+                  description: move.description,
+                  caseId: move.caseId || undefined,
+                  clientId: moveClientId || undefined,
+                  invoiceId: move.type === "fee_transfer" ? move.invoiceId || undefined : undefined,
+                });
+                setOpen(false);
+                await load();
+              } catch (e) {
+                setMoveError(e instanceof Error ? e.message : "Could not post the movement");
+              } finally {
+                setPosting(false);
+              }
             }}
           >
-            Post
+            {posting ? "Posting…" : "Post"}
           </Button>
         }
       >
+        <ErrorBanner error={moveError} />
         <Label>Type</Label>
-        <Select value={move.type} onChange={(e) => setMove({ ...move, type: e.target.value })}>
+        <Select aria-label="Type" value={move.type} onChange={(e) => setMove({ ...move, type: e.target.value, invoiceId: "" })}>
           <option value="deposit">Deposit</option>
           <option value="withdrawal">Withdrawal</option>
+          <option value="fee_transfer">Transfer to fees (pays an invoice)</option>
         </Select>
+        <Label className="mt-3">Matter</Label>
+        <Select aria-label="Matter" value={move.caseId} onChange={(e) => setMove({ ...move, caseId: e.target.value, invoiceId: "" })}>
+          <option value="">{move.type === "deposit" ? "Unallocated (no client yet)" : "Choose the matter"}</option>
+          {matters.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.caseNumber} {m.title}
+              {m.clientName ? ` (${m.clientName})` : ""}
+            </option>
+          ))}
+        </Select>
+        <p className="mt-1 text-xs text-slate-500">
+          {moveMatter
+            ? `Posts to ${moveMatter.clientName || "this client"}'s ledger.`
+            : move.type === "deposit"
+              ? "Money with no matter sits in Unallocated until you move it to a client."
+              : "Withdrawals and fee transfers come off one client's ledger, so pick the matter."}
+        </p>
+        {move.type === "fee_transfer" && (
+          <>
+            <Label className="mt-3">Invoice</Label>
+            <Select aria-label="Invoice" value={move.invoiceId} onChange={(e) => setMove({ ...move, invoiceId: e.target.value })}>
+              <option value="">{moveClientId ? "Choose the invoice this pays" : "Pick a matter first"}</option>
+              {clientInvoices.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.invoiceNumber} owing {moneyExact(i.balanceDue ?? Number(i.total) - Number(i.amountPaid || 0))}
+                </option>
+              ))}
+            </Select>
+          </>
+        )}
         <Label className="mt-3">Amount</Label>
         <Input type="number" value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} />
         <Label className="mt-3">Memo</Label>
