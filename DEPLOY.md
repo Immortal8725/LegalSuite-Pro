@@ -52,6 +52,7 @@ Flyway creates the schema on an empty database and upgrades an older one (see [d
 - [ ] Put a TLS proxy in front of the web container (Caddy, nginx, or a cloud load balancer). Compose binds every port to `127.0.0.1` only.
 - [ ] Point `app.example.co.za` at the proxy. For firm public sites, add a wildcard DNS record `*.example.co.za` and a wildcard certificate, and set `NEXT_PUBLIC_PUBLIC_SITE_ROOT=example.co.za`.
 - [ ] The proxy must pass `X-Forwarded-For` and `X-Forwarded-Proto`, and must allow WebSocket upgrades on `/ws/` (in-app calls).
+- [ ] In-app call signalling (`/ws/signal`) only accepts browsers whose origin is `APP_URL` or in `CORS_ALLOWED_ORIGINS`, and only with a signed-in staff token. If calls do not connect, check those two values first.
 - [ ] Only the proxy is public. Postgres and the API port stay private.
 - [ ] Check the headers: `curl -sI https://app.example.co.za/login` shows `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
 
