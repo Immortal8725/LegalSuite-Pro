@@ -82,8 +82,13 @@ export default function ConflictsPage() {
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      await apiPost(`/api/v1/conflicts/${r.id}/clear`);
-                      await load();
+                      setError(null);
+                      try {
+                        await apiPost(`/api/v1/conflicts/${r.id}/clear`);
+                        await load();
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                      }
                     }}
                   >
                     Clear

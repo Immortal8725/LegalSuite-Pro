@@ -214,7 +214,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         <div className="fixed bottom-6 right-6 z-[90] w-80 rounded-2xl border border-gold/40 bg-white p-5 shadow-lift">
           <p className="text-xs font-bold uppercase tracking-wide text-gold">Live call</p>
           <p className="mt-1 text-lg font-bold text-navy">{active.peerName}</p>
-          <p className="font-mono text-sm text-slate-500">{elapsed}</p>
+          <p className="font-mono text-sm text-slate-600">{elapsed}</p>
           <Button className="mt-4 w-full" variant="danger" onClick={() => hangUp(active.callId)}>
             End call
           </Button>

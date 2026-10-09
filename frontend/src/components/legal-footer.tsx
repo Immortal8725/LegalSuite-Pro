@@ -6,7 +6,7 @@ export function LegalFooter({ className }: { className?: string }) {
   return (
     <footer className={cn("border-t bg-white px-6 py-10", className)}>
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">LegalSuite Pro</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-600">LegalSuite Pro</p>
         <nav className="mt-4 flex flex-col gap-2 text-sm" aria-label="Legal">
           {LEGAL_DOCS.map((d) => (
             <Link
@@ -18,7 +18,7 @@ export function LegalFooter({ className }: { className?: string }) {
             </Link>
           ))}
         </nav>
-        <p className="mt-6 text-xs text-slate-500">
+        <p className="mt-6 text-xs text-slate-600">
           Starting texts, not a substitute for counsel. Attorney-client privilege stays on your tenant row. Call
           recording is opt-in.
         </p>

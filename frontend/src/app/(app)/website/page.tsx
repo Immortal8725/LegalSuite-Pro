@@ -169,9 +169,9 @@ export default function WebsiteSettingsPage() {
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Light is the cool neutral site. Dark is a near-black navy field with cream type and gold rules. It goes live only after approval, same as the accent.</p>
+                <p className="mt-2 text-xs text-slate-600">Light is the cool neutral site. Dark is a near-black navy field with cream type and gold rules. It goes live only after approval, same as the accent.</p>
               </div>
-              <p className="text-xs text-slate-500">Invoices and letterhead still use Firm settings. This name is only for the public site, and only after approval.</p>
+              <p className="text-xs text-slate-600">Invoices and letterhead still use Firm settings. This name is only for the public site, and only after approval.</p>
             </CardBody>
           </Card>
 
@@ -191,12 +191,12 @@ export default function WebsiteSettingsPage() {
                   <span>
                     <span className="font-semibold text-slate-900">{feature.label}</span>
                     <span className="mt-1 block text-slate-600">{feature.description}</span>
-                    <span className="mt-1 block text-xs text-slate-500">{featureLabel(feature, Boolean(requested[feature.key]))}</span>
+                    <span className="mt-1 block text-xs text-slate-600">{featureLabel(feature, Boolean(requested[feature.key]))}</span>
                     {feature.note ? <span className="mt-1 block text-slate-600">Note: {feature.note}</span> : null}
                   </span>
                 </label>
               ))}
-              <p className="text-xs text-slate-500">Turning a feature on does not publish it. You can turn an approved feature off immediately.</p>
+              <p className="text-xs text-slate-600">Turning a feature on does not publish it. You can turn an approved feature off immediately.</p>
             </CardBody>
           </Card>
 

@@ -57,7 +57,7 @@ export default function RegisterPage() {
         }}
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-600">
           You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing for the seat uses PayFast once the operator sets sandbox or live keys.
         </p>
         <ErrorBanner error={error} />
@@ -99,7 +99,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <Label>{form.country === "ZA" ? "Province" : "State"}</Label>
-            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
+            <Input aria-label={form.country === "ZA" ? "Province" : "State"} value={form.state} onChange={(e) => set("state", e.target.value)} />
           </div>
         </div>
         <div>
@@ -137,7 +137,7 @@ export default function RegisterPage() {
         <Button className="w-full" variant="gold" disabled={loading}>
           {loading ? "Creating tenant…" : "Create firm on Light"}
         </Button>
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-600">
           Already registered?{" "}
           <Link href="/login" className="font-semibold text-navy">
             Sign in

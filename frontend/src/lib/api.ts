@@ -87,16 +87,29 @@ export function readTenant(): Tenant | null {
 }
 
 async function parse<T>(res: Response): Promise<T> {
-  const json = (await res.json()) as ApiEnvelope<T>;
+  let json: ApiEnvelope<T>;
+  try {
+    json = (await res.json()) as ApiEnvelope<T>;
+  } catch {
+    // A proxy or gateway error page, not the API's JSON.
+    throw new Error(
+      res.status === 429
+        ? "Too many attempts. Wait a few minutes and try again."
+        : res.status >= 500
+          ? "The server is not responding. Try again in a moment."
+          : `Request failed (${res.status})`
+    );
+  }
   if (!res.ok || json.success === false) {
     throw new Error(json.message || `Request failed (${res.status})`);
   }
   return json.data;
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** fetch with the access token; on a 401 it refreshes the session once and retries. */
+async function authedFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
-  if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
+  if (!headers.has("Content-Type") && init.body !== undefined && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
   const token = getToken();
@@ -106,7 +119,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     path.includes("/landing/") ||
     path.includes("/api/v1/public/") ||
     /\/intake\/[^/]+$/.test(path) ||
-    path.includes("/api/v1/sign/");
+    path.includes("/api/v1/sign/") ||
+    path.includes("/api/v1/auth/invite/");
   if (res.status === 401 && !path.includes("/auth/login") && !skipAuthRedirect) {
     const refresh = localStorage.getItem(REFRESH_KEY);
     if (refresh) {
@@ -119,14 +133,49 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
         const body = (await r.json()) as ApiEnvelope<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>;
         setSession(body.data);
         headers.set("Authorization", `Bearer ${body.data.accessToken}`);
-        const retry = await fetch(path, { ...init, headers });
-        return parse<T>(retry);
+        return fetch(path, { ...init, headers });
       }
     }
     clearSession();
     if (typeof window !== "undefined") window.location.href = "/login";
   }
-  return parse<T>(res);
+  return res;
+}
+
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+  return parse<T>(await authedFetch(path, { ...init, headers }));
+}
+
+/** Download a protected file (documents, payment proofs). Throws with the server's message on failure. */
+export async function apiBlob(path: string): Promise<Blob> {
+  const res = await authedFetch(path);
+  if (!res.ok) {
+    let detail = res.status === 404 ? "That file is no longer available." : "Could not open the file.";
+    try {
+      const body = (await res.json()) as { message?: string };
+      if (body.message) detail = body.message;
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(detail);
+  }
+  return res.blob();
+}
+
+/** Save a blob under a file name, then release the object URL. */
+export function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 export const apiGet = <T>(path: string) => api<T>(path);

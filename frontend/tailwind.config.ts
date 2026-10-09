@@ -17,6 +17,8 @@ const config: Config = {
         gold: {
           DEFAULT: "#c6a052",
           light: "#d4b06a",
+          // Gold for text on white or light surfaces (AA contrast).
+          dark: "#8a6a22",
         },
         background: "var(--background)",
         foreground: "var(--foreground)",

@@ -74,7 +74,7 @@ export function Dialog({
 
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: React.ReactNode }) {
   return (
-    <div className="px-6 py-16 text-center text-slate-500">
+    <div className="px-6 py-16 text-center text-slate-600">
       <p className="text-base font-semibold text-slate-800">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-sm">{body}</p>
       {action && <div className="mt-4">{action}</div>}

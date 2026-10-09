@@ -41,7 +41,7 @@ export default function PortalHome() {
     <div className="min-h-screen bg-slate-50">
       <header className="flex items-center justify-between border-b bg-white px-6 py-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-gold">Client portal</p>
+          <p className="text-xs uppercase tracking-wide text-gold-dark">Client portal</p>
           <h1 className="text-lg font-bold text-navy">{tenant?.firmName}</h1>
         </div>
         <div className="flex items-center gap-3 text-sm">
@@ -122,11 +122,11 @@ export default function PortalHome() {
                             {Number(i.taxAmount) > 0 && <span>VAT {moneyExact(i.taxAmount)}</span>}
                             <span className="font-semibold">Total {moneyExact(i.total)}</span>
                           </div>
-                          {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
+                          {i.notes && <p className="px-4 pb-3 text-xs text-slate-600">{i.notes}</p>}
                           {Number(i.balanceDue) > 0 && (
                             <div className="border-t border-slate-100 px-4 py-3">
                               <p className="text-sm font-semibold text-navy">Proof of payment</p>
-                              <p className="mt-1 text-xs text-slate-500">
+                              <p className="mt-1 text-xs text-slate-600">
                                 Upload a bank deposit slip or EFT confirmation (PDF, JPEG, or PNG, up to 10 MB). The firm reviews it before the invoice is marked paid.
                               </p>
                               {(i.proofs || []).length > 0 && (

@@ -176,14 +176,14 @@ export function OutboundPanel({
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-xs text-slate-500">Choose a matter to file the message on that matter.</p>
+            <p className="mt-1 text-xs text-slate-600">Choose a matter to file the message on that matter.</p>
           </div>
         )}
 
         <div className={spread ? "grid gap-6 lg:grid-cols-3" : "grid gap-6"}>
           <section className="space-y-3">
             <h3 className="text-sm font-bold text-navy">SMS</h3>
-            <p className="text-xs text-slate-500">{readiness?.smsHint || "Checking the SMS sender."}</p>
+            <p className="text-xs text-slate-600">{readiness?.smsHint || "Checking the SMS sender."}</p>
             <div>
               <Label>Mobile number</Label>
               <Input aria-label="Mobile number" value={smsPhone} onChange={(e) => setSmsPhone(e.target.value)} placeholder="082 555 0144" />
@@ -200,7 +200,7 @@ export function OutboundPanel({
 
           <section className="space-y-3">
             <h3 className="text-sm font-bold text-navy">WhatsApp</h3>
-            <p className="text-xs text-slate-500">{readiness?.whatsappHint || "Checking WhatsApp."}</p>
+            <p className="text-xs text-slate-600">{readiness?.whatsappHint || "Checking WhatsApp."}</p>
             <div>
               <Label>WhatsApp number</Label>
               <Input aria-label="WhatsApp number" value={waPhone} onChange={(e) => setWaPhone(e.target.value)} placeholder="082 555 0144" />
@@ -233,7 +233,7 @@ export function OutboundPanel({
 
           <section className="space-y-3">
             <h3 className="text-sm font-bold text-navy">Email</h3>
-            <p className="text-xs text-slate-500">{readiness?.emailHint || "Checking email."}</p>
+            <p className="text-xs text-slate-600">{readiness?.emailHint || "Checking email."}</p>
             <div>
               <Label>Email address</Label>
               <Input aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nomsa@example.com" />
@@ -256,7 +256,7 @@ export function OutboundPanel({
         <div>
           <h3 className="mb-2 text-sm font-bold text-navy">Recent sends</h3>
           {rows.length === 0 ? (
-            <p className="text-sm text-slate-500">No SMS, WhatsApp, or email has been attempted yet.</p>
+            <p className="text-sm text-slate-600">No SMS, WhatsApp, or email has been attempted yet.</p>
           ) : (
             <TableWrap>
               <thead>
@@ -277,7 +277,7 @@ export function OutboundPanel({
                     <Td>
                       <StatusBadge status={row.status} />
                       {row.errorMessage && row.status !== "sent" && row.status !== "delivered" && (
-                        <p className="mt-1 max-w-xs text-xs text-slate-500">{row.errorMessage}</p>
+                        <p className="mt-1 max-w-xs text-xs text-slate-600">{row.errorMessage}</p>
                       )}
                     </Td>
                     <Td>{row.caseId ? "Linked" : "Not on a matter"}</Td>

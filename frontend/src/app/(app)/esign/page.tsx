@@ -63,7 +63,7 @@ export default function EsignPage() {
                 <Td className="font-semibold">{r.title}</Td>
                 <Td>
                   {r.signerName}
-                  <div className="text-xs text-slate-500">{r.signerEmail}</div>
+                  <div className="text-xs text-slate-600">{r.signerEmail}</div>
                 </Td>
                 <Td>
                   <StatusBadge status={r.status} />
@@ -78,8 +78,13 @@ export default function EsignPage() {
                     <button
                       className="text-sm text-red-600"
                       onClick={async () => {
-                        await apiPost(`/api/v1/signatures/${r.id}/void`, {});
-                        load();
+                        setError(null);
+                        try {
+                          await apiPost(`/api/v1/signatures/${r.id}/void`, {});
+                          load();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                        }
                       }}
                     >
                       Void

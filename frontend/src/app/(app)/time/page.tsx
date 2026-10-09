@@ -21,7 +21,14 @@ export default function TimePage() {
   };
   const [form, setForm] = useState({ caseId: "", durationMinutes: "36", description: "Legal research" });
   const { timer, start, stop, label } = useTimer();
-  const load = () => apiGet<TimeRow[]>("/api/v1/time-entries").then(setRows);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    apiGet<TimeRow[]>("/api/v1/time-entries")
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load time entries"));
   useEffect(() => {
     load();
     apiGet<Matter[]>("/api/v1/cases").then(setCases);
@@ -47,6 +54,7 @@ export default function TimePage() {
           </div>
         }
       />
+      <ErrorBanner error={error} />
       <TableWrap>
         <thead>
           <tr>

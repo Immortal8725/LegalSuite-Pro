@@ -19,7 +19,14 @@ export default function CalendarPage() {
     setOpen(true);
   };
   const [form, setForm] = useState({ title: "", type: "hearing", location: "", startTime: "" });
-  const load = () => apiGet<CalEvent[]>("/api/v1/events").then(setEvents);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    apiGet<CalEvent[]>("/api/v1/events")
+      .then((r) => {
+        setEvents(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load the calendar"));
   useEffect(() => {
     load();
   }, []);
@@ -36,22 +43,23 @@ export default function CalendarPage() {
   return (
     <div>
       <PageHeader title="Calendar" subtitle="Court dates, depositions, and filing clocks. Color follows the event type." actions={<Button onClick={openDialog}>New event</Button>} />
+      <ErrorBanner error={error} />
       <div className="space-y-4">
-        {byDay.length === 0 && <p className="text-sm text-slate-500">No events in the next 40 days.</p>}
+        {byDay.length === 0 && <p className="text-sm text-slate-600">No events in the next 40 days.</p>}
         {byDay.map(([day, list]) => (
           <Card key={day}>
             <CardBody>
-              <p className="mb-3 text-xs font-bold uppercase text-slate-500">{day}</p>
+              <p className="mb-3 text-xs font-bold uppercase text-slate-600">{day}</p>
               <div className="space-y-3">
                 {list.map((e) => (
                   <div key={e.id} className="flex flex-wrap justify-between gap-2 border-l-4 border-gold pl-3">
                     <div>
                       <p className="font-semibold">{e.title}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-600">
                         {e.type} · {e.location || "TBD"}
                       </p>
                     </div>
-                    <p className="text-sm text-slate-500">{formatDateTime(e.startTime)}</p>
+                    <p className="text-sm text-slate-600">{formatDateTime(e.startTime)}</p>
                   </div>
                 ))}
               </div>

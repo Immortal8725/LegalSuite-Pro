@@ -49,7 +49,7 @@ export default function TemplatesPage() {
                 }}
               >
                 <p className="font-semibold text-navy">{t.name}</p>
-                <p className="text-xs uppercase text-slate-500">{t.category}</p>
+                <p className="text-xs uppercase text-slate-600">{t.category}</p>
               </button>
             ))}
           </div>
@@ -89,18 +89,28 @@ export default function TemplatesPage() {
                   <Button
                     variant="outline"
                     onClick={async () => {
-                      await apiPut(`/api/v1/templates/${active.id}`, active);
-                      load();
+                      setError(null);
+                      try {
+                        await apiPut(`/api/v1/templates/${active.id}`, active);
+                        load();
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                      }
                     }}
                   >
                     Save body
                   </Button>
                   <Button
                     onClick={async () => {
-                      const res = await apiPost<DocTemplate>(`/api/v1/templates/${active.id}/merge`, {
-                        caseId: caseId || undefined,
-                      });
-                      setMerged(res.merged || "");
+                      setError(null);
+                      try {
+                        const res = await apiPost<DocTemplate>(`/api/v1/templates/${active.id}/merge`, {
+                          caseId: caseId || undefined,
+                        });
+                        setMerged(res.merged || "");
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                      }
                     }}
                   >
                     Merge
@@ -119,10 +129,15 @@ export default function TemplatesPage() {
         footer={
           <Button
             onClick={async () => {
-              await apiPost("/api/v1/templates", form);
-              setOpen(false);
-              setForm({ name: "", category: "correspondence", body: "" });
-              load();
+              setError(null);
+              try {
+                await apiPost("/api/v1/templates", form);
+                setOpen(false);
+                setForm({ name: "", category: "correspondence", body: "" });
+                load();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+              }
             }}
           >
             Create

@@ -13,6 +13,7 @@ export default function TasksPage() {
   const [rows, setRows] = useState<Task[]>([]);
   const [open, setOpen] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const openDialog = () => {
     setDialogError(null);
@@ -20,7 +21,13 @@ export default function TasksPage() {
   };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const load = () => apiGet<Task[]>("/api/v1/tasks").then(setRows);
+  const load = () =>
+    apiGet<Task[]>("/api/v1/tasks")
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load tasks"));
   useEffect(() => {
     load();
   }, []);
@@ -32,25 +39,32 @@ export default function TasksPage() {
 
   return (
     <div>
-      <PageHeader title="Tasks" subtitle="Drag is a click: move a card by changing its status." actions={<Button onClick={openDialog}>Add task</Button>} />
+      <PageHeader title="Tasks" subtitle="Move a card by changing its status." actions={<Button onClick={openDialog}>Add task</Button>} />
+      <ErrorBanner error={error} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {COLS.map((col) => (
           <div key={col} className="rounded-xl bg-slate-100 p-3">
-            <p className="mb-3 text-xs font-bold uppercase text-slate-500">
+            <p className="mb-3 text-xs font-bold uppercase text-slate-600">
               {col.replaceAll("_", " ")} · {grouped[col].length}
             </p>
             {grouped[col].map((t) => (
               <div key={t.id} className="mb-2 rounded-lg bg-white p-3 shadow-card">
                 <p className="text-sm font-semibold">{t.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{t.description}</p>
+                <p className="mt-1 text-xs text-slate-600">{t.description}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <StatusBadge status={t.priority} />
                   <Select
                     className="h-8 w-auto text-xs"
+                    aria-label={`Status of ${t.title}`}
                     value={t.status}
                     onChange={async (e) => {
-                      await apiPatch(`/api/v1/tasks/${t.id}/status`, { status: e.target.value });
-                      load();
+                      setError(null);
+                      try {
+                        await apiPatch(`/api/v1/tasks/${t.id}/status`, { status: e.target.value });
+                        await load();
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Could not move the task");
+                      }
                     }}
                   >
                     {COLS.map((s) => (

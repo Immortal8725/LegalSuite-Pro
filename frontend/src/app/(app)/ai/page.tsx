@@ -120,7 +120,7 @@ export default function AiPage() {
             </CardHeader>
             <CardBody className="space-y-3">
               {leads.length === 0 ? (
-                <p className="text-sm text-slate-500">No website leads yet. Submit one from the public firm page.</p>
+                <p className="text-sm text-slate-600">No website leads yet. Submit one from the public firm page.</p>
               ) : (
                 <>
                   <Select value={leadId} onChange={(e) => setLeadId(e.target.value)}>

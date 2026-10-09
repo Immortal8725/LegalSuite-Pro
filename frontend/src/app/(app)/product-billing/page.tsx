@@ -125,30 +125,30 @@ export default function ProductBillingPage() {
               <StatusBadge status={status.seatStatus} />
             </CardHeader>
             <CardBody>
-              <p className="mb-4 text-sm text-slate-500">{status.note}</p>
+              <p className="mb-4 text-sm text-slate-600">{status.note}</p>
               <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs text-slate-500">Seat price</p>
+                  <p className="text-xs text-slate-600">Seat price</p>
                   <p className="text-xl font-extrabold text-navy">{moneyExact(status.seatPrice, "ZAR")} / month</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Seats on the account</p>
+                  <p className="text-xs text-slate-600">Seats on the account</p>
                   <p className="text-xl font-extrabold text-navy">{status.seatCount}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Last payment</p>
+                  <p className="text-xs text-slate-600">Last payment</p>
                   <p className="text-xl font-extrabold text-navy">
                     {status.lastAmount ? moneyExact(status.lastAmount, "ZAR") : "None"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Card token</p>
+                  <p className="text-xs text-slate-600">Card token</p>
                   <p className="text-xl font-extrabold text-navy">
                     {status.tokenPresent ? `On file, ending ${status.tokenHint || ""}` : "Not saved"}
                   </p>
                 </div>
               </div>
-              <p className="mb-4 text-xs text-slate-500">
+              <p className="mb-4 text-xs text-slate-600">
                 Environment: {status.environment}. PayFast merchant {status.merchantConfigured ? "is set" : "is not set"}.
                 Passphrase {status.passphraseSet ? "is set" : "is blank"}. A blank passphrase is valid only when the PayFast merchant has none.
                 {status.lastPfPaymentId ? ` Last PayFast id ${status.lastPfPaymentId}.` : ""}
@@ -187,7 +187,7 @@ export default function ProductBillingPage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">A firm owner or director starts the subscription. You can still read this status.</p>
+                <p className="text-sm text-slate-600">A firm owner or director starts the subscription. You can still read this status.</p>
               )}
             </CardBody>
           </Card>
@@ -197,7 +197,7 @@ export default function ProductBillingPage() {
               <CardTitle>Phone minutes</CardTitle>
             </CardHeader>
             <CardBody>
-              <p className="mb-4 text-sm text-slate-500">
+              <p className="mb-4 text-sm text-slate-600">
                 Minutes are pay-what-you-use and are charged with the saved PayFast token. This does not include the seat.
                 The pilot trigger is manual.
               </p>
@@ -228,7 +228,7 @@ export default function ProductBillingPage() {
                 </div>
               )}
               {status.minutes.length === 0 ? (
-                <p className="text-sm text-slate-500">No minute invoices yet.</p>
+                <p className="text-sm text-slate-600">No minute invoices yet.</p>
               ) : (
                 <TableWrap>
                   <thead>
@@ -264,7 +264,7 @@ export default function ProductBillingPage() {
             </CardHeader>
             <CardBody className="p-0">
               {status.payments.length === 0 ? (
-                <p className="p-5 text-sm text-slate-500">No product payments yet. A return from PayFast is not itself proof of payment. The seat turns active after the ITN is checked.</p>
+                <p className="p-5 text-sm text-slate-600">No product payments yet. A return from PayFast is not itself proof of payment. The seat turns active after the ITN is checked.</p>
               ) : (
                 <TableWrap>
                   <thead>

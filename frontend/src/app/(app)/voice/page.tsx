@@ -148,7 +148,7 @@ export default function VoicePage() {
           <CardTitle>Call a teammate</CardTitle>
         </CardHeader>
         <CardBody className="flex flex-wrap items-center gap-2">
-          <select className="h-10 rounded-lg border px-3 text-sm" value={peerId} onChange={(e) => setPeerId(e.target.value)}>
+          <select className="h-10 rounded-lg border px-3 text-sm" aria-label="Colleague to call" value={peerId} onChange={(e) => setPeerId(e.target.value)}>
             <option value="">Choose a teammate</option>
             {team.map((u) => (
               <option key={u.id} value={u.id}>
@@ -163,15 +163,20 @@ export default function VoicePage() {
           <Button
             disabled={!peer}
             onClick={async () => {
-              if (!peer) return;
-              if (record && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
-              await startCall(peer, { record });
-              load();
+              setError(null);
+              try {
+                if (!peer) return;
+                if (record && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
+                await startCall(peer, { record });
+                load();
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+              }
             }}
           >
             Call in app
           </Button>
-          <p className="w-full text-xs text-slate-500">In-app WebRTC stays inside the browser and does not show a public caller ID.</p>
+          <p className="w-full text-xs text-slate-600">In-app WebRTC stays inside the browser and does not show a public caller ID.</p>
         </CardBody>
       </Card>
 
@@ -181,7 +186,7 @@ export default function VoicePage() {
         </CardHeader>
         <CardBody className="space-y-6">
           <p className="text-sm text-slate-600">{readiness?.message || ethics?.pstnNotice}</p>
-          {ethics?.pstnNotice && <p className="text-xs text-slate-500">{ethics.pstnNotice}</p>}
+          {ethics?.pstnNotice && <p className="text-xs text-slate-600">{ethics.pstnNotice}</p>}
 
           <div>
             <h3 className="mb-2 text-sm font-bold text-navy">Caller IDs</h3>
@@ -191,7 +196,7 @@ export default function VoicePage() {
               </p>
             )}
             {(readiness?.callerIds || []).length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-600">
                 No number is saved on this firm yet. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a local number is optional.
               </p>
             ) : (
@@ -211,7 +216,7 @@ export default function VoicePage() {
                       <Td>
                         <span className="font-mono">{n.e164}</span>
                         {n.defaultOutbound && <span className="ml-2 text-[11px] font-bold uppercase text-gold">Default</span>}
-                        {n.friendlyName && <div className="text-xs text-slate-500">{n.friendlyName}</div>}
+                        {n.friendlyName && <div className="text-xs text-slate-600">{n.friendlyName}</div>}
                         {n.validationCode && (
                           <div className="mt-1 text-xs text-amber-800">
                             Enter {n.validationCode} when Twilio calls this phone.
@@ -257,7 +262,7 @@ export default function VoicePage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
               <h3 className="mb-2 text-sm font-bold text-navy">Verify a personal number</h3>
-              <p className="mb-3 text-xs text-slate-500">
+              <p className="mb-3 text-xs text-slate-600">
                 Use a mobile or a landline you can answer. Twilio calls that phone and asks for a code. After you enter it, that number is the caller ID. You do not need to buy a number.
               </p>
               <div className="grid gap-3">
@@ -288,7 +293,7 @@ export default function VoicePage() {
             </div>
             <div>
               <h3 className="mb-2 text-sm font-bold text-navy">Rent a local number (optional)</h3>
-              <p className="mb-3 text-xs text-slate-500">Optional. Search Twilio if you want a separate local number. Dialing does not require a purchase.</p>
+              <p className="mb-3 text-xs text-slate-600">Optional. Search Twilio if you want a separate local number. Dialing does not require a purchase.</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <Label>Country</Label>
@@ -330,7 +335,7 @@ export default function VoicePage() {
                     <li key={n.phoneNumber} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                       <span>
                         <span className="font-mono">{n.phoneNumber}</span>
-                        <span className="ml-2 text-slate-500">{[n.locality, n.region].filter(Boolean).join(", ")}</span>
+                        <span className="ml-2 text-slate-600">{[n.locality, n.region].filter(Boolean).join(", ")}</span>
                       </span>
                       <Button
                         size="sm"
@@ -359,7 +364,7 @@ export default function VoicePage() {
 
           <div>
             <h3 className="mb-2 text-sm font-bold text-navy">Dial out</h3>
-            <p className="mb-3 text-xs text-slate-500">
+            <p className="mb-3 text-xs text-slate-600">
               Your mobile rings first. When you answer, we connect the other party and they see the automatic caller ID, or the one you pick. This is not a browser softphone. Emergency numbers stay on the handset dialer. Buying a number is optional.
             </p>
             <div className="grid gap-3 md:grid-cols-2">
@@ -426,23 +431,28 @@ export default function VoicePage() {
               <Button
                 disabled={placing || !destination || !callback || (!matterId && !nonMatter)}
                 onClick={async () => {
-                  if (pstnRecord && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
-                  setPlacing(true);
-                  const placed = await run(
-                    () =>
-                      apiPost<CallRow>("/api/v1/calls/pstn", {
-                        to: destination,
-                        staffCallback: callback,
-                        firmPhoneNumberId: callerId || undefined,
-                        caseId: nonMatter ? undefined : matterId,
-                        nonMatter,
-                        recordingEnabled: pstnRecord,
-                        recordingConsentGiven: pstnRecord,
-                      }),
-                    "Calling your phone. Answer it to be connected. The other party will see the firm caller ID."
-                  );
-                  if (placed) setDestination("");
-                  setPlacing(false);
+                  setError(null);
+                  try {
+                    if (pstnRecord && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
+                    setPlacing(true);
+                    const placed = await run(
+                      () =>
+                        apiPost<CallRow>("/api/v1/calls/pstn", {
+                          to: destination,
+                          staffCallback: callback,
+                          firmPhoneNumberId: callerId || undefined,
+                          caseId: nonMatter ? undefined : matterId,
+                          nonMatter,
+                          recordingEnabled: pstnRecord,
+                          recordingConsentGiven: pstnRecord,
+                        }),
+                      "Calling your phone. Answer it to be connected. The other party will see the firm caller ID."
+                    );
+                    if (placed) setDestination("");
+                    setPlacing(false);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                  }
                 }}
               >
                 {placing ? "Placing call" : "Place call"}
@@ -486,7 +496,7 @@ export default function VoicePage() {
           ))}
         </tbody>
       </TableWrap>
-      <p className="mt-3 text-xs text-slate-500">{usage?.note}</p>
+      <p className="mt-3 text-xs text-slate-600">{usage?.note}</p>
     </div>
   );
 }

@@ -55,7 +55,7 @@ export default function ModulesPage() {
                 </CardTitle>
               </CardHeader>
               <CardBody>
-                <p className="mb-3 text-sm text-slate-500">{m.description}</p>
+                <p className="mb-3 text-sm text-slate-600">{m.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{m.core ? "Included" : `${money(m.priceMonthly)}/mo`}</span>
                   <Button size="sm" variant={on ? "default" : "outline"} disabled={m.core} onClick={() => toggle(m)}>

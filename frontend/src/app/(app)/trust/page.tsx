@@ -119,15 +119,15 @@ export default function TrustPage() {
           </CardHeader>
           <CardBody className="grid gap-4 sm:grid-cols-3 text-sm">
             <div>
-              <p className="text-xs text-slate-500">Bank statement</p>
+              <p className="text-xs text-slate-600">Bank statement</p>
               <p className="text-xl font-extrabold">{moneyExact(live.bankBalance)}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Cashbook</p>
+              <p className="text-xs text-slate-600">Cashbook</p>
               <p className="text-xl font-extrabold">{moneyExact(live.bookBalance)}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Client ledgers</p>
+              <p className="text-xs text-slate-600">Client ledgers</p>
               <p className="text-xl font-extrabold">{moneyExact(live.clientLedgerTotal)}</p>
             </div>
             <p className="sm:col-span-3 text-xs text-slate-600">{live.rule}</p>
@@ -156,7 +156,7 @@ export default function TrustPage() {
               </CardHeader>
               <CardBody>
                 <p className="text-2xl font-extrabold text-navy">{moneyExact(a.balance)}</p>
-                <p className="text-xs text-slate-500">{a.bankName}</p>
+                <p className="text-xs text-slate-600">{a.bankName}</p>
               </CardBody>
             </Card>
           </button>
@@ -178,7 +178,7 @@ export default function TrustPage() {
         </Card>
       )}
       {recon?.history && recon.history.length > 0 && (
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-slate-600">
           Last saved recon: {recon.history[0].status}
           {recon.history[0].certified ? " · certified" : " · not certified"} · difference{" "}
           {moneyExact(recon.history[0].difference)}
@@ -254,7 +254,7 @@ export default function TrustPage() {
             </option>
           ))}
         </Select>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-600">
           {moveMatter
             ? `Posts to ${moveMatter.clientName || "this client"}'s ledger.`
             : move.type === "deposit"
@@ -313,7 +313,7 @@ export default function TrustPage() {
           ))}
         </Select>
         {chosenInvoice && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-600">
             This client&apos;s ledger on the selected account is {moneyExact(ledgerFor(chosenInvoice.clientId))}. Invoice balance is {moneyExact(chosenInvoice.balanceDue)}.
           </p>
         )}
@@ -394,9 +394,14 @@ export default function TrustPage() {
           accept=".csv,text/csv,text/plain"
           className="mb-3 block text-sm"
           onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            setCsv(await file.text());
+            setError(null);
+            try {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setCsv(await file.text());
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+            }
           }}
         />
         <Label>CSV</Label>

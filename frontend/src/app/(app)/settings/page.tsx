@@ -243,7 +243,7 @@ export default function SettingsPage() {
               </Button>
             </div>
             {tenant?.paiaManualBody && (
-              <Textarea className="sm:col-span-2 min-h-[220px] font-mono text-xs" readOnly value={tenant.paiaManualBody} />
+              <Textarea aria-label="PAIA manual" className="sm:col-span-2 min-h-[220px] font-mono text-xs" readOnly value={tenant.paiaManualBody} />
             )}
           </CardBody>
         </Card>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
                 {totp && (
                   <div className="space-y-2 rounded-lg border bg-slate-50 p-3">
                     <p className="font-mono text-xs break-all">Secret {totp.secret}</p>
-                    <p className="font-mono text-[11px] break-all text-slate-500">{totp.otpauthUrl}</p>
+                    <p className="font-mono text-[11px] break-all text-slate-600">{totp.otpauthUrl}</p>
                     <Label>Code from the app</Label>
                     <Input aria-label="Code from the app" value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="123456" />
                     <Button
@@ -334,7 +334,7 @@ export default function SettingsPage() {
             <CardTitle>LegalSuite product billing</CardTitle>
           </CardHeader>
           <CardBody>
-            <p className="mb-3 text-sm text-slate-500">
+            <p className="mb-3 text-sm text-slate-600">
               The Light seat and phone minutes are billed to the firm through PayFast. That is separate from client invoices and from trust.
             </p>
             <Link href="/product-billing" className="text-sm font-semibold text-navy underline">

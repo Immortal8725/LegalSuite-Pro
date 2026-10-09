@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { apiGet, apiPost, getToken } from "@/lib/api";
+import { apiBlob, apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { InvoiceLines } from "@/components/invoice-lines";
@@ -24,22 +24,10 @@ function message(e: unknown, fallback: string) {
 }
 
 async function openProofFile(id: string) {
-  const res = await fetch(`/api/v1/payment-proofs/${id}/file`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) {
-    let detail = "Could not open the file";
-    try {
-      const body = (await res.json()) as { message?: string };
-      if (body.message) detail = body.message;
-    } catch {
-      /* response was not JSON */
-    }
-    throw new Error(detail);
-  }
-  const blob = await res.blob();
+  const blob = await apiBlob(`/api/v1/payment-proofs/${id}/file`);
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export default function BillingPage() {
@@ -268,12 +256,12 @@ export default function BillingPage() {
                       {Number(i.writeOffAmount) > 0 && <span>Written off {moneyExact(i.writeOffAmount)}</span>}
                       <span className="font-semibold">Balance {moneyExact(i.balanceDue)}</span>
                     </div>
-                    {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
+                    {i.notes && <p className="px-4 pb-3 text-xs text-slate-600">{i.notes}</p>}
                     <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Payments</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Payments</p>
                         {(i.payments || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No payments recorded.</p>
+                          <p className="text-sm text-slate-600">No payments recorded.</p>
                         ) : (
                           <ul className="space-y-1 text-sm">
                             {(i.payments || []).map((p) => (
@@ -290,9 +278,9 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Write-offs</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Write-offs</p>
                         {(i.writeOffs || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No write-offs.</p>
+                          <p className="text-sm text-slate-600">No write-offs.</p>
                         ) : (
                           <ul className="space-y-1 text-sm">
                             {(i.writeOffs || []).map((w) => (
@@ -304,9 +292,9 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div className="md:col-span-2">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Proof of payment</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Proof of payment</p>
                         {(i.proofs || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No slips on this invoice.</p>
+                          <p className="text-sm text-slate-600">No slips on this invoice.</p>
                         ) : (
                           <ul className="space-y-2 text-sm">
                             {(i.proofs || []).map((p) => (
@@ -319,7 +307,7 @@ export default function BillingPage() {
                                 <button className="font-semibold text-navy" onClick={() => openProofFile(p.id).catch((e) => setError(message(e, "Could not open the file")))}>
                                   Open file
                                 </button>
-                                {p.reviewNote && <span className="text-slate-500">{p.reviewNote}</span>}
+                                {p.reviewNote && <span className="text-slate-600">{p.reviewNote}</span>}
                               </li>
                             ))}
                           </ul>

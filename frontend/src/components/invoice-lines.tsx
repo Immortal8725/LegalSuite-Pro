@@ -38,7 +38,7 @@ function Section({
 }) {
   return (
     <section>
-      <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">{title}</h3>
+      <h3 className="text-xs font-bold uppercase tracking-wide text-slate-600">{title}</h3>
       <table className="mt-2 w-full text-sm">{children}</table>
     </section>
   );
@@ -49,14 +49,14 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
   const fees = lines.filter((line) => line.kind !== "expense");
   const disbursements = lines.filter((line) => line.kind === "expense");
   if (lines.length === 0) {
-    return <p className="px-4 py-3 text-sm text-slate-500">No line items.</p>;
+    return <p className="px-4 py-3 text-sm text-slate-600">No line items.</p>;
   }
   return (
     <div className="space-y-4 bg-slate-50 px-4 py-3">
       {fees.length > 0 && (
         <Section title="Fees">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-600">
               <th className="py-1 pr-3 font-semibold">Date</th>
               <th className="py-1 pr-3 font-semibold">Description</th>
               <th className="py-1 pr-3 font-semibold">Time</th>
@@ -78,7 +78,7 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
       {disbursements.length > 0 && (
         <Section title="Disbursements">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="text-left text-[11px] uppercase tracking-wide text-slate-600">
               <th className="py-1 pr-3 font-semibold">Date</th>
               <th className="py-1 pr-3 font-semibold">Description</th>
               <th className="py-1 pr-3 font-semibold">Vendor</th>
@@ -91,7 +91,7 @@ export function InvoiceLines({ raw }: { raw?: string | null }) {
                 <td className="py-1.5 pr-3">{showDate(line.date)}</td>
                 <td className="py-1.5 pr-3">
                   {line.description}
-                  {line.category ? <span className="ml-2 text-xs text-slate-500">{line.category}</span> : null}
+                  {line.category ? <span className="ml-2 text-xs text-slate-600">{line.category}</span> : null}
                 </td>
                 <td className="py-1.5 pr-3">{line.vendor || ""}</td>
                 <td className="py-1.5 text-right">{moneyExact(line.amount)}</td>

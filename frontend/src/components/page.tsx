@@ -14,7 +14,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-navy">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
       </div>
       {actions}
     </div>
@@ -106,7 +106,7 @@ export function Td({ children, className }: { children: ReactNode; className?: s
 }
 
 export function Loading() {
-  return <p className="py-16 text-center text-sm text-slate-500">Loading…</p>;
+  return <p className="py-16 text-center text-sm text-slate-600">Loading…</p>;
 }
 
 export { Button };
