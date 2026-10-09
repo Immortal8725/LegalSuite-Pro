@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.Client;
@@ -92,8 +93,9 @@ public class TemplateService {
             values.put("attorney.email", nz(u.getEmail()));
             values.put("attorney.title", nz(u.getTitle()));
         });
-        if (body.get("caseId") != null) {
-            LegalCase c = cases.findByIdAndTenantId(UUID.fromString(String.valueOf(body.get("caseId"))), tid())
+        UUID mergeCase = Ids.optUuid(body.get("caseId"), "matter");
+        if (mergeCase != null) {
+            LegalCase c = cases.findByIdAndTenantId(mergeCase, tid())
                     .orElseThrow(() -> ApiException.notFound("Matter not found"));
             values.put("case.title", nz(c.getTitle()));
             values.put("case.number", nz(c.getCaseNumber()));
@@ -105,8 +107,9 @@ public class TemplateService {
                 clients.findByIdAndTenantId(c.getClientId(), tid()).ifPresent(cl -> fillClient(values, cl));
             }
         }
-        if (body.get("clientId") != null) {
-            Client cl = clients.findByIdAndTenantId(UUID.fromString(String.valueOf(body.get("clientId"))), tid())
+        UUID mergeClient = Ids.optUuid(body.get("clientId"), "client");
+        if (mergeClient != null) {
+            Client cl = clients.findByIdAndTenantId(mergeClient, tid())
                     .orElseThrow(() -> ApiException.notFound("Client not found"));
             fillClient(values, cl);
         }

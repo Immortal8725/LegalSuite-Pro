@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
@@ -101,9 +102,9 @@ public class VoiceService {
         if (rec.isRecordingEnabled() && !rec.isRecordingConsentGiven()) {
             throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
         }
-        if (body.get("calleeUserId") != null) rec.setCalleeUserId(UUID.fromString(String.valueOf(body.get("calleeUserId"))));
-        if (body.get("caseId") != null) rec.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
-        if (body.get("clientId") != null) rec.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
+        if (body.get("calleeUserId") != null) rec.setCalleeUserId(Ids.optUuid(body.get("calleeUserId"), "person called"));
+        if (body.get("caseId") != null) rec.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
+        if (body.get("clientId") != null) rec.setClientId(Ids.optUuid(body.get("clientId"), "client"));
         rec.setCostPerMinute(costFor(rec.getCallType()));
         calls.save(rec);
         return view(rec);

@@ -4,13 +4,19 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { OutboundPanel } from "@/components/outbound-panel";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
-import { Dialog, EmptyState } from "@/components/ui/dialog";
+import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select } from "@/components/ui/input";
 import type { Contact } from "@/lib/types";
 
 export default function ContactsPage() {
   const [rows, setRows] = useState<Contact[]>([]);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [messaging, setMessaging] = useState<Contact | null>(null);
   const [form, setForm] = useState({ type: "opposing_counsel", firstName: "", lastName: "", company: "", email: "", phone: "" });
   const load = () => apiGet<Contact[]>("/api/v1/contacts").then(setRows);
@@ -20,7 +26,7 @@ export default function ContactsPage() {
 
   return (
     <div>
-      <PageHeader title="Contacts" subtitle="Judges, opposing counsel, experts, and vendors." actions={<Button onClick={() => setOpen(true)}>Add contact</Button>} />
+      <PageHeader title="Contacts" subtitle="Judges, opposing counsel, experts, and vendors." actions={<Button onClick={openDialog}>Add contact</Button>} />
       {rows.length === 0 ? (
         <EmptyState title="No contacts" body="Add opposing counsel before the first hearing." />
       ) : (
@@ -59,16 +65,26 @@ export default function ContactsPage() {
         title="Contact"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/contacts", form);
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/contacts", form);
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not save the contact");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Type</Label>
           <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>

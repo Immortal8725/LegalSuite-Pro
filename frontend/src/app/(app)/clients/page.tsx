@@ -12,6 +12,12 @@ export default function ClientsPage() {
   const [rows, setRows] = useState<Party[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [messaging, setMessaging] = useState<Party | null>(null);
   const [form, setForm] = useState({ type: "individual", firstName: "", lastName: "", companyName: "", email: "", phone: "", source: "website" });
 
@@ -22,7 +28,7 @@ export default function ClientsPage() {
 
   return (
     <div>
-      <PageHeader title="Clients" subtitle="People and companies the firm represents. Portal access is a toggle." actions={<Button onClick={() => setOpen(true)}>New client</Button>} />
+      <PageHeader title="Clients" subtitle="People and companies the firm represents. Portal access is a toggle." actions={<Button onClick={openDialog}>New client</Button>} />
       <ErrorBanner error={error} />
       {rows.length === 0 ? (
         <EmptyState title="No clients" body="Add a retained client or wait for an intake from your public site." />
@@ -68,16 +74,26 @@ export default function ClientsPage() {
         title="New client"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/clients", form);
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/clients", form);
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not save the client");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="individual">Individual</option>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { hoursFromMinutes, moneyExact } from "@/lib/utils";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { useTimer } from "@/components/timer-provider";
 import type { Matter, TimeRow } from "@/lib/types";
@@ -13,6 +13,12 @@ export default function TimePage() {
   const [rows, setRows] = useState<TimeRow[]>([]);
   const [cases, setCases] = useState<Matter[]>([]);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [form, setForm] = useState({ caseId: "", durationMinutes: "36", description: "Legal research" });
   const { timer, start, stop, label } = useTimer();
   const load = () => apiGet<TimeRow[]>("/api/v1/time-entries").then(setRows);
@@ -35,7 +41,7 @@ export default function TimePage() {
             ) : (
               <Button onClick={() => start(form.caseId || undefined)}>Start timer</Button>
             )}
-            <Button variant="outline" onClick={() => setOpen(true)}>
+            <Button variant="outline" onClick={openDialog}>
               Manual entry
             </Button>
           </div>
@@ -71,16 +77,26 @@ export default function TimePage() {
         title="Log time"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/time-entries", form);
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/time-entries", { ...form, caseId: form.caseId || undefined });
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not save the time entry");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Matter</Label>
           <Select value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>

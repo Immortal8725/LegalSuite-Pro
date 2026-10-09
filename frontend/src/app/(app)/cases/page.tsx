@@ -13,6 +13,12 @@ export default function CasesPage() {
   const [clients, setClients] = useState<Party[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [form, setForm] = useState({
     title: "",
     clientId: "",
@@ -40,11 +46,11 @@ export default function CasesPage() {
       <PageHeader
         title="Cases & matters"
         subtitle="Every open file, with court and opposing party."
-        actions={<Button onClick={() => setOpen(true)}>New matter</Button>}
+        actions={<Button onClick={openDialog}>New matter</Button>}
       />
       <ErrorBanner error={error} />
       {rows.length === 0 && !error ? (
-        <EmptyState title="No matters yet" body="Open a file from intake or add a retained client first." action={<Button onClick={() => setOpen(true)}>New matter</Button>} />
+        <EmptyState title="No matters yet" body="Open a file from intake or add a retained client first." action={<Button onClick={openDialog}>New matter</Button>} />
       ) : (
         <TableWrap>
           <thead>
@@ -83,16 +89,26 @@ export default function CasesPage() {
         title="Open a matter"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/cases", form);
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/cases", form);
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not create the matter");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Create
+            {saving ? "Saving…" : "Create"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <div>
             <Label>Title</Label>
