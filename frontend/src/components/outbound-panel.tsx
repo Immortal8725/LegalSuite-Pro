@@ -65,6 +65,8 @@ export function OutboundPanel({
 
   useEffect(() => {
     load();
+    // Reload only when the matter this panel is locked to changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lockedMatterId]);
 
   useEffect(() => {

@@ -37,6 +37,7 @@ public class TenantService {
     private final LandingPageRepository landingPages;
     private final PasswordEncoder encoder;
     private final AuthService authService;
+    private final AuditService audit;
 
     public TenantService(
             TenantRepository tenants,
@@ -46,7 +47,9 @@ public class TenantService {
             AppUserRepository users,
             LandingPageRepository landingPages,
             PasswordEncoder encoder,
-            AuthService authService) {
+            AuthService authService,
+            AuditService audit) {
+        this.audit = audit;
         this.tenants = tenants;
         this.plans = plans;
         this.modules = modules;
@@ -95,6 +98,7 @@ public class TenantService {
                 });
         tm.setEnabled(enabled);
         tenantModules.save(tm);
+        audit.record(enabled ? "module.enable" : "module.disable", "module", moduleId.toString(), module.getSlug());
         return Map.of("module", module.getSlug(), "enabled", enabled);
     }
 
@@ -145,6 +149,7 @@ public class TenantService {
             page.setUpdatedAt(Instant.now());
             landingPages.save(page);
         }
+        audit.record("firm.update", "tenant", tenant.getId().toString(), String.join(",", body.keySet()));
         return authService.tenantView(tenant);
     }
 
@@ -159,6 +164,7 @@ public class TenantService {
         tenant.setPaiaManualBody(PaiaManual.generate(tenant));
         tenant.setUpdatedAt(Instant.now());
         tenants.save(tenant);
+        audit.record("firm.paia_generated", "tenant", tenant.getId().toString(), "PAIA manual");
         return authService.tenantView(tenant);
     }
 
@@ -198,6 +204,7 @@ public class TenantService {
         users.save(user);
         Map<String, Object> view = new HashMap<>(authService.userView(user));
         view.put("temporaryPassword", temporary);
+        audit.record("user.invite", "user", user.getId().toString(), email + " as " + role);
         return view;
     }
 
@@ -222,6 +229,7 @@ public class TenantService {
         if (body.get("title") != null) user.setTitle(String.valueOf(body.get("title")));
         if (body.get("hourlyRate") != null) user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         users.save(user);
+        audit.record("user.update", "user", user.getId().toString(), user.getEmail() + " " + String.join(",", body.keySet()) + (body.get("role") == null ? "" : " role " + user.getRole()));
         return authService.userView(user);
     }
 

@@ -57,6 +57,8 @@ export default function TrustPage() {
   };
   useEffect(() => {
     load().catch((e) => setError(e.message));
+    // Load once on mount. load() picks the selected account itself, so re-running on every change would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const acct = accounts.find((a) => a.id === selected);

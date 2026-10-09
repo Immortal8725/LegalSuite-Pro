@@ -37,8 +37,9 @@ const FEATURE_FOR: Partial<Record<FirmPage, string>> = {
 };
 
 export function FirmView({ view }: { view: FirmPage }) {
-  const { site, error, loading } = usePublicSite();
-  const base = useSiteBase(site?.slug || "");
+  // The route slug is known before the site loads, so links keep the /firm/<slug> prefix from the first render.
+  const { slug, site, error, loading } = usePublicSite();
+  const base = useSiteBase(slug);
 
   if (loading) return <p className="px-6 py-16 text-sm text-[var(--ps-meta)]">Loading…</p>;
   if (error || !site) {
@@ -364,7 +365,7 @@ function Practice({ site, base }: { site: PublicSite; base: string }) {
 }
 
 function People({ site, base }: { site: PublicSite; base: string }) {
-  const people = site.people || [];
+  const people = useMemo(() => site.people || [], [site.people]);
   const [query, setQuery] = useState("");
   const [title, setTitle] = useState("All");
   const titles = useMemo(() => ["All", ...Array.from(new Set(people.map((person) => person.title)))], [people]);

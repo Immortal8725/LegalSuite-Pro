@@ -86,6 +86,8 @@ export default function VoicePage() {
 
   useEffect(() => {
     load();
+    // Load once on mount; later reloads are triggered by the actions on the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
