@@ -44,7 +44,7 @@ export default function ModulesPage() {
         subtitle={`Light includes the practice desk and section 86 trust. Add-ons outside the seat this month: ${money(addOnCost)}. Public-network minutes are pay-what-you-use and are not a module price.`}
       />
       <ErrorBanner error={error} />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {catalog.map((m) => {
           const on = enabled.has(m.slug);
           return (

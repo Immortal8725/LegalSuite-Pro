@@ -38,7 +38,7 @@ export default function ConflictsPage() {
     <div>
       <PageHeader title="Conflict check" subtitle="Matches clients, related last names, adverse entities, and opposing counsel." />
       <ErrorBanner error={error} />
-      <form onSubmit={run} className="mb-6 grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+      <form onSubmit={run} className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Prospective client" required />
         <Input value={opposing} onChange={(e) => setOpposing(e.target.value)} placeholder="Adverse party (optional)" />
         <Button type="submit">Run check</Button>

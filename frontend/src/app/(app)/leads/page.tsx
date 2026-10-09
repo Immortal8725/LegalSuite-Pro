@@ -153,7 +153,7 @@ export default function LeadsPage() {
           )}
         </div>
       )}
-      <div className="mt-4 grid gap-3 overflow-x-auto md:grid-cols-5">
+      <div className="mt-4 grid grid-cols-1 gap-3 overflow-x-auto md:grid-cols-5">
         {STAGES.map((stage) => (
           <Card key={stage} className="min-w-[180px]">
             <CardHeader>

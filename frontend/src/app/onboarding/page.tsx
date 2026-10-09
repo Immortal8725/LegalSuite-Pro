@@ -64,7 +64,7 @@ export default function OnboardingPage() {
         </div>
         <div className="rounded-2xl bg-white p-8 shadow-card">
           {step === 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <h2 className="sm:col-span-2 text-xl font-bold">Where should clients find you?</h2>
               <div>
                 <Label>Phone</Label>
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
                 <Label>Tagline</Label>
                 <Input aria-label="Tagline" value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {TEMPLATES.map((t) => (
                   <button
                     type="button"

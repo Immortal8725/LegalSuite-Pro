@@ -124,7 +124,7 @@ export function SiteFrame({
       </header>
       <main id="main">{children}</main>
       <footer className="border-t border-[var(--ps-line)] bg-[var(--ps-clay)]">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid grid-cols-1 max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="text-lg" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>
               {site.firmName}

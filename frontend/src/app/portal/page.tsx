@@ -173,11 +173,11 @@ export default function PortalHome() {
                                     onChange={(e) => setProofFile(e.target.files?.[0] || null)}
                                   />
                                   <Label className="mt-2">Amount claimed</Label>
-                                  <Input value={proofAmount} onChange={(e) => setProofAmount(e.target.value)} />
+                                  <Input aria-label="Amount claimed" value={proofAmount} onChange={(e) => setProofAmount(e.target.value)} />
                                   <Label className="mt-2">Reference</Label>
-                                  <Input value={proofRef} onChange={(e) => setProofRef(e.target.value)} />
+                                  <Input aria-label="Reference" value={proofRef} onChange={(e) => setProofRef(e.target.value)} />
                                   <Label className="mt-2">Note</Label>
-                                  <Input value={proofNote} onChange={(e) => setProofNote(e.target.value)} />
+                                  <Input aria-label="Note" value={proofNote} onChange={(e) => setProofNote(e.target.value)} />
                                   <div className="flex gap-2 pt-2">
                                     <Button type="submit" size="sm">
                                       Submit proof

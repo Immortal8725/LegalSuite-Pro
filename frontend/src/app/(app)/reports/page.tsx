@@ -34,7 +34,7 @@ export default function ReportsPage() {
         subtitle="Realization, collections, and practice-area mix for this month."
       />
       <ErrorBanner error={error} />
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           ["Active matters", o?.activeCases ?? "n/a"],
           ["Hours billed", o?.hoursBilled ?? "n/a"],
@@ -51,7 +51,7 @@ export default function ReportsPage() {
           </Card>
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Revenue by practice area (rate mix)</CardTitle>

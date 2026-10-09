@@ -106,6 +106,41 @@ async function parse<T>(res: Response): Promise<T> {
   return json.data;
 }
 
+let refreshing: Promise<string | null> | null = null;
+
+/**
+ * Exchange the refresh token for a new session. Refresh tokens are single use, so concurrent
+ * 401s share one refresh instead of racing (the losers would otherwise sign the user out).
+ */
+function refreshAccess(): Promise<string | null> {
+  if (!refreshing) {
+    refreshing = (async () => {
+      const refresh = localStorage.getItem(REFRESH_KEY);
+      if (!refresh) return null;
+      try {
+        const r = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: refresh }),
+        });
+        if (r.ok) {
+          const body = (await r.json()) as ApiEnvelope<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>;
+          setSession(body.data);
+          return body.data.accessToken;
+        }
+      } catch {
+        /* network error: treat as not refreshed */
+      }
+      // Another tab may have rotated the token while this request was in flight.
+      const now = localStorage.getItem(REFRESH_KEY);
+      return now && now !== refresh ? getToken() : null;
+    })().finally(() => {
+      refreshing = null;
+    });
+  }
+  return refreshing;
+}
+
 /** fetch with the access token; on a 401 it refreshes the session once and retries. */
 async function authedFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
@@ -122,22 +157,17 @@ async function authedFetch(path: string, init: RequestInit = {}): Promise<Respon
     path.includes("/api/v1/sign/") ||
     path.includes("/api/v1/auth/invite/");
   if (res.status === 401 && !path.includes("/auth/login") && !skipAuthRedirect) {
-    const refresh = localStorage.getItem(REFRESH_KEY);
-    if (refresh) {
-      const r = await fetch("/api/v1/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken: refresh }),
-      });
-      if (r.ok) {
-        const body = (await r.json()) as ApiEnvelope<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>;
-        setSession(body.data);
-        headers.set("Authorization", `Bearer ${body.data.accessToken}`);
-        return fetch(path, { ...init, headers });
-      }
+    // If another request already refreshed, just retry with the new token.
+    const current = getToken();
+    const fresh = current && current !== token ? current : await refreshAccess();
+    if (fresh) {
+      headers.set("Authorization", `Bearer ${fresh}`);
+      return fetch(path, { ...init, headers });
     }
     clearSession();
-    if (typeof window !== "undefined") window.location.href = "/login";
+    if (typeof window !== "undefined") {
+      window.location.href = window.location.pathname.startsWith("/portal") ? "/portal/login" : "/login";
+    }
   }
   return res;
 }

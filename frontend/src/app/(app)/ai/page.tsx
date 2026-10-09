@@ -45,7 +45,7 @@ export default function AiPage() {
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <MatterAssistant
           caseId={chatCaseId || undefined}
           onCaseId={setChatCaseId}

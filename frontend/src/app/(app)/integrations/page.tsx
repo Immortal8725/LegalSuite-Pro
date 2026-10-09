@@ -23,7 +23,7 @@ export default function IntegrationsPage() {
         subtitle="Connect or disconnect without pasting production secrets. Local demo stores the toggle only."
       />
       <ErrorBanner error={error} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {rows.map((row) => (
           <Card key={row.provider}>
             <CardHeader>

@@ -38,7 +38,8 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const PUBLIC = new Set(["/", "/login", "/register", "/portal/login"]);
+// Pages a signed-out visitor may open. /set-password is the invite link from the email.
+const PUBLIC = new Set(["/", "/login", "/register", "/portal/login", "/set-password"]);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

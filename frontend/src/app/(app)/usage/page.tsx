@@ -89,7 +89,7 @@ export default function UsagePage() {
           </CardHeader>
           <CardBody>
             <p className="mb-4 text-sm text-slate-600">{preview.note}</p>
-            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div>
                 <p className="text-xs text-slate-600">Light seat</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.seatSubtotal ?? 0)}</p>

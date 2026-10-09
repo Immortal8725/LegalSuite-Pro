@@ -10,6 +10,7 @@ export function Dialog({
   children,
   footer,
   wide,
+  error,
 }: {
   open: boolean;
   onClose: () => void;
@@ -17,6 +18,8 @@ export function Dialog({
   children: React.ReactNode;
   footer?: React.ReactNode;
   wide?: boolean;
+  /** Shown at the top of the dialog body, so a failed save is visible inside the modal. */
+  error?: string | null;
 }) {
   const titleId = React.useId();
   const panel = React.useRef<HTMLDivElement>(null);
@@ -65,7 +68,14 @@ export function Dialog({
             ×
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6">
+          {error && (
+            <div className="mb-4">
+              <ErrorBanner error={error} />
+            </div>
+          )}
+          {children}
+        </div>
         {footer && <div className="flex flex-wrap justify-end gap-2 border-t bg-slate-50 px-6 py-4">{footer}</div>}
       </div>
     </div>

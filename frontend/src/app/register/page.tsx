@@ -65,7 +65,7 @@ export default function RegisterPage() {
           <Label>Firm name</Label>
               <Input aria-label="Firm name" required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>First name</Label>
             <Input aria-label="First name" required value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
@@ -83,7 +83,7 @@ export default function RegisterPage() {
             <Input aria-label="Password (8+)" type="password" required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <Label>Country</Label>
             <Select aria-label="Country"

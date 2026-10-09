@@ -87,7 +87,7 @@ export default function DashboardPage() {
           </p>
         </Link>
       )}
-      <div className="mt-4 mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-5">
           <p className="text-xs text-slate-600">Active matters</p>
           <p className="mt-1 text-2xl font-extrabold text-navy">{data.activeCases}</p>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
         </CardBody>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Recent matters</CardTitle>

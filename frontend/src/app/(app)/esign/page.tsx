@@ -125,7 +125,7 @@ export default function EsignPage() {
         <ErrorBanner error={dialogError} />
         <Label>Title</Label>
         <Input aria-label="Title" className="mb-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-        <div className="mb-3 grid gap-3 sm:grid-cols-2">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <Label>Signer name</Label>
             <Input aria-label="Signer name" value={form.signerName} onChange={(e) => setForm({ ...form, signerName: e.target.value })} />
@@ -135,7 +135,7 @@ export default function EsignPage() {
             <Input aria-label="Signer email" value={form.signerEmail} onChange={(e) => setForm({ ...form, signerEmail: e.target.value })} />
           </div>
         </div>
-        <div className="mb-3 grid gap-3 sm:grid-cols-2">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Select value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
             <option value="">Matter (optional)</option>
             {cases.map((c) => (
