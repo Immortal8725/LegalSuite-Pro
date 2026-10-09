@@ -136,7 +136,7 @@ export default function EsignPage() {
           </div>
         </div>
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Select value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
+          <Select aria-label="Matter" value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
             <option value="">Matter (optional)</option>
             {cases.map((c) => (
               <option key={c.id} value={c.id}>
@@ -145,6 +145,7 @@ export default function EsignPage() {
             ))}
           </Select>
           <Select
+            aria-label="Client"
             value={form.clientId}
             onChange={(e) => {
               const id = e.target.value;

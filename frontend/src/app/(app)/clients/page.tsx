@@ -95,7 +95,7 @@ export default function ClientsPage() {
       >
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
-          <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+          <Select aria-label="Client type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="individual">Individual</option>
             <option value="company">Company</option>
           </Select>
