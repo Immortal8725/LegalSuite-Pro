@@ -29,6 +29,11 @@ spring:
 legalsuite:
   # Public address of the web app, used in invite links.
   app-url: ${APP_URL:http://localhost:3000}
+  # Demo firms with known passwords. Defaults on for local H2, off for the postgres profile.
+  demo-data: ${LEGALSUITE_DEMO_DATA:true}
+  operator:
+    email: ${LEGALSUITE_OPERATOR_EMAIL:}
+    password: ${LEGALSUITE_OPERATOR_PASSWORD:}
   jwt:
     secret: ${LEGALSUITE_JWT_SECRET:legalsuite-pro-dev-secret-change-in-production-must-be-64-chars-longXX}
     access-ms: 86400000
@@ -107,3 +112,5 @@ spring:
   h2:
     console:
       enabled: false
+legalsuite:
+  demo-data: ${LEGALSUITE_DEMO_DATA:false}

@@ -83,6 +83,16 @@ public class DemoDataLoader implements CommandLineRunner {
     private final LegalCaseRepository cases;
     private final ContactRepository contacts;
     private final DocumentFileRepository documents;
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.upload-dir:./uploads}")
+    private String uploadDir = "./uploads";
+    /** Demo firms with known passwords. On by default for H2, off for the postgres profile. */
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.demo-data:true}")
+    private boolean demoData = true;
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.operator.email:}")
+    private String operatorEmail = "";
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.operator.password:}")
+    private String operatorPassword = "";
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DemoDataLoader.class);
     private final TimeEntryRepository timeEntries;
     private final InvoiceRepository invoices;
     private final CalendarEventRepository events;
@@ -209,6 +219,13 @@ public class DemoDataLoader implements CommandLineRunner {
         module("Integrations", "integrations", "PayFast and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "light", 19);
         module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "light", 20);
 
+        if (!demoData) {
+            // Production: plans and modules only. No demo firms, no known passwords.
+            seedOperatorFromEnvironment(light);
+            return;
+        }
+        log.warn("LEGALSUITE_DEMO_DATA is on: demo firms with the password 'password' are being created. Never do this on a live system.");
+
         Tenant firm = new Tenant();
         firm.setFirmName("Smith & Associates");
         firm.setSlug("smith-associates");
@@ -278,7 +295,7 @@ public class DemoDataLoader implements CommandLineRunner {
 
         note(firm.getId(), c1, john, "Hearing prep", "Confirm exhibits 12–18 and the video deposition clip for Dr. Chen.");
         doc(firm.getId(), c1, john, "deposition_transcript.pdf", "discovery");
-        doc(firm.getId(), c3, john, "will_draft_v4.docx", "estate");
+        doc(firm.getId(), c3, john, "will_draft_v4.pdf", "estate");
 
         time(firm.getId(), c1, john, 150, "Hearing preparation and exhibit review", true, false);
         time(firm.getId(), c3, maria, 90, "Probate filing package", true, true);
@@ -806,6 +823,138 @@ public class DemoDataLoader implements CommandLineRunner {
         conflictLead.setDescription("City bus hit her at the Sandton stop eight days ago. The metro already called.");
         conflictLead.setStatus("consultation");
         leads.save(conflictLead);
+
+        seedSouthAfricaWorkspace(firm.getId(), thabo, lindiwe, sipho, nomsa, pieter, raf, pothole, labour, deceased, commercial);
+    }
+
+    /** Documents, e-sign, expenses and team messages so every screen of the SA demo firm has real-looking work in it. */
+    private void seedSouthAfricaWorkspace(
+            java.util.UUID tenant, AppUser thabo, AppUser lindiwe, AppUser sipho, Client nomsa, Client pieter,
+            LegalCase raf, LegalCase pothole, LegalCase labour, LegalCase deceased, LegalCase commercial) {
+        doc(tenant, raf, sipho, "RAF_1_claim_form_draft.pdf", "pleadings", List.of(
+                "Road Accident Fund claim form (RAF 1), draft for review by the director.",
+                "Claimant: Nomsa Khumalo. Accident: N12 eastbound near the Elands off-ramp.",
+                "Medical report section to be completed by the treating doctor before lodgement."));
+        doc(tenant, raf, sipho, "Hospital_records_Chris_Hani_Baragwanath.pdf", "medical", List.of(
+                "Admission and discharge summary, orthopaedic ward.",
+                "Fracture of the left tibia, open reduction and internal fixation."));
+        doc(tenant, raf, thabo, "SAPS_accident_report_AR_412-09.pdf", "evidence", List.of(
+                "Accident report as obtained from the SAPS station commander.",
+                "Insured driver identified. Registration number on file."));
+        doc(tenant, pothole, lindiwe, "Act_40_section_3_notice.pdf", "correspondence", List.of(
+                "Notice in terms of section 3 of the Institution of Legal Proceedings against Certain Organs of State Act 40 of 2002.",
+                "Addressed to the City Manager, City of Johannesburg Metropolitan Municipality."));
+        doc(tenant, labour, sipho, "CCMA_7.11_referral_form.pdf", "pleadings", List.of(
+                "LRA Form 7.11: referral of a dispute to the CCMA for conciliation.",
+                "Dispute: unfair dismissal. Date of dismissal recorded on the form."));
+        doc(tenant, deceased, thabo, "Letters_of_executorship.pdf", "estate", List.of(
+                "Letters of executorship issued by the Master of the High Court, Johannesburg.",
+                "Executor: Sibusiso Dlamini, represented by Ndlovu & Partners."));
+        doc(tenant, commercial, lindiwe, "Haulage_agreement_signed.pdf", "contracts", List.of(
+                "Written haulage agreement between Horizon Logistics (Pty) Ltd and Drakensberg Fuels (Pty) Ltd.",
+                "Clause 14: breach and notice to remedy within 10 business days."));
+
+        String rafMandate = """
+                WRITTEN MANDATE
+
+                Ndlovu & Partners will act for Nomsa Khumalo in Khumalo v Road Accident Fund (C-2001).
+                Fees are hourly plus VAT and are subject to the Contingency Fees Act 66 of 1997 where agreed in writing.
+                Trust money is held in the firm's Legal Practice Act s 86 trust account.
+                """;
+        SignatureRequest signed = new SignatureRequest();
+        signed.setTenantId(tenant);
+        signed.setCaseId(raf.getId());
+        signed.setClientId(nomsa.getId());
+        signed.setTitle("Written mandate: Khumalo v Road Accident Fund");
+        signed.setSignerName("Nomsa Khumalo");
+        signed.setSignerEmail(nomsa.getEmail());
+        signed.setPurpose("engagement");
+        signed.setDocumentBody(rafMandate);
+        signed.setDocumentHash(com.legalsuite.service.DocumentHash.sha256(rafMandate));
+        signed.setCreatedAt(Instant.now().minus(12, ChronoUnit.DAYS));
+        signed.setStatus("signed");
+        signed.setSignedAt(Instant.now().minus(11, ChronoUnit.DAYS));
+        signed.setSignerIdentityNumber("8504120000000");
+        signed.setSignatureStandard("ect_act_25_2002_s13");
+        signed.setSignatureDataUrl("data:image/svg+xml;base64,"
+                + java.util.Base64.getEncoder().encodeToString("<svg xmlns='http://www.w3.org/2000/svg' width='240' height='60'><text x='10' y='40' font-family='cursive' font-size='28'>N. Khumalo</text></svg>".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        signed.setSignatureHash(com.legalsuite.service.DocumentHash.sha256(rafMandate, signed.getSignerName(), "8504120000000",
+                signed.getSignedAt().toString(), signed.getSignatureDataUrl().substring(0, 80)));
+        signatures.save(signed);
+
+        String potholeMandate = """
+                WRITTEN MANDATE
+
+                Ndlovu & Partners will act for Pieter van der Merwe in Van der Merwe v City of Johannesburg (C-2002).
+                The Act 40 notice is late, so we will apply for condonation before summons is issued.
+                Fees are hourly plus VAT.
+                """;
+        SignatureRequest pending = new SignatureRequest();
+        pending.setTenantId(tenant);
+        pending.setCaseId(pothole.getId());
+        pending.setClientId(pieter.getId());
+        pending.setTitle("Written mandate: Van der Merwe v City of Johannesburg");
+        pending.setSignerName("Pieter van der Merwe");
+        pending.setSignerEmail(pieter.getEmail());
+        pending.setPurpose("engagement");
+        pending.setDocumentBody(potholeMandate);
+        pending.setDocumentHash(com.legalsuite.service.DocumentHash.sha256(potholeMandate));
+        pending.setCreatedAt(Instant.now().minus(2, ChronoUnit.DAYS));
+        pending.setStatus("pending");
+        signatures.save(pending);
+
+        expense(tenant, raf, sipho, "sheriff", "Sheriff service fee: summons on the RAF", "450.00", "Sheriff Johannesburg Central", 9);
+        expense(tenant, raf, thabo, "expert", "Medico-legal report: orthopaedic surgeon", "12500.00", "Dr L. Naidoo Inc", 6);
+        expense(tenant, pothole, lindiwe, "counsel", "Counsel's opinion on condonation", "8000.00", "Adv. K. Moloi, Sandton Group", 4);
+        expense(tenant, deceased, sipho, "advertising", "Government Gazette creditors' notice", "350.85", "Government Printing Works", 15);
+        expense(tenant, labour, sipho, "travel", "Travel to CCMA Johannesburg: 38 km at SARS rate", "182.78", "Own vehicle", 3);
+
+        Conversation team = new Conversation();
+        team.setTenantId(tenant);
+        team.setTitle("Khumalo RAF team");
+        team.setType("group");
+        team.setCaseId(raf.getId());
+        team.setParticipantIdsJson(JsonLists.toJson(List.of(thabo.getId().toString(), sipho.getId().toString())));
+        team.setLastMessageAt(Instant.now().minus(35, ChronoUnit.MINUTES));
+        team = conversations.save(team);
+        chat(tenant, team, sipho, "RAF 1 draft is uploaded. The medical section still needs the doctor.", 180);
+        chat(tenant, team, thabo, "Good. Prescription is in under three weeks, so chase Bara for the records today.", 150);
+        chat(tenant, team, sipho, "Called them. Records promised by Thursday. I logged the call on the matter.", 60);
+        chat(tenant, team, thabo, "Thanks. Book the medico-legal consult once the records are in.", 35);
+
+        Conversation directors = new Conversation();
+        directors.setTenantId(tenant);
+        directors.setTitle("Directors");
+        directors.setType("direct");
+        directors.setParticipantIdsJson(JsonLists.toJson(List.of(thabo.getId().toString(), lindiwe.getId().toString())));
+        directors.setLastMessageAt(Instant.now().minus(3, ChronoUnit.HOURS));
+        directors = conversations.save(directors);
+        chat(tenant, directors, lindiwe, "Trust is short R11,750 against the bank. Do not certify the recon until we find it.", 240);
+        chat(tenant, directors, thabo, "Agreed. I think it is the unidentified transfer on the 2nd. I will check the FNB statement.", 180);
+    }
+
+    private void expense(java.util.UUID tenant, LegalCase matter, AppUser user, String category, String description,
+            String amount, String vendor, int daysAgo) {
+        Expense e = new Expense();
+        e.setTenantId(tenant);
+        e.setCaseId(matter.getId());
+        e.setUserId(user.getId());
+        e.setCategory(category);
+        e.setDescription(description);
+        e.setAmount(new BigDecimal(amount));
+        e.setVendor(vendor);
+        e.setDate(LocalDate.now().minusDays(daysAgo));
+        expenses.save(e);
+    }
+
+    private void chat(java.util.UUID tenant, Conversation conv, AppUser sender, String body, int minutesAgo) {
+        ChatMessage m = new ChatMessage();
+        m.setTenantId(tenant);
+        m.setConversationId(conv.getId());
+        m.setSenderId(sender.getId());
+        m.setBody(body);
+        m.setCreatedAt(Instant.now().minus(minutesAgo, ChronoUnit.MINUTES));
+        messages.save(m);
     }
 
     private void zaDeposit(java.util.UUID tenant, TrustAccount acct, java.util.UUID clientId, java.util.UUID caseId, java.util.UUID actor, String amount, String after, String memo) {
@@ -820,6 +969,45 @@ public class DemoDataLoader implements CommandLineRunner {
         tx.setDescription(memo);
         tx.setCreatedBy(actor);
         trustTx.save(tx);
+    }
+
+    private void seedOperatorFromEnvironment(Plan light) {
+        if (operatorEmail == null || operatorEmail.isBlank() || operatorPassword == null || operatorPassword.length() < 12) {
+            log.warn("No platform operator created. Set LEGALSUITE_OPERATOR_EMAIL and LEGALSUITE_OPERATOR_PASSWORD (12+ characters) for the first start.");
+            return;
+        }
+        Tenant firm = platformTenant(light, operatorEmail.trim());
+        AppUser ops = user(firm.getId(), operatorEmail.trim(), operatorPassword, "Platform", "Operator", "superadmin", "Platform operator", "0", "", "");
+        ops.setPasswordChangeRequired(true);
+        users.save(ops);
+        log.info("Platform operator {} created. Change the password at first sign-in and remove LEGALSUITE_OPERATOR_PASSWORD.", operatorEmail.trim());
+    }
+
+    private Tenant platformTenant(Plan light, String email) {
+        Tenant firm = new Tenant();
+        firm.setFirmName("LegalSuite");
+        firm.setSlug("legalsuite");
+        firm.setEmail(email);
+        firm.setCountry("ZA");
+        firm.setState("GP");
+        firm.setCity("Johannesburg");
+        firm.setPlanId(light.getId());
+        firm.setStatus("active");
+        firm.setOnboardingCompleted(true);
+        firm.setTagline("Platform operator");
+        firm = tenants.save(firm);
+        for (AppModule m : modules.findAll()) {
+            if (!m.isCore()) {
+                continue;
+            }
+            TenantModule tm = new TenantModule();
+            tm.setTenantId(firm.getId());
+            tm.setModuleId(m.getId());
+            tm.setEnabled(true);
+            tenantModules.save(tm);
+        }
+        publicSites.ensureDraft(firm);
+        return firm;
     }
 
     private void seedPlatform(Plan light) {
@@ -963,16 +1151,35 @@ public class DemoDataLoader implements CommandLineRunner {
     }
 
     private void doc(java.util.UUID tenant, LegalCase matter, AppUser user, String name, String cat) {
+        doc(tenant, matter, user, name, cat, List.of(
+                matter.getTitle() + " (" + matter.getCaseNumber() + ")",
+                "Demo document created with the sample data. Replace it with the real file."));
+    }
+
+    /** Seeded documents are real PDFs on disk, so preview and download work like a real upload. */
+    private void doc(java.util.UUID tenant, LegalCase matter, AppUser user, String name, String cat, List<String> lines) {
         DocumentFile d = new DocumentFile();
         d.setTenantId(tenant);
         d.setCaseId(matter.getId());
+        d.setClientId(matter.getClientId());
         d.setUploadedBy(user.getId());
         d.setName(name);
         d.setOriginalName(name);
         d.setCategory(cat);
         d.setMimeType("application/pdf");
-        d.setSizeBytes(240_000);
-        d.setStoragePath("seed://" + name);
+        String title = name.replaceAll("\\.pdf$", "").replace('_', ' ');
+        byte[] pdf = SeedPdf.render(title, lines);
+        try {
+            java.nio.file.Path dir = java.nio.file.Paths.get(uploadDir).toAbsolutePath().normalize().resolve(tenant.toString());
+            java.nio.file.Files.createDirectories(dir);
+            java.nio.file.Path file = dir.resolve("seed-" + java.util.UUID.randomUUID() + ".pdf");
+            java.nio.file.Files.write(file, pdf);
+            d.setStoragePath(file.toString());
+            d.setSizeBytes(pdf.length);
+        } catch (java.io.IOException e) {
+            d.setStoragePath("seed://" + name);
+            d.setSizeBytes(pdf.length);
+        }
         documents.save(d);
     }
 

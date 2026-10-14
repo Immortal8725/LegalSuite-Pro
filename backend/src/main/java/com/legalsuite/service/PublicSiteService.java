@@ -482,7 +482,7 @@ public class PublicSiteService {
         List<Map<String, Object>> people = new ArrayList<>();
         for (AppUser user : users.findByTenantIdOrderByLastNameAsc(tenantId)) {
             String role = user.getRole() == null ? "" : user.getRole().toLowerCase(Locale.ROOT);
-            if (!DIRECTORY_ROLES.contains(role) || !"active".equals(user.getStatus())) {
+            if (!DIRECTORY_ROLES.contains(role) || !"active".equals(user.getStatus()) || !user.listedPublicly()) {
                 continue;
             }
             Map<String, Object> person = new LinkedHashMap<>();
