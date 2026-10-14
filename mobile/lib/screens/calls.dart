@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:legalsuite_mobile/api.dart';
+import '../api/api_client.dart';
+import '../ui/common.dart';
 
 /// Starts a real PSTN callback. The handset rings; CallKit is a later native step.
 class CallsScreen extends StatefulWidget {
-  const CallsScreen({super.key, required this.api});
+  const CallsScreen({super.key, required this.api, this.initialTo});
 
-  final LegalSuiteApi api;
+  final ApiClient api;
+  final String? initialTo;
 
   @override
   State<CallsScreen> createState() => _CallsScreenState();
@@ -16,6 +18,7 @@ class _CallsScreenState extends State<CallsScreen> {
   final fromCtrl = TextEditingController();
   List cases = [];
   List numbers = [];
+  List history = [];
   String? matterId;
   String? callerId;
   bool nonMatter = false;
@@ -26,6 +29,7 @@ class _CallsScreenState extends State<CallsScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTo != null) toCtrl.text = widget.initialTo!;
     _load();
   }
 
@@ -40,7 +44,10 @@ class _CallsScreenState extends State<CallsScreen> {
     try {
       final matters = await widget.api.get('/api/v1/cases') as List;
       final ready = await widget.api.get('/api/v1/voice/pstn/readiness') as Map<String, dynamic>;
+      final log = await widget.api.get('/api/v1/calls') as List;
+      if (!mounted) return;
       setState(() {
+        history = log;
         cases = matters;
         numbers = (ready['callerIds'] as List? ?? const [])
             .where((n) => (n as Map)['status'] == 'active')
@@ -48,7 +55,8 @@ class _CallsScreenState extends State<CallsScreen> {
         message = ready['message']?.toString();
       });
     } catch (e) {
-      setState(() => error = e.toString().replaceFirst('Exception: ', ''));
+      if (!mounted) return;
+      setState(() => error = e.toString());
     }
   }
 
@@ -74,7 +82,7 @@ class _CallsScreenState extends State<CallsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => error = e.toString());
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -82,16 +90,18 @@ class _CallsScreenState extends State<CallsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Calls')),
+      body: RefreshIndicator(onRefresh: _load, child: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
-          'Public network',
+          'Call through the firm',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A365D)),
         ),
         const SizedBox(height: 8),
         const Text(
-          'Your mobile rings first. The person you call sees a verified personal number or TWILIO_VOICE_FROM. Buying a number is optional. Emergency numbers stay on the phone dialer. An in-app CallKit screen is a later step.',
+          'Your mobile rings first. When you answer, Owlaw connects the other party, who sees the firm caller ID. Time is written to the matter. Emergency numbers stay on your phone dialler.',
           style: TextStyle(color: Colors.black54),
         ),
         if (message != null) ...[
@@ -174,9 +184,23 @@ class _CallsScreenState extends State<CallsScreen> {
         if (numbers.isEmpty)
           const Padding(
             padding: EdgeInsets.only(top: 12),
-            child: Text('No number is saved on this firm. Verify a personal mobile or landline on the web app, or set TWILIO_VOICE_FROM. Buying a number is optional.'),
+            child: Text('No caller ID is set up for this firm yet. Verify a mobile or landline in the Owlaw web app first.'),
           ),
+        const SizedBox(height: 24),
+        const Text('Recent calls', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A365D))),
+        if (history.isEmpty) const Padding(padding: EdgeInsets.only(top: 8), child: Text('No calls yet.', style: TextStyle(color: Colors.black54))),
+        ...history.take(30).map((c) {
+          final row = c as Map;
+          final secs = (row['durationSeconds'] as num?)?.toInt() ?? 0;
+          final kind = row['callType'] == 'webrtc' ? 'In-app' : 'Phone';
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(row['direction'] == 'inbound' ? Icons.call_received : Icons.call_made, color: const Color(0xFF1A365D)),
+            title: Text('$kind ${row['direction'] ?? ''} call, ${secs ~/ 60} min ${secs % 60} s'),
+            subtitle: Text(niceDate(row['startedAt'], withTime: true)),
+          );
+        }),
       ],
-    );
+    )));
   }
 }
