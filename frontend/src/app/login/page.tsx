@@ -76,7 +76,7 @@ export default function LoginPage() {
           }}
         >
           <h2 className="text-2xl font-bold text-navy">Staff sign in</h2>
-          <p className="text-sm text-slate-500">Sign in with your firm slug. Demo password is password.</p>
+          <p className="text-sm text-slate-600">Sign in with your firm slug. Demo password is password.</p>
           <div className="flex flex-col gap-2">
             {DEMOS.map((d) => (
               <button
@@ -93,27 +93,27 @@ export default function LoginPage() {
                 }`}
               >
                 {d.label}
-                <span className="mt-0.5 block font-normal text-slate-400">{d.note}</span>
+                <span className="mt-0.5 block font-normal text-slate-600">{d.note}</span>
               </button>
             ))}
           </div>
           <ErrorBanner error={error} />
           <div>
             <Label>Firm ID</Label>
-            <Input value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
+            <Input aria-label="Firm ID" value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
           </div>
           <div>
             <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input aria-label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div>
             <Label>Password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input aria-label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
           {needTotp && (
             <div>
               <Label>Authenticator code</Label>
-              <Input
+              <Input aria-label="Authenticator code"
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 value={totpCode}
@@ -121,13 +121,13 @@ export default function LoginPage() {
                 placeholder="6-digit code"
                 required
               />
-              <p className="mt-1 text-xs text-slate-500">This account has 2FA on. Demo users do not. Enrol from Settings if you want to try it.</p>
+              <p className="mt-1 text-xs text-slate-600">This account has 2FA on. Demo users do not. Enrol from Settings if you want to try it.</p>
             </div>
           )}
           <Button className="w-full" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-slate-600">
             New firm?{" "}
             <Link href="/register" className="font-semibold text-navy">
               Register

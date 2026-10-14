@@ -165,10 +165,10 @@ export default function LeadsPage() {
                 .map((l) => (
                   <div key={l.id} className="rounded-lg border p-3 text-sm">
                     <div className="font-semibold">{l.name}</div>
-                    <div className="text-xs text-slate-500">{l.email}</div>
+                    <div className="text-xs text-slate-600">{l.email}</div>
                     <p className="mt-1 text-xs">{l.caseType}</p>
                     {l.opposingParty && <p className="mt-1 text-xs font-medium text-red-800">v. {l.opposingParty}</p>}
-                    <p className="mt-1 text-xs text-slate-500">{l.description}</p>
+                    <p className="mt-1 text-xs text-slate-600">{l.description}</p>
                     {l.docket?.solDate && (
                       <p className="mt-1 text-[11px] text-navy">
                         {statutoryClockLabel(l.docket.jurisdiction, l.docket.controllingKind)}{" "}
@@ -199,10 +199,16 @@ export default function LeadsPage() {
                     <StatusBadge status={l.status} />
                     <select
                       className="mt-2 h-8 w-full rounded border text-xs"
+                      aria-label={`Stage for ${l.name}`}
                       value={l.status}
                       onChange={async (e) => {
-                        await apiPatch(`/api/v1/intake/leads/${l.id}`, { status: e.target.value });
-                        await load();
+                        setError(null);
+                        try {
+                          await apiPatch(`/api/v1/intake/leads/${l.id}`, { status: e.target.value });
+                          await load();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                        }
                       }}
                     >
                       {STAGES.map((s) => (

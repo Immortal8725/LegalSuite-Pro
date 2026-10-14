@@ -89,19 +89,19 @@ export default function DashboardPage() {
       )}
       <div className="mt-4 mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="p-5">
-          <p className="text-xs text-slate-500">Active matters</p>
+          <p className="text-xs text-slate-600">Active matters</p>
           <p className="mt-1 text-2xl font-extrabold text-navy">{data.activeCases}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-slate-500">Outstanding</p>
+          <p className="text-xs text-slate-600">Outstanding</p>
           <p className="mt-1 text-2xl font-extrabold text-amber-700">{money(data.outstanding)}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-slate-500">Website consults waiting</p>
+          <p className="text-xs text-slate-600">Website consults waiting</p>
           <p className="mt-1 text-2xl font-extrabold text-navy">{data.newLeads ?? 0}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-slate-500">Calls (in-app free)</p>
+          <p className="text-xs text-slate-600">Calls (in-app free)</p>
           <p className="mt-1 text-2xl font-extrabold text-navy">{data.callCount}</p>
         </Card>
       </div>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardBody className="space-y-3">
-          {docket.length === 0 && <p className="text-sm text-slate-500">No statute or filing in the next 45 days.</p>}
+          {docket.length === 0 && <p className="text-sm text-slate-600">No statute or filing in the next 45 days.</p>}
           {docket.map((item, i) => (
             <Link
               key={`${item.kind}-${item.caseId}-${i}`}
@@ -132,8 +132,8 @@ export default function DashboardPage() {
                 {item.title}
               </p>
               {item.citation && <p className="mt-1 text-[11px] font-semibold opacity-90">{item.citation}</p>}
-              {item.reason && <p className="mt-1 text-xs opacity-80">{item.reason}</p>}
-              <p className="text-xs opacity-80">
+              {item.reason && <p className="mt-1 text-xs">{item.reason}</p>}
+              <p className="text-xs">
                 {item.kind === "sol" ||
                 item.kind === "notice" ||
                 item.kind === "repose" ||

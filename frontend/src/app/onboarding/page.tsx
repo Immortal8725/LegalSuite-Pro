@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { apiPut } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
+import { ErrorBanner } from "@/components/ui/dialog";
 import type { Tenant } from "@/lib/api";
 
 const STEPS = ["Firm profile", "Landing page", "Modules", "Billing defaults"];
@@ -32,9 +33,22 @@ export default function OnboardingPage() {
     defaultRate: "350",
   });
 
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const save = async (extra: Record<string, unknown> = {}) => {
-    const next = await apiPut<Tenant>("/api/v1/tenants/me", { ...profile, ...extra });
-    refreshTenant(next);
+    setError(null);
+    setSaving(true);
+    try {
+      const next = await apiPut<Tenant>("/api/v1/tenants/me", { ...profile, ...extra });
+      refreshTenant(next);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save your settings");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -43,7 +57,7 @@ export default function OnboardingPage() {
       <div className="mx-auto max-w-2xl px-6 py-10">
         <div className="mb-8 flex gap-2">
           {STEPS.map((s, i) => (
-            <div key={s} className={`flex-1 rounded-full py-1 text-center text-xs font-bold ${i <= step ? "bg-navy text-white" : "bg-slate-200 text-slate-500"}`}>
+            <div key={s} className={`flex-1 rounded-full py-1 text-center text-xs font-bold ${i <= step ? "bg-navy text-white" : "bg-slate-200 text-slate-600"}`}>
               {s}
             </div>
           ))}
@@ -54,15 +68,15 @@ export default function OnboardingPage() {
               <h2 className="sm:col-span-2 text-xl font-bold">Where should clients find you?</h2>
               <div>
                 <Label>Phone</Label>
-                <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                <Input aria-label="Phone" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
               </div>
               <div>
                 <Label>Website</Label>
-                <Input value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} />
+                <Input aria-label="Website" value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} />
               </div>
               <div className="sm:col-span-2">
                 <Label>Street</Label>
-                <Input value={profile.addressLine1} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} />
+                <Input aria-label="Street" value={profile.addressLine1} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} />
               </div>
               <Input placeholder="City" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
               <Input placeholder="State" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
@@ -74,7 +88,7 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-bold">Public site template</h2>
               <div>
                 <Label>Tagline</Label>
-                <Input value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
+                <Input aria-label="Tagline" value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {TEMPLATES.map((t) => (
@@ -85,7 +99,7 @@ export default function OnboardingPage() {
                     className={`rounded-xl border-2 p-4 text-left ${profile.template === t.id ? "border-gold bg-amber-50" : "border-slate-200"}`}
                   >
                     <p className="font-bold">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.desc}</p>
+                    <p className="text-xs text-slate-600">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -97,7 +111,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div>
               <h2 className="text-xl font-bold">Core modules stay on</h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-600">
                 Cases, clients, calendar, tasks, documents, time, billing, messaging, conflict check, reports, and section 86 trust are in the Light seat. Trust is not a separate charge.
               </p>
             </div>
@@ -107,40 +121,43 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-bold">Default billing</h2>
               <div>
                 <Label>Hourly rate</Label>
-                <Input type="number" value={profile.defaultRate} onChange={(e) => setProfile({ ...profile, defaultRate: e.target.value })} />
+                <Input aria-label="Hourly rate" type="number" value={profile.defaultRate} onChange={(e) => setProfile({ ...profile, defaultRate: e.target.value })} />
               </div>
               <div>
                 <Label>Increment</Label>
-                <Select defaultValue="6">
+                <Select aria-label="Increment" defaultValue="6">
                   <option value="6">6 minutes (1/10 hour)</option>
                   <option value="15">15 minutes</option>
                 </Select>
               </div>
-              <p className="text-sm text-slate-500">Light is R1,199 per month for one attorney. Public-network minutes are pay-what-you-use. A local number is optional at about R79, or bundled. Recording stays off until you opt in on a call.</p>
+              <p className="text-sm text-slate-600">Light is R1,199 per month for one attorney. Public-network minutes are pay-what-you-use. A local number is optional at about R79, or bundled. Recording stays off until you opt in on a call.</p>
             </div>
           )}
+          <div className="mt-6">
+            <ErrorBanner error={error} />
+          </div>
           <div className="mt-8 flex justify-between border-t pt-6">
             <Button variant="outline" disabled={step === 0} onClick={() => setStep(step - 1)}>
               Back
             </Button>
             {step < 3 ? (
               <Button
+                disabled={saving}
                 onClick={async () => {
-                  await save();
-                  setStep(step + 1);
+                  if (await save()) setStep(step + 1);
                 }}
               >
-                Next
+                {saving ? "Saving…" : "Next"}
               </Button>
             ) : (
               <Button
                 variant="gold"
+                disabled={saving}
                 onClick={async () => {
-                  await save({ onboardingCompleted: true, heroSubtitle: profile.tagline, template: profile.template });
-                  router.push("/dashboard");
+                  if (await save({ onboardingCompleted: true, heroSubtitle: profile.tagline, template: profile.template })) router.push("/dashboard");
                 }}
               >
-                Launch my firm
+                {saving ? "Saving…" : "Launch my firm"}
               </Button>
             )}
           </div>

@@ -20,7 +20,7 @@ export default function ChangePasswordPage() {
     if (ready && !user) router.replace("/login");
   }, [ready, user, router]);
 
-  if (!ready || !user) return <div className="p-10 text-sm text-slate-500">Loading…</div>;
+  if (!ready || !user) return <div className="p-10 text-sm text-slate-600">Loading…</div>;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-8">
@@ -44,7 +44,7 @@ export default function ChangePasswordPage() {
         }}
       >
         <h1 className="text-2xl font-bold text-navy">Set your password</h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-600">
           {user.mustChangePassword
             ? "You signed in with a one-time password. Choose your own before you carry on."
             : "Choose a new password for your account."}
@@ -52,21 +52,21 @@ export default function ChangePasswordPage() {
         <ErrorBanner error={error} />
         <div>
           <Label>Current password</Label>
-          <Input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+          <Input aria-label="Current password" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
         </div>
         <div>
           <Label>New password</Label>
-          <Input type="password" autoComplete="new-password" minLength={10} value={next} onChange={(e) => setNext(e.target.value)} required />
-          <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>
+          <Input aria-label="New password" type="password" autoComplete="new-password" minLength={10} value={next} onChange={(e) => setNext(e.target.value)} required />
+          <p className="mt-1 text-xs text-slate-600">At least 10 characters.</p>
         </div>
         <div>
           <Label>Confirm new password</Label>
-          <Input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+          <Input aria-label="Confirm new password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </div>
         <Button className="w-full" disabled={saving}>
           {saving ? "Saving…" : "Save password"}
         </Button>
-        <button type="button" className="w-full text-center text-sm text-slate-500" onClick={logout}>
+        <button type="button" className="w-full text-center text-sm text-slate-600" onClick={logout}>
           Sign out
         </button>
       </form>

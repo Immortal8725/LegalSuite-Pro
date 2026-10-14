@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { apiGet, apiPost, getToken } from "@/lib/api";
+import { apiBlob, apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { InvoiceLines } from "@/components/invoice-lines";
@@ -24,22 +24,10 @@ function message(e: unknown, fallback: string) {
 }
 
 async function openProofFile(id: string) {
-  const res = await fetch(`/api/v1/payment-proofs/${id}/file`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) {
-    let detail = "Could not open the file";
-    try {
-      const body = (await res.json()) as { message?: string };
-      if (body.message) detail = body.message;
-    } catch {
-      /* response was not JSON */
-    }
-    throw new Error(detail);
-  }
-  const blob = await res.blob();
+  const blob = await apiBlob(`/api/v1/payment-proofs/${id}/file`);
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export default function BillingPage() {
@@ -268,12 +256,12 @@ export default function BillingPage() {
                       {Number(i.writeOffAmount) > 0 && <span>Written off {moneyExact(i.writeOffAmount)}</span>}
                       <span className="font-semibold">Balance {moneyExact(i.balanceDue)}</span>
                     </div>
-                    {i.notes && <p className="px-4 pb-3 text-xs text-slate-500">{i.notes}</p>}
+                    {i.notes && <p className="px-4 pb-3 text-xs text-slate-600">{i.notes}</p>}
                     <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Payments</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Payments</p>
                         {(i.payments || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No payments recorded.</p>
+                          <p className="text-sm text-slate-600">No payments recorded.</p>
                         ) : (
                           <ul className="space-y-1 text-sm">
                             {(i.payments || []).map((p) => (
@@ -290,9 +278,9 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Write-offs</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Write-offs</p>
                         {(i.writeOffs || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No write-offs.</p>
+                          <p className="text-sm text-slate-600">No write-offs.</p>
                         ) : (
                           <ul className="space-y-1 text-sm">
                             {(i.writeOffs || []).map((w) => (
@@ -304,9 +292,9 @@ export default function BillingPage() {
                         )}
                       </div>
                       <div className="md:col-span-2">
-                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Proof of payment</p>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Proof of payment</p>
                         {(i.proofs || []).length === 0 ? (
-                          <p className="text-sm text-slate-500">No slips on this invoice.</p>
+                          <p className="text-sm text-slate-600">No slips on this invoice.</p>
                         ) : (
                           <ul className="space-y-2 text-sm">
                             {(i.proofs || []).map((p) => (
@@ -319,7 +307,7 @@ export default function BillingPage() {
                                 <button className="font-semibold text-navy" onClick={() => openProofFile(p.id).catch((e) => setError(message(e, "Could not open the file")))}>
                                   Open file
                                 </button>
-                                {p.reviewNote && <span className="text-slate-500">{p.reviewNote}</span>}
+                                {p.reviewNote && <span className="text-slate-600">{p.reviewNote}</span>}
                               </li>
                             ))}
                           </ul>
@@ -418,7 +406,7 @@ export default function BillingPage() {
           Balance due on {payFor?.invoiceNumber} is {moneyExact(payFor?.balanceDue)}. A payment cannot exceed that balance.
         </p>
         <Label>Amount</Label>
-        <Input value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
         <Select value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}>
           <option value="eft">EFT</option>
@@ -461,7 +449,7 @@ export default function BillingPage() {
           This writes off {writeForm.amount || asMoney(writeFor?.balanceDue)} on {writeFor?.invoiceNumber}. The invoice total stays {moneyExact(writeFor?.total)}. Amount already paid stays {moneyExact(writeFor?.amountPaid)}. The write-off is stored on its own so the original total, payments, and write-off still reconcile.
         </p>
         <Label>Amount</Label>
-        <Input value={writeForm.amount} onChange={(e) => setWriteForm({ ...writeForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={writeForm.amount} onChange={(e) => setWriteForm({ ...writeForm, amount: e.target.value })} />
         <Label className="mt-3">Reason</Label>
         <Textarea value={writeForm.reason} onChange={(e) => setWriteForm({ ...writeForm, reason: e.target.value })} placeholder="Why this balance is being written off" />
       </Dialog>
@@ -492,7 +480,7 @@ export default function BillingPage() {
           This withdraws the amount from this client&apos;s trust ledger and records one payment on {trustFor?.invoiceNumber}. Only this client&apos;s ledger is used.
         </p>
         <Label>Trust account</Label>
-        <Select
+        <Select aria-label="Trust account"
           value={trustForm.accountId}
           onChange={(e) => {
             const accountId = e.target.value;
@@ -550,7 +538,7 @@ export default function BillingPage() {
           Upload the deposit slip or EFT confirmation for {proofFor?.invoiceNumber}. It stays pending until a staff member accepts or rejects it. Accepting records the payment. PDF, JPEG, or PNG, up to 10 MB.
         </p>
         <Label>File</Label>
-        <Input
+        <Input aria-label="File"
           type="file"
           accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
           onChange={(e) => setProofFile(e.target.files?.[0] || null)}
@@ -589,7 +577,7 @@ export default function BillingPage() {
           Accepting records one payment on {acceptFor?.invoiceNumber} for the amount below. The invoice balance updates once. A later accept of the same proof leaves that payment in place.
         </p>
         <Label>Amount</Label>
-        <Input value={acceptForm.amount} onChange={(e) => setAcceptForm({ ...acceptForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={acceptForm.amount} onChange={(e) => setAcceptForm({ ...acceptForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
         <Select value={acceptForm.method} onChange={(e) => setAcceptForm({ ...acceptForm, method: e.target.value })}>
           <option value="eft">EFT</option>
@@ -628,7 +616,7 @@ export default function BillingPage() {
           Reject this proof on {rejectFor?.invoiceNumber}. The file stays on the invoice for the audit trail. The invoice balance stays as it was. A note is required.
         </p>
         <Label>Note</Label>
-        <Textarea value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} placeholder="Why this proof is rejected" />
+        <Textarea aria-label="Note" value={rejectNote} onChange={(e) => setRejectNote(e.target.value)} placeholder="Why this proof is rejected" />
       </Dialog>
     </div>
   );

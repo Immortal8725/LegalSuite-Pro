@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { apiGet, apiPatch, apiPost, apiPut, getToken } from "@/lib/api";
+import { apiBlob, apiGet, apiPatch, apiPost, apiPut, saveBlob } from "@/lib/api";
 import { daysLeftLabel, daysUntil, todayIso } from "@/lib/docket";
 import { formatDate, formatDateTime, moneyExact } from "@/lib/utils";
 import { OutboundPanel } from "@/components/outbound-panel";
@@ -62,7 +62,7 @@ export default function CaseDetailPage() {
     );
   }
 
-  if (!c) return <p className="text-sm text-slate-500">Loading matter…</p>;
+  if (!c) return <p className="text-sm text-slate-600">Loading matter…</p>;
 
   const trialBlocked = Boolean(c.docketHold);
   const za = c.jurisdiction === "ZA";
@@ -119,27 +119,7 @@ export default function CaseDetailPage() {
   async function downloadFile(id: string, name: string) {
     setError(null);
     try {
-      const res = await fetch(`/api/v1/documents/${id}/download`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (!res.ok) {
-        let message = "Could not download this file";
-        try {
-          const body = (await res.json()) as { message?: string };
-          if (body.message) message = body.message;
-        } catch {
-          /* the body was not JSON */
-        }
-        setError(message);
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      a.click();
-      URL.revokeObjectURL(url);
+      saveBlob(await apiBlob(`/api/v1/documents/${id}/download`), name);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not download this file");
     }
@@ -216,13 +196,13 @@ export default function CaseDetailPage() {
       <ErrorBanner error={error} />
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Client</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Client</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.clientName || "Client not named"}</p>
         </div>
         <div className="rounded-xl border bg-white p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Other side</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Other side</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.opposingParty || "No opposing party on the file"}</p>
-          {c.opposingCounsel && <p className="mt-1 text-sm text-slate-500">Counsel: {c.opposingCounsel}</p>}
+          {c.opposingCounsel && <p className="mt-1 text-sm text-slate-600">Counsel: {c.opposingCounsel}</p>}
         </div>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -259,38 +239,38 @@ export default function CaseDetailPage() {
           </CardHeader>
           <CardBody className="grid gap-3 text-sm sm:grid-cols-2">
             <p>
-              <span className="text-slate-400">Court</span>
+              <span className="text-slate-600">Court</span>
               <br />
               {c.courtName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Judge</span>
+              <span className="text-slate-600">Judge</span>
               <br />
               {c.judgeName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Client</span>
+              <span className="text-slate-600">Client</span>
               <br />
               {c.clientName || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Opposing party</span>
+              <span className="text-slate-600">Opposing party</span>
               <br />
               {c.opposingParty || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Opposing counsel</span>
+              <span className="text-slate-600">Opposing counsel</span>
               <br />
               {c.opposingCounsel || "None"}
             </p>
             <p>
-              <span className="text-slate-400">Limitations</span>
+              <span className="text-slate-600">Limitations</span>
               <br />
               {c.solCitation || (za ? "South African docket" : c.jurisdiction === "TX" ? "Texas docket" : "Docket")}
               {c.statuteOfLimitations ? ` · ${formatDate(c.statuteOfLimitations)}` : ""}
             </p>
             <p className="sm:col-span-2">
-              <span className="text-slate-400">Assignment</span>
+              <span className="text-slate-600">Assignment</span>
               <br />
               {c.description || "No narrative on file."}
             </p>
@@ -303,14 +283,14 @@ export default function CaseDetailPage() {
             </CardHeader>
             <CardBody className="space-y-3 text-sm">
               {(c.docketClocks || []).length === 0 && (
-                <p className="text-slate-500">No computed clocks. Add an incident date.</p>
+                <p className="text-slate-600">No computed clocks. Add an incident date.</p>
               )}
               {(c.docketClocks || []).map((clock, i) => {
                 const left = daysLeftLabel(clockDays(clock));
                 return (
                   <div key={i} className="rounded-lg border p-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">{clock.title || clock.kind}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">{clock.title || clock.kind}</p>
                       {left && <p className="font-mono text-xs font-bold text-navy">{left}</p>}
                     </div>
                     <p className="font-semibold text-navy">{formatDate(clock.date)}</p>
@@ -319,7 +299,7 @@ export default function CaseDetailPage() {
                   </div>
                 );
               })}
-              {c.solReason && (c.docketClocks || []).length === 0 && <p className="text-xs text-slate-500">{c.solReason}</p>}
+              {c.solReason && (c.docketClocks || []).length === 0 && <p className="text-xs text-slate-600">{c.solReason}</p>}
             </CardBody>
           </Card>
           <Card>
@@ -335,7 +315,7 @@ export default function CaseDetailPage() {
                   </Link>
                 </p>
               ) : (
-                <p className="text-slate-500">No mandate is out for signature on this matter.</p>
+                <p className="text-slate-600">No mandate is out for signature on this matter.</p>
               )}
               {c.conflictWaiverSignatureId ? (
                 <p>
@@ -344,12 +324,12 @@ export default function CaseDetailPage() {
                     Open sign link
                   </Link>
                   {c.conflictWaiverHash && (
-                    <span className="mt-1 block font-mono text-[11px] text-slate-500">hash {c.conflictWaiverHash.slice(0, 16)}…</span>
+                    <span className="mt-1 block font-mono text-[11px] text-slate-600">hash {c.conflictWaiverHash.slice(0, 16)}…</span>
                   )}
                 </p>
               ) : (
                 c.conflictWaiverHash && (
-                  <p className="font-mono text-[11px] text-slate-500">Conflict waiver hash {c.conflictWaiverHash}</p>
+                  <p className="font-mono text-[11px] text-slate-600">Conflict waiver hash {c.conflictWaiverHash}</p>
                 )
               )}
             </CardBody>
@@ -415,12 +395,12 @@ export default function CaseDetailPage() {
               <CardTitle>Files</CardTitle>
             </CardHeader>
             <CardBody className="space-y-2 text-sm">
-              {(c.documents || []).length === 0 && <p className="text-slate-500">No files on this matter yet.</p>}
+              {(c.documents || []).length === 0 && <p className="text-slate-600">No files on this matter yet.</p>}
               {(c.documents || []).map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
                   <div>
                     <p className="font-semibold">{d.name}</p>
-                    <p className="text-xs text-slate-500">{d.category}</p>
+                    <p className="text-xs text-slate-600">{d.category}</p>
                   </div>
                   <button
                     type="button"
@@ -454,10 +434,10 @@ export default function CaseDetailPage() {
           <CardTitle>Notes</CardTitle>
         </CardHeader>
         <CardBody className="space-y-4">
-          {(c.notes || []).length === 0 && <p className="text-sm text-slate-500">No notes yet.</p>}
+          {(c.notes || []).length === 0 && <p className="text-sm text-slate-600">No notes yet.</p>}
           {(c.notes || []).map((n) => (
             <div key={n.id}>
-              <p className="text-xs text-slate-400">{formatDateTime(n.createdAt)}</p>
+              <p className="text-xs text-slate-600">{formatDateTime(n.createdAt)}</p>
               <p className="font-semibold">{n.title}</p>
               <p className="text-sm">{n.body}</p>
             </div>

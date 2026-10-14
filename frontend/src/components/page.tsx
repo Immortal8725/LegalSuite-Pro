@@ -14,7 +14,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-navy">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
       </div>
       {actions}
     </div>
@@ -86,7 +86,8 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function TableWrap({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl bg-white shadow-card">
+    // Focusable so keyboard users can scroll a wide table sideways on a phone.
+    <div className="overflow-x-auto rounded-xl bg-white shadow-card" tabIndex={0} role="region" aria-label="Table">
       <table className="w-full text-sm">{children}</table>
     </div>
   );
@@ -94,7 +95,7 @@ export function TableWrap({ children }: { children: ReactNode }) {
 
 export function Th({ children }: { children?: ReactNode }) {
   return (
-    <th className="bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-400">
+    <th className="bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-slate-600">
       {children}
     </th>
   );
@@ -105,7 +106,7 @@ export function Td({ children, className }: { children: ReactNode; className?: s
 }
 
 export function Loading() {
-  return <p className="py-16 text-center text-sm text-slate-500">Loading…</p>;
+  return <p className="py-16 text-center text-sm text-slate-600">Loading…</p>;
 }
 
 export { Button };

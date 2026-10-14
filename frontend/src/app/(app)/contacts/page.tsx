@@ -19,7 +19,14 @@ export default function ContactsPage() {
   };
   const [messaging, setMessaging] = useState<Contact | null>(null);
   const [form, setForm] = useState({ type: "opposing_counsel", firstName: "", lastName: "", company: "", email: "", phone: "" });
-  const load = () => apiGet<Contact[]>("/api/v1/contacts").then(setRows);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    apiGet<Contact[]>("/api/v1/contacts")
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load contacts"));
   useEffect(() => {
     load();
   }, []);
@@ -27,6 +34,7 @@ export default function ContactsPage() {
   return (
     <div>
       <PageHeader title="Contacts" subtitle="Judges, opposing counsel, experts, and vendors." actions={<Button onClick={openDialog}>Add contact</Button>} />
+      <ErrorBanner error={error} />
       {rows.length === 0 ? (
         <EmptyState title="No contacts" body="Add opposing counsel before the first hearing." />
       ) : (
@@ -87,7 +95,7 @@ export default function ContactsPage() {
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Type</Label>
-          <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+          <Select aria-label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="opposing_counsel">Opposing counsel</option>
             <option value="judge">Judge</option>
             <option value="expert_witness">Expert</option>

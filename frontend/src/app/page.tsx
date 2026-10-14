@@ -52,7 +52,7 @@ export default function MarketingPage() {
         <h1 className="mt-3 text-4xl font-extrabold leading-tight text-navy sm:text-5xl">
           One seat at R1,199 a month. The docket watches RAF and Act 40. The phone is what you use.
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-500">
+        <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
           Landing, intake, conflict check, signed mandate, and section 86 trust stay in one firm. Trust is in the seat, not a later add-on. In-app calls are included and write time on hangup. Public-network minutes have no bundle. A local number is optional at about R79 a month, or bundled when you include it.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -70,7 +70,7 @@ export default function MarketingPage() {
           {FEATURES.map(([title, body]) => (
             <div key={title} className="rounded-2xl bg-white p-6 shadow-card">
               <h3 className="font-bold text-navy">{title}</h3>
-              <p className="mt-2 text-sm text-slate-500">{body}</p>
+              <p className="mt-2 text-sm text-slate-600">{body}</p>
             </div>
           ))}
         </div>
@@ -78,14 +78,14 @@ export default function MarketingPage() {
 
       <section className="mx-auto max-w-xl px-6 py-16">
         <h2 className="text-center text-3xl font-extrabold text-navy">Light</h2>
-        <p className="mx-auto mt-2 max-w-xl text-center text-slate-500">
+        <p className="mx-auto mt-2 max-w-xl text-center text-slate-600">
           Prices are in rand. The Light seat is a PayFast subscription once sandbox or live keys are set. Until then the seat stays on the month-end preview and no card is charged.
         </p>
         <div className="mt-10 rounded-2xl border border-gold p-6 shadow-lift">
           <p className="mb-2 text-xs font-bold uppercase text-gold">Solo launch</p>
           <h3 className="text-lg font-bold">{LIGHT.name}</h3>
           <p className="mt-2 text-3xl font-extrabold text-navy">{LIGHT.price}</p>
-          <p className="text-xs text-slate-400">{LIGHT.note}</p>
+          <p className="text-xs text-slate-600">{LIGHT.note}</p>
           <ul className="mt-4 space-y-2 text-sm">
             {LIGHT.items.map((item) => (
               <li key={item} className="flex gap-2">

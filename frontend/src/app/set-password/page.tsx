@@ -42,7 +42,7 @@ function SetPasswordForm() {
       </div>
     );
   }
-  if (!invite) return <p className="text-sm text-slate-500">Checking your link…</p>;
+  if (!invite) return <p className="text-sm text-slate-600">Checking your link…</p>;
 
   return (
     <form
@@ -69,7 +69,7 @@ function SetPasswordForm() {
       }}
     >
       <h1 className="text-2xl font-bold text-navy">Welcome{invite.firstName ? `, ${invite.firstName}` : ""}</h1>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-600">
         Choose a password for <strong>{invite.email}</strong> at {invite.firmName}. Your firm code is{" "}
         <strong>{invite.firmSlug}</strong>.
       </p>
@@ -85,7 +85,7 @@ function SetPasswordForm() {
           onChange={(e) => setNext(e.target.value)}
           required
         />
-        <p className="mt-1 text-xs text-slate-500">At least 10 characters.</p>
+        <p className="mt-1 text-xs text-slate-600">At least 10 characters.</p>
       </div>
       <div>
         <Label htmlFor="confirm-password">Confirm password</Label>
@@ -108,7 +108,7 @@ function SetPasswordForm() {
 export default function SetPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-8">
-      <Suspense fallback={<p className="text-sm text-slate-500">Loading…</p>}>
+      <Suspense fallback={<p className="text-sm text-slate-600">Loading…</p>}>
         <SetPasswordForm />
       </Suspense>
     </div>

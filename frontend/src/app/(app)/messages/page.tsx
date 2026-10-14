@@ -40,10 +40,15 @@ export default function MessagesPage() {
         <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Thread title" />
         <Button
           onClick={async () => {
-            const created = await apiPost<Conversation>("/api/v1/conversations", { title, type: "direct" });
-            setTitle("Matter discussion");
-            await load();
-            setActive(created.id);
+            setError(null);
+            try {
+              const created = await apiPost<Conversation>("/api/v1/conversations", { title, type: "direct" });
+              setTitle("Matter discussion");
+              await load();
+              setActive(created.id);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+            }
           }}
         >
           New thread
@@ -62,7 +67,7 @@ export default function MessagesPage() {
                   className={cn("w-full border-b px-4 py-3 text-left hover:bg-slate-50", active === t.id && "bg-navy/5")}
                 >
                   <div className="text-sm font-semibold">{t.title}</div>
-                  <div className="text-xs text-slate-400">{t.type}</div>
+                  <div className="text-xs text-slate-600">{t.type}</div>
                 </button>
               ))
             )}

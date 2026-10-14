@@ -77,15 +77,34 @@ public class SecurityConfig {
                                             .noneMatch(a -> "ROLE_CLIENT".equals(a.getAuthority()));
                             return new AuthorizationDecision(staff);
                         }))
-                .headers(h -> h.frameOptions(f -> f.disable()))
+                .headers(h -> h
+                        // Same-origin framing only (the H2 console in local dev); the API itself is never framed.
+                        .frameOptions(f -> f.sameOrigin())
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .referrerPolicy(r -> r.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                        .addHeaderWriter(new org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter(
+                                new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
+                                        org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults().matcher("/h2-console/**")),
+                                new org.springframework.security.web.header.writers.StaticHeadersWriter("Content-Security-Policy",
+                                        "default-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")))
+                        .permissionsPolicyHeader(pp -> pp.policy("camera=(), geolocation=(), microphone=()")))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @org.springframework.beans.factory.annotation.Value("${legalsuite.cors.allowed-origins:}") String allowedOrigins) {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        // Exact origins only. The web app calls the API through its own origin, so this list is for
+        // other browser clients (for example a separate admin host). Never "*" with credentials.
+        List<String> origins = java.util.Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(o -> !o.isEmpty() && !"*".equals(o))
+                .toList();
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Disposition"));

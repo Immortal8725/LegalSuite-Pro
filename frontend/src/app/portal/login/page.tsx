@@ -33,24 +33,24 @@ export default function PortalLoginPage() {
         }}
       >
         <h1 className="text-2xl font-bold text-navy">Client portal</h1>
-        <p className="text-sm text-slate-500">View your matters, invoices, and message the firm. Demo: ndlovu-partners / nomsa@example.com / portal123</p>
+        <p className="text-sm text-slate-600">View your matters, invoices, and message the firm. Demo: ndlovu-partners / nomsa@example.com / portal123</p>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm ID</Label>
-          <Input value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
+          <Input aria-label="Firm ID" value={firmSlug} onChange={(e) => setFirmSlug(e.target.value)} required />
         </div>
         <div>
           <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input aria-label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div>
           <Label>Password</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Input aria-label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         <Button className="w-full" disabled={loading}>
           {loading ? "Signing in…" : "Enter portal"}
         </Button>
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-600">
           Attorney?{" "}
           <Link href="/login" className="font-semibold text-navy">
             Firm sign-in

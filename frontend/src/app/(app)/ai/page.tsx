@@ -61,7 +61,7 @@ export default function AiPage() {
             </CardHeader>
             <CardBody className="space-y-3">
               <Label>Matter</Label>
-              <Select value={caseId} onChange={(e) => setCaseId(e.target.value)}>
+              <Select aria-label="Matter" value={caseId} onChange={(e) => setCaseId(e.target.value)}>
                 {cases.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.caseNumber}: {c.title}
@@ -120,7 +120,7 @@ export default function AiPage() {
             </CardHeader>
             <CardBody className="space-y-3">
               {leads.length === 0 ? (
-                <p className="text-sm text-slate-500">No website leads yet. Submit one from the public firm page.</p>
+                <p className="text-sm text-slate-600">No website leads yet. Submit one from the public firm page.</p>
               ) : (
                 <>
                   <Select value={leadId} onChange={(e) => setLeadId(e.target.value)}>

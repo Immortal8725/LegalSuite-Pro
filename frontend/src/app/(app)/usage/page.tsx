@@ -58,7 +58,7 @@ export default function UsagePage() {
         subtitle="Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
       />
       <ErrorBanner error={error} />
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-slate-600">
         The Light seat subscription and phone-minute card charges are on{" "}
         <Link href="/product-billing" className="font-semibold text-navy underline">
           Product billing
@@ -74,8 +74,13 @@ export default function UsagePage() {
             ) : (
               <Button
                 onClick={async () => {
-                  await apiPost("/api/v1/usage/issue", {});
-                  load();
+                  setError(null);
+                  try {
+                    await apiPost("/api/v1/usage/issue", {});
+                    load();
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                  }
                 }}
               >
                 Issue month-end invoice
@@ -83,26 +88,26 @@ export default function UsagePage() {
             )}
           </CardHeader>
           <CardBody>
-            <p className="mb-4 text-sm text-slate-500">{preview.note}</p>
+            <p className="mb-4 text-sm text-slate-600">{preview.note}</p>
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div>
-                <p className="text-xs text-slate-400">Light seat</p>
+                <p className="text-xs text-slate-600">Light seat</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.seatSubtotal ?? 0)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Add-ons outside the seat</p>
+                <p className="text-xs text-slate-600">Add-ons outside the seat</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.modulesSubtotal)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Phone ({preview.pstnMinutes} min, no bundle)</p>
+                <p className="text-xs text-slate-600">Phone ({preview.pstnMinutes} min, no bundle)</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.pstnSubtotal)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">SMS and WhatsApp ({(preview.smsCount || 0) + (preview.whatsappCount || 0)})</p>
+                <p className="text-xs text-slate-600">SMS and WhatsApp ({(preview.smsCount || 0) + (preview.whatsappCount || 0)})</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.messagingSubtotal || 0)}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-400">Due</p>
+                <p className="text-xs text-slate-600">Due</p>
                 <p className="text-xl font-extrabold text-gold">{moneyExact(preview.total)}</p>
               </div>
             </div>
@@ -131,7 +136,7 @@ export default function UsagePage() {
         </CardHeader>
         <CardBody className="p-0">
           {history.length === 0 ? (
-            <p className="p-5 text-sm text-slate-500">None issued yet. The preview is the Light seat plus public-network minutes used this month. A local number is about R79 if you take one, or bundled if the operator includes it.</p>
+            <p className="p-5 text-sm text-slate-600">None issued yet. The preview is the Light seat plus public-network minutes used this month. A local number is about R79 if you take one, or bundled if the operator includes it.</p>
           ) : (
             <TableWrap>
               <thead>
@@ -157,8 +162,13 @@ export default function UsagePage() {
                         <button
                           className="text-sm font-semibold text-navy"
                           onClick={async () => {
-                            await apiPost(`/api/v1/usage/${inv.id}/pay`, {});
-                            load();
+                            setError(null);
+                            try {
+                              await apiPost(`/api/v1/usage/${inv.id}/pay`, {});
+                              load();
+                            } catch (err) {
+                              setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                            }
                           }}
                         >
                           Mark paid

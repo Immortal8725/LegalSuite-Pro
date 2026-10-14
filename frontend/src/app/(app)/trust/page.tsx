@@ -9,6 +9,7 @@ import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Invoice, Matter, TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
+import { useLatest } from "@/lib/use-latest";
 
 export default function TrustPage() {
   const { tenant } = useAuth();
@@ -54,11 +55,11 @@ export default function TrustPage() {
     }
     setRecon(await apiGet<TrustRecon>("/api/v1/trust/recon"));
   };
+  const loadLatest = useLatest(load);
   useEffect(() => {
-    load().catch((e) => setError(e.message));
     // Load once on mount. load() picks the selected account itself, so re-running on every change would loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    loadLatest.current().catch((e) => setError(e.message));
+  }, [loadLatest]);
 
   const acct = accounts.find((a) => a.id === selected);
   const live = acct?.recon;
@@ -118,15 +119,15 @@ export default function TrustPage() {
           </CardHeader>
           <CardBody className="grid gap-4 sm:grid-cols-3 text-sm">
             <div>
-              <p className="text-xs text-slate-500">Bank statement</p>
+              <p className="text-xs text-slate-600">Bank statement</p>
               <p className="text-xl font-extrabold">{moneyExact(live.bankBalance)}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Cashbook</p>
+              <p className="text-xs text-slate-600">Cashbook</p>
               <p className="text-xl font-extrabold">{moneyExact(live.bookBalance)}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Client ledgers</p>
+              <p className="text-xs text-slate-600">Client ledgers</p>
               <p className="text-xl font-extrabold">{moneyExact(live.clientLedgerTotal)}</p>
             </div>
             <p className="sm:col-span-3 text-xs text-slate-600">{live.rule}</p>
@@ -155,7 +156,7 @@ export default function TrustPage() {
               </CardHeader>
               <CardBody>
                 <p className="text-2xl font-extrabold text-navy">{moneyExact(a.balance)}</p>
-                <p className="text-xs text-slate-500">{a.bankName}</p>
+                <p className="text-xs text-slate-600">{a.bankName}</p>
               </CardBody>
             </Card>
           </button>
@@ -177,7 +178,7 @@ export default function TrustPage() {
         </Card>
       )}
       {recon?.history && recon.history.length > 0 && (
-        <p className="mb-3 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-slate-600">
           Last saved recon: {recon.history[0].status}
           {recon.history[0].certified ? " · certified" : " · not certified"} · difference{" "}
           {moneyExact(recon.history[0].difference)}
@@ -253,7 +254,7 @@ export default function TrustPage() {
             </option>
           ))}
         </Select>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-600">
           {moveMatter
             ? `Posts to ${moveMatter.clientName || "this client"}'s ledger.`
             : move.type === "deposit"
@@ -295,7 +296,7 @@ export default function TrustPage() {
           Withdraws from this client&apos;s ledger on {acct?.accountName || "the selected account"} and records the matching fee payment. Only this client&apos;s ledger is used. The amount starts at the smaller of the invoice balance and this client&apos;s ledger.
         </p>
         <Label>Invoice</Label>
-        <Select
+        <Select aria-label="Invoice"
           value={fee.invoiceId}
           onChange={(e) => {
             const invoiceId = e.target.value;
@@ -312,7 +313,7 @@ export default function TrustPage() {
           ))}
         </Select>
         {chosenInvoice && (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-slate-600">
             This client&apos;s ledger on the selected account is {moneyExact(ledgerFor(chosenInvoice.clientId))}. Invoice balance is {moneyExact(chosenInvoice.balanceDue)}.
           </p>
         )}
@@ -352,7 +353,7 @@ export default function TrustPage() {
           disagree unless you write a full explanation.
         </p>
         <Label>Bank statement balance</Label>
-        <Input
+        <Input aria-label="Bank statement balance"
           type="number"
           value={bank.bankBalance}
           onChange={(e) => setBank({ ...bank, bankBalance: e.target.value })}
@@ -388,18 +389,23 @@ export default function TrustPage() {
           not Open Banking.
         </p>
         <Label>Statement file</Label>
-        <input
+        <input aria-label="Statement file"
           type="file"
           accept=".csv,text/csv,text/plain"
           className="mb-3 block text-sm"
           onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            setCsv(await file.text());
+            setError(null);
+            try {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setCsv(await file.text());
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+            }
           }}
         />
         <Label>CSV</Label>
-        <Textarea className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
+        <Textarea aria-label="CSV" className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
       </Dialog>
     </div>
   );

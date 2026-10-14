@@ -29,6 +29,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (target) router.replace(target);
   }, [target, router]);
 
-  if (!ready || target) return <div className="p-10 text-sm text-slate-500">Loading workspace…</div>;
+  if (!ready || target) return <div className="p-10 text-sm text-slate-600">Loading workspace…</div>;
   return <AppShell>{children}</AppShell>;
 }

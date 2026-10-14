@@ -98,30 +98,30 @@ export default function SettingsPage() {
           <CardBody className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Firm name</Label>
-              <Input value={form.firmName} onChange={(e) => setForm({ ...form, firmName: e.target.value })} />
+              <Input aria-label="Firm name" value={form.firmName} onChange={(e) => setForm({ ...form, firmName: e.target.value })} />
             </div>
             <div>
               <Label>Phone</Label>
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <Input aria-label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </div>
             <div>
               <Label>Email</Label>
-              <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input aria-label="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
               <Label>Tagline</Label>
-              <Input value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
+              <Input aria-label="Tagline" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
               <Label>Address</Label>
-              <Input value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
+              <Input aria-label="Address" value={form.addressLine1} onChange={(e) => setForm({ ...form, addressLine1: e.target.value })} />
             </div>
             <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             <Input placeholder="Province / state" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
             <Input placeholder="Postal code" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} />
             <div>
               <Label>Landing template</Label>
-              <Select value={form.template} onChange={(e) => setForm({ ...form, template: e.target.value })}>
+              <Select aria-label="Landing template" value={form.template} onChange={(e) => setForm({ ...form, template: e.target.value })}>
                 <option value="classic">Classic</option>
                 <option value="modern">Modern</option>
                 <option value="boutique">Boutique</option>
@@ -157,15 +157,15 @@ export default function SettingsPage() {
             </p>
             <div>
               <Label>Certificate number</Label>
-              <Input value={form.ffcNumber} onChange={(e) => setForm({ ...form, ffcNumber: e.target.value })} />
+              <Input aria-label="Certificate number" value={form.ffcNumber} onChange={(e) => setForm({ ...form, ffcNumber: e.target.value })} />
             </div>
             <div>
               <Label>Expires</Label>
-              <Input type="date" value={form.ffcExpiresOn} onChange={(e) => setForm({ ...form, ffcExpiresOn: e.target.value })} />
+              <Input aria-label="Expires" type="date" value={form.ffcExpiresOn} onChange={(e) => setForm({ ...form, ffcExpiresOn: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
               <Label>Holder</Label>
-              <Input value={form.ffcHolderName} onChange={(e) => setForm({ ...form, ffcHolderName: e.target.value })} />
+              <Input aria-label="Holder" value={form.ffcHolderName} onChange={(e) => setForm({ ...form, ffcHolderName: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
               <Button
@@ -190,14 +190,14 @@ export default function SettingsPage() {
           <CardBody className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Information officer</Label>
-              <Input
+              <Input aria-label="Information officer"
                 value={form.informationOfficerName}
                 onChange={(e) => setForm({ ...form, informationOfficerName: e.target.value })}
               />
             </div>
             <div>
               <Label>Officer email</Label>
-              <Input
+              <Input aria-label="Officer email"
                 type="email"
                 value={form.informationOfficerEmail}
                 onChange={(e) => setForm({ ...form, informationOfficerEmail: e.target.value })}
@@ -243,7 +243,7 @@ export default function SettingsPage() {
               </Button>
             </div>
             {tenant?.paiaManualBody && (
-              <Textarea className="sm:col-span-2 min-h-[220px] font-mono text-xs" readOnly value={tenant.paiaManualBody} />
+              <Textarea aria-label="PAIA manual" className="sm:col-span-2 min-h-[220px] font-mono text-xs" readOnly value={tenant.paiaManualBody} />
             )}
           </CardBody>
         </Card>
@@ -277,9 +277,9 @@ export default function SettingsPage() {
                 {totp && (
                   <div className="space-y-2 rounded-lg border bg-slate-50 p-3">
                     <p className="font-mono text-xs break-all">Secret {totp.secret}</p>
-                    <p className="font-mono text-[11px] break-all text-slate-500">{totp.otpauthUrl}</p>
+                    <p className="font-mono text-[11px] break-all text-slate-600">{totp.otpauthUrl}</p>
                     <Label>Code from the app</Label>
-                    <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="123456" />
+                    <Input aria-label="Code from the app" value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="123456" />
                     <Button
                       onClick={async () => {
                         try {
@@ -303,11 +303,11 @@ export default function SettingsPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 <div>
                   <Label>Current code or password</Label>
-                  <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="Authenticator code" />
+                  <Input aria-label="Current code or password" value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="Authenticator code" />
                 </div>
                 <div>
                   <Label>Password</Label>
-                  <Input type="password" value={totpPassword} onChange={(e) => setTotpPassword(e.target.value)} />
+                  <Input aria-label="Password" type="password" value={totpPassword} onChange={(e) => setTotpPassword(e.target.value)} />
                 </div>
                 <Button
                   variant="outline"
@@ -334,7 +334,7 @@ export default function SettingsPage() {
             <CardTitle>LegalSuite product billing</CardTitle>
           </CardHeader>
           <CardBody>
-            <p className="mb-3 text-sm text-slate-500">
+            <p className="mb-3 text-sm text-slate-600">
               The Light seat and phone minutes are billed to the firm through PayFast. That is separate from client invoices and from trust.
             </p>
             <Link href="/product-billing" className="text-sm font-semibold text-navy underline">

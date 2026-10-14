@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -122,11 +123,15 @@ const floatShadow = "shadow-[0_22px_40px_-22px_rgba(24,24,24,0.28)]";
 function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: string; index?: number }) {
   return (
     <Link href={href(base, `/people/${person.id}`)} className="block">
-      <img
-        src={portraitSrc(person.fullName, index)}
-        alt=""
-        className={`ps-photo aspect-[3/4] w-full object-cover object-[center_18%] ${floatShadow}`}
-      />
+      <div className={`ps-photo relative aspect-[3/4] w-full overflow-hidden ${floatShadow}`}>
+        <Image
+          src={portraitSrc(person.fullName, index)}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 45vw, 90vw"
+          className="object-cover object-[center_18%]"
+        />
+      </div>
       <div className={`ps-panel relative z-10 -mt-14 mx-4 border border-[var(--ps-line)] bg-[var(--ps-card)] px-4 py-4 ${floatShadow}`}>
         <p className="text-2xl font-semibold leading-tight tracking-tight text-[var(--ps-ink)]" style={serifStyle}>{person.fullName}</p>
         <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--ps-meta)]">{person.title}</p>
@@ -141,19 +146,28 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
   const next = people.find((person) => person.id !== lead?.id);
   return (
     <div className="relative mx-auto h-[30rem] w-full max-w-lg sm:h-[34rem] lg:h-[38rem]">
-      <img
-        src={READING_ROOM}
-        alt="People working together beside a sunlit window"
-        className={`ps-photo absolute right-0 top-12 h-[72%] w-[76%] object-cover ${floatShadow}`}
+      <div
+        className={`ps-photo absolute right-0 top-12 h-[72%] w-[76%] overflow-hidden ${floatShadow}`}
         style={{ transform: "rotate(-1.5deg)" }}
-      />
+      >
+        <Image
+          src={READING_ROOM}
+          alt="People working together beside a sunlit window"
+          fill
+          priority
+          sizes="(min-width: 1024px) 380px, 76vw"
+          className="object-cover"
+        />
+      </div>
       {lead ? (
         <Link
           href={href(base, `/people/${lead.id}`)}
           className={`ps-panel absolute left-0 top-0 z-10 w-[48%] border border-[var(--ps-line)] bg-[var(--ps-card)] p-2 ${floatShadow}`}
           style={{ transform: "rotate(2.4deg)" }}
         >
-          <img src={portraitSrc(lead.fullName, 0)} alt="" className="ps-photo aspect-[4/5] w-full object-cover object-[center_18%]" />
+          <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
+            <Image src={portraitSrc(lead.fullName, 0)} alt="" fill sizes="(min-width: 1024px) 245px, 48vw" className="object-cover object-[center_18%]" />
+          </div>
           <p className="px-1.5 pb-0.5 pt-2 text-lg font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{lead.fullName}</p>
           <p className="px-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{lead.title}</p>
         </Link>
@@ -164,17 +178,19 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
           className={`ps-panel absolute bottom-2 right-1 z-20 w-[40%] border border-[var(--ps-line)] bg-[var(--ps-card)] p-1.5 ${floatShadow}`}
           style={{ transform: "rotate(-2.5deg)" }}
         >
-          <img src={portraitSrc(next.fullName, 1)} alt="" className="ps-photo aspect-[4/5] w-full object-cover object-[center_15%]" />
+          <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
+            <Image src={portraitSrc(next.fullName, 1)} alt="" fill sizes="(min-width: 1024px) 205px, 40vw" className="object-cover object-[center_15%]" />
+          </div>
           <p className="px-1 pb-0.5 pt-1.5 text-base font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{next.fullName}</p>
           <p className="px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{next.title}</p>
         </Link>
       ) : (
-        <img
-          src={DESK}
-          alt=""
-          className={`ps-photo absolute bottom-2 right-2 z-10 w-[42%] object-cover ${floatShadow}`}
+        <div
+          className={`ps-photo absolute bottom-2 right-2 z-10 aspect-[4/3] w-[42%] overflow-hidden ${floatShadow}`}
           style={{ transform: "rotate(-3deg)" }}
-        />
+        >
+          <Image src={DESK} alt="" fill sizes="(min-width: 1024px) 215px, 42vw" className="object-cover" />
+        </div>
       )}
     </div>
   );

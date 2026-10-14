@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiGet, apiPost, getToken } from "@/lib/api";
+import { apiBlob, apiGet, apiPost, saveBlob } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
-import { EmptyState } from "@/components/ui/dialog";
+import { EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import type { Doc, Matter } from "@/lib/types";
 
 export default function DocumentsPage() {
@@ -12,34 +12,49 @@ export default function DocumentsPage() {
   const [cases, setCases] = useState<Matter[]>([]);
   const [caseId, setCaseId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = () => apiGet<Doc[]>("/api/v1/documents").then(setRows);
+  const load = () =>
+    apiGet<Doc[]>("/api/v1/documents")
+      .then(setRows)
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load documents"));
   useEffect(() => {
     load();
-    apiGet<Matter[]>("/api/v1/cases").then(setCases);
+    apiGet<Matter[]>("/api/v1/cases")
+      .then(setCases)
+      .catch(() => setCases([]));
   }, []);
 
   return (
     <div>
-      <PageHeader title="Documents" subtitle="Privileged work product stays on this tenant. Demo seed files are metadata-only until you upload." />
+      <PageHeader title="Documents" subtitle="Privileged work product stays on this firm's workspace." />
+      <ErrorBanner error={error} />
       <form
         className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-white p-4 shadow-card"
         onSubmit={async (e) => {
           e.preventDefault();
           const input = (e.currentTarget.elements.namedItem("file") as HTMLInputElement).files?.[0];
           if (!input) return;
+          const form = e.currentTarget;
           setBusy(true);
-          const fd = new FormData();
-          fd.append("file", input);
-          if (caseId) fd.append("caseId", caseId);
-          fd.append("category", "correspondence");
-          await apiPost("/api/v1/documents/upload", fd);
-          setBusy(false);
-          load();
+          setError(null);
+          try {
+            const fd = new FormData();
+            fd.append("file", input);
+            if (caseId) fd.append("caseId", caseId);
+            fd.append("category", "correspondence");
+            await apiPost("/api/v1/documents/upload", fd);
+            form.reset();
+            await load();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Could not upload the file");
+          } finally {
+            setBusy(false);
+          }
         }}
       >
-        <input name="file" type="file" className="text-sm" required />
-        <select className="h-10 rounded-lg border px-3 text-sm" value={caseId} onChange={(e) => setCaseId(e.target.value)}>
+        <input name="file" type="file" className="text-sm" aria-label="File to upload" required />
+        <select className="h-10 rounded-lg border px-3 text-sm" aria-label="Matter for the upload" value={caseId} onChange={(e) => setCaseId(e.target.value)}>
           <option value="">No matter</option>
           {cases.map((c) => (
             <option key={c.id} value={c.id}>
@@ -72,20 +87,14 @@ export default function DocumentsPage() {
                 <Td>
                   <button
                     className="text-sm font-semibold text-navy"
+                    type="button"
                     onClick={async () => {
-                      const res = await fetch(`/api/v1/documents/${d.id}/download`, {
-                        headers: { Authorization: `Bearer ${getToken()}` },
-                      });
-                      if (!res.ok) {
-                        alert("This demo file has metadata only. Upload a real document to download it.");
-                        return;
+                      setError(null);
+                      try {
+                        saveBlob(await apiBlob(`/api/v1/documents/${d.id}/download`), d.name);
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : "Could not download this file");
                       }
-                      const blob = await res.blob();
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = d.name;
-                      a.click();
                     }}
                   >
                     Download

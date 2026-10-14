@@ -230,19 +230,19 @@ export default function TeamPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label>First name</Label>
-            <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+            <Input aria-label="First name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
           </div>
           <div>
             <Label>Last name</Label>
-            <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+            <Input aria-label="Last name" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
           </div>
           <div className="sm:col-span-2">
             <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <Input aria-label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div>
             <Label>Role</Label>
-            <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+            <Select aria-label="Role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
               {roles.map((r) => (
                 <option key={r}>{r}</option>
               ))}
@@ -250,7 +250,7 @@ export default function TeamPage() {
           </div>
           <div>
             <Label>Hourly rate</Label>
-            <Input value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })} />
+            <Input aria-label="Hourly rate" value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })} />
           </div>
         </div>
       </Dialog>

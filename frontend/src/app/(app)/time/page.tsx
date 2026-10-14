@@ -21,7 +21,14 @@ export default function TimePage() {
   };
   const [form, setForm] = useState({ caseId: "", durationMinutes: "36", description: "Legal research" });
   const { timer, start, stop, label } = useTimer();
-  const load = () => apiGet<TimeRow[]>("/api/v1/time-entries").then(setRows);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    apiGet<TimeRow[]>("/api/v1/time-entries")
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load time entries"));
   useEffect(() => {
     load();
     apiGet<Matter[]>("/api/v1/cases").then(setCases);
@@ -47,6 +54,7 @@ export default function TimePage() {
           </div>
         }
       />
+      <ErrorBanner error={error} />
       <TableWrap>
         <thead>
           <tr>
@@ -99,7 +107,7 @@ export default function TimePage() {
         <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Matter</Label>
-          <Select value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
+          <Select aria-label="Matter" value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
             <option value="">Unassigned</option>
             {cases.map((c) => (
               <option key={c.id} value={c.id}>
@@ -108,7 +116,7 @@ export default function TimePage() {
             ))}
           </Select>
           <Label>Minutes</Label>
-          <Input type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
+          <Input aria-label="Minutes" type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
           <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </div>
       </Dialog>

@@ -1,3 +1,8 @@
 node_modules
 .next
+out
+coverage
 *.log
+.env
+.env.*
+tsconfig.tsbuildinfo

@@ -29,14 +29,14 @@ export default function IntegrationsPage() {
             <CardHeader>
               <CardTitle>
                 {row.name}{" "}
-                <span className="ml-2 text-[11px] font-bold uppercase text-slate-400">{row.category}</span>
+                <span className="ml-2 text-[11px] font-bold uppercase text-slate-600">{row.category}</span>
               </CardTitle>
             </CardHeader>
             <CardBody>
-              <p className="mb-3 text-sm text-slate-500">{row.description}</p>
-              <p className="mb-4 text-xs text-slate-400">{row.statusNote}</p>
+              <p className="mb-3 text-sm text-slate-600">{row.description}</p>
+              <p className="mb-4 text-xs text-slate-600">{row.statusNote}</p>
               {row.provider === "payfast" && (
-                <p className="mb-4 text-xs text-slate-500">
+                <p className="mb-4 text-xs text-slate-600">
                   {row.credentialsPresent
                     ? "Server merchant id and key are present. They are not shown here. The passphrase is never sent to the browser."
                     : "No PayFast merchant id on this server yet. Set PAYFAST_MERCHANT_ID and PAYFAST_MERCHANT_KEY. Leave PAYFAST_ENV=sandbox until live keys exist."}
@@ -44,7 +44,7 @@ export default function IntegrationsPage() {
                 </p>
               )}
               {row.provider === "twilio" && (
-                <p className="mb-4 text-xs text-slate-500">
+                <p className="mb-4 text-xs text-slate-600">
                   {row.credentialsPresent
                     ? "Server credentials are present. They are not shown here."
                     : "No Twilio credentials on this server yet. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in the environment."}
@@ -56,8 +56,13 @@ export default function IntegrationsPage() {
                 <Button
                   variant="outline"
                   onClick={async () => {
-                    await apiPost(`/api/v1/integrations/${row.provider}/disconnect`, {});
-                    load();
+                    setError(null);
+                    try {
+                      await apiPost(`/api/v1/integrations/${row.provider}/disconnect`, {});
+                      load();
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                    }
                   }}
                 >
                   Disconnect
@@ -65,8 +70,13 @@ export default function IntegrationsPage() {
               ) : (
                 <Button
                   onClick={async () => {
-                    await apiPost(`/api/v1/integrations/${row.provider}/connect`, {});
-                    load();
+                    setError(null);
+                    try {
+                      await apiPost(`/api/v1/integrations/${row.provider}/connect`, {});
+                      load();
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                    }
                   }}
                 >
                   Connect

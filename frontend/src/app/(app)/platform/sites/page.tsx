@@ -86,7 +86,7 @@ export default function PlatformSitesPage() {
         subtitle="Approve or reject a publish request, a branding change, or a feature the firm asked to turn on."
       />
       <ErrorBanner error={error} />
-      {loading ? <p className="text-sm text-slate-500">Loading queue…</p> : null}
+      {loading ? <p className="text-sm text-slate-600">Loading queue…</p> : null}
       {!loading && items.length === 0 ? <p className="text-sm text-slate-600">No requests waiting.</p> : null}
       <div className="space-y-4">
         {items.map((item) => {

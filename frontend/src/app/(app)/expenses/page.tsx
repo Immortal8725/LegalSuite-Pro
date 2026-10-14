@@ -15,7 +15,14 @@ export default function ExpensesPage() {
   const [form, setForm] = useState({ caseId: "", category: "filing fees", description: "", amount: "", vendor: "" });
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const load = () => apiGet<Expense[]>("/api/v1/expenses").then(setRows);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    apiGet<Expense[]>("/api/v1/expenses")
+      .then((r) => {
+        setRows(r);
+        setError(null);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Could not load expenses"));
   useEffect(() => {
     load();
     apiGet<Matter[]>("/api/v1/cases").then(setMatters).catch(() => setMatters([]));
@@ -34,6 +41,7 @@ export default function ExpensesPage() {
           </Button>
         }
       />
+      <ErrorBanner error={error} />
       <TableWrap>
         <thead>
           <tr>

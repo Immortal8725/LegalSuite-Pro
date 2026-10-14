@@ -8,6 +8,7 @@ import { Button, StatusBadge } from "@/components/page";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import type { SignReq } from "@/lib/types";
+import Image from "next/image";
 
 export default function PublicSignPage() {
   const params = useParams<{ id: string }>();
@@ -44,19 +45,19 @@ export default function PublicSignPage() {
           LegalSuite Pro
         </div>
         <ErrorBanner error={error} />
-        {!doc && !error && <p className="text-sm text-slate-500">Loading the document…</p>}
+        {!doc && !error && <p className="text-sm text-slate-600">Loading the document…</p>}
         {doc && (
           <>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-bold text-navy">{doc.title}</h1>
-                <p className="text-sm text-slate-500">Requested for {doc.signerName}</p>
+                <p className="text-sm text-slate-600">Requested for {doc.signerName}</p>
               </div>
               <StatusBadge status={doc.status} />
             </div>
             <pre className="mb-6 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed">{doc.documentBody}</pre>
             {doc.documentHash && (
-              <p className="mb-4 font-mono text-[11px] text-slate-500">Document hash {doc.documentHash}</p>
+              <p className="mb-4 font-mono text-[11px] text-slate-600">Document hash {doc.documentHash}</p>
             )}
             {doc.status === "signed" ? (
               <div>
@@ -64,26 +65,32 @@ export default function PublicSignPage() {
                   Signed {doc.signedAt ? new Date(doc.signedAt).toLocaleString() : ""}
                 </p>
                 {doc.unlocked && <p className="mb-2 text-sm">The limited file is now open. The pledged retainer posts to the trust account.</p>}
-                {doc.signatureHash && <p className="mb-2 font-mono text-[11px] text-slate-500">Signature hash {doc.signatureHash}</p>}
+                {doc.signatureHash && <p className="mb-2 font-mono text-[11px] text-slate-600">Signature hash {doc.signatureHash}</p>}
                 {doc.signatureStandard && (
-                  <p className="mb-2 text-xs text-slate-500">
+                  <p className="mb-2 text-xs text-slate-600">
                     Standard {doc.signatureStandard}
                     {doc.identityCaptured ? " · identity number included in the hash" : ""}
                   </p>
                 )}
                 {doc.signatureDataUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="Signature" src={doc.signatureDataUrl} className="h-24 rounded border bg-white" />
+                  <Image
+                    alt="Signature"
+                    src={doc.signatureDataUrl}
+                    width={288}
+                    height={96}
+                    unoptimized
+                    className="h-24 w-auto rounded border bg-white"
+                  />
                 )}
               </div>
             ) : doc.status === "void" ? (
-              <p className="text-sm text-slate-500">This request was voided by the firm.</p>
+              <p className="text-sm text-slate-600">This request was voided by the firm.</p>
             ) : (
               <div className="space-y-3">
                 <Label>Type your name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Input aria-label="Type your name" value={name} onChange={(e) => setName(e.target.value)} />
                 <Label>Identity number (SA ID, passport, or equivalent)</Label>
-                <Input
+                <Input aria-label="Identity number (SA ID, passport, or equivalent)"
                   value={identity}
                   onChange={(e) => setIdentity(e.target.value)}
                   placeholder="Required. Hashed into the instrument"

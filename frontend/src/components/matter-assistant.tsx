@@ -77,7 +77,7 @@ export function MatterAssistant({
         {matters && onCaseId && (
           <div className="space-y-1">
             <Label>Matter</Label>
-            <Select value={caseId || ""} onChange={(e) => onCaseId(e.target.value)}>
+            <Select aria-label="Matter" value={caseId || ""} onChange={(e) => onCaseId(e.target.value)}>
               <option value="">Whole docket, no single file</option>
               {matters.map((matter) => (
                 <option key={matter.id} value={matter.id}>
@@ -89,19 +89,19 @@ export function MatterAssistant({
         )}
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">{disclaimer}</p>
         {matterLabel && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-600">
             Context is limited to <span className="font-semibold text-navy">{matterLabel}</span>. Other matters are not included.
           </p>
         )}
         {!caseId && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-600">
             No single matter is selected, so this search stays on the firm docket. Open a matter for its clocks, notes, and file names.
           </p>
         )}
         <ErrorBanner error={error} />
         <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg bg-slate-50 p-3 text-sm">
           {turns.length === 0 && (
-            <p className="text-slate-500">Parties, computed clocks, notes, and file names.</p>
+            <p className="text-slate-600">Parties, computed clocks, notes, and file names.</p>
           )}
           {turns.map((turn, i) => (
             <div key={i}>
@@ -114,7 +114,7 @@ export function MatterAssistant({
                   className={`mt-1 text-xs ${
                     turn.providerStatus === "missing-key" || turn.providerStatus === "vendor-error"
                       ? "text-amber-800"
-                      : "text-slate-500"
+                      : "text-slate-600"
                   }`}
                 >
                   {turn.notice}

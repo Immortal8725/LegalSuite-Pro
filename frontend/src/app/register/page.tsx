@@ -57,36 +57,36 @@ export default function RegisterPage() {
         }}
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-600">
           You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing for the seat uses PayFast once the operator sets sandbox or live keys.
         </p>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm name</Label>
-              <Input required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
+              <Input aria-label="Firm name" required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label>First name</Label>
-            <Input required value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
+            <Input aria-label="First name" required value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
           </div>
           <div>
             <Label>Last name</Label>
-            <Input required value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
+            <Input aria-label="Last name" required value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
           </div>
           <div>
             <Label>Email</Label>
-            <Input type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
+            <Input aria-label="Email" type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
           </div>
           <div>
             <Label>Password (8+)</Label>
-            <Input type="password" required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
+            <Input aria-label="Password (8+)" type="password" required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label>Country</Label>
-            <Select
+            <Select aria-label="Country"
               value={form.country}
               onChange={(e) => {
                 const country = e.target.value;
@@ -99,12 +99,12 @@ export default function RegisterPage() {
           </div>
           <div>
             <Label>{form.country === "ZA" ? "Province" : "State"}</Label>
-            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
+            <Input aria-label={form.country === "ZA" ? "Province" : "State"} value={form.state} onChange={(e) => set("state", e.target.value)} />
           </div>
         </div>
         <div>
           <Label>Firm size</Label>
-          <Select value={form.firmSize} onChange={(e) => set("firmSize", e.target.value)}>
+          <Select aria-label="Firm size" value={form.firmSize} onChange={(e) => set("firmSize", e.target.value)}>
             <option value="solo">Solo</option>
             <option value="small">Small (2–5)</option>
             <option value="medium">Medium (6–25)</option>
@@ -137,7 +137,7 @@ export default function RegisterPage() {
         <Button className="w-full" variant="gold" disabled={loading}>
           {loading ? "Creating tenant…" : "Create firm on Light"}
         </Button>
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-600">
           Already registered?{" "}
           <Link href="/login" className="font-semibold text-navy">
             Sign in
