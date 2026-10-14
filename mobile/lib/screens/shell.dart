@@ -17,21 +17,28 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int tab = 0;
+  final _visits = List<int>.filled(5, 0);
+
+  void _go(int i) => setState(() {
+        // Coming back to a tab reloads it, so work saved elsewhere shows up.
+        if (i != tab) _visits[i]++;
+        tab = i;
+      });
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      DashboardScreen(api: widget.api, onOpenTab: (i) => setState(() => tab = i)),
+      DashboardScreen(api: widget.api, onOpenTab: _go),
       MattersScreen(api: widget.api),
       TimeScreen(api: widget.api),
       DiaryScreen(api: widget.api),
       MoreScreen(api: widget.api, onLogout: widget.onLogout),
     ];
     return Scaffold(
-      body: IndexedStack(index: tab, children: pages),
+      body: IndexedStack(index: tab, children: [for (var i = 0; i < pages.length; i++) KeyedSubtree(key: ValueKey('tab$i-${_visits[i]}'), child: pages[i])]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
-        onDestinationSelected: (i) => setState(() => tab = i),
+        onDestinationSelected: _go,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.space_dashboard_outlined), selectedIcon: Icon(Icons.space_dashboard), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.folder_outlined), selectedIcon: Icon(Icons.folder), label: 'Matters'),
