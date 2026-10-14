@@ -1,11 +1,11 @@
 {
-    "name": "owlaw_mobile",
-    "short_name": "owlaw_mobile",
+    "name": "Owlaw",
+    "short_name": "Owlaw",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1A365D",
     "theme_color": "#1A365D",
-    "description": "A new Flutter project.",
+    "description": "Owlaw attorney app: matters, time, the docket and calls.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
