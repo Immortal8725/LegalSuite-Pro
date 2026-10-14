@@ -335,7 +335,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardBody>
             <p className="mb-3 text-sm text-slate-600">
-              The Light seat and phone minutes are billed to the firm through PayFast. That is separate from client invoices and from trust.
+              Your Owlaw plan, staff seats and phone minutes are billed to the firm through PayFast. That is separate from client invoices and from trust.
             </p>
             <Link href="/product-billing" className="text-sm font-semibold text-navy underline">
               Open product billing

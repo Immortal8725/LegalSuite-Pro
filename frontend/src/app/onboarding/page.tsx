@@ -112,7 +112,7 @@ export default function OnboardingPage() {
             <div>
               <h2 className="text-xl font-bold">Core modules stay on</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Cases, clients, calendar, tasks, documents, time, billing, messaging, conflict check, reports, and section 86 trust are in the Light seat. Trust is not a separate charge.
+                Cases, clients, calendar, tasks, documents, time, billing, messaging, conflict check, reports, and section 86 trust are in every plan. Trust is not a separate charge.
               </p>
             </div>
           )}
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
                   <option value="15">15 minutes</option>
                 </Select>
               </div>
-              <p className="text-sm text-slate-600">Light is R1,199 per month for one attorney. Public-network minutes are pay-what-you-use. A local number is optional at about R79, or bundled. Recording stays off until you opt in on a call.</p>
+              <p className="text-sm text-slate-600">Solo is R899 a month for one attorney. Firm is R1,199 and Practice R1,599 per attorney a month. Support staff are R349 a seat. Calls are R1.49 a minute, or R149 a month plus R8.90 a minute with your own landline as caller ID. Prices exclude VAT. Recording stays off until you opt in on a call.</p>
             </div>
           )}
           <div className="mt-6">

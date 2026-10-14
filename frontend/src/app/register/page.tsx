@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
+import { PLANS, PRICE_NOTE, type PlanSlug } from "@/lib/pricing";
 
 const AREAS = [
   "RAF",
@@ -30,6 +31,7 @@ export default function RegisterPage() {
     password: "",
     phone: "",
     firmSize: "solo",
+    planSlug: "firm" as PlanSlug,
     practiceAreas: [] as string[],
     country: "ZA",
     state: "GP",
@@ -38,6 +40,11 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("plan");
+    if (wanted && PLANS.some((p) => p.slug === wanted)) setForm((p) => ({ ...p, planSlug: wanted as PlanSlug }));
+  }, []);
+  const chosen = PLANS.find((p) => p.slug === form.planSlug) ?? PLANS[1];
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy-dark via-navy to-navy-light p-6">
@@ -58,8 +65,32 @@ export default function RegisterPage() {
       >
         <h2 className="text-2xl font-bold text-navy">Register your firm</h2>
         <p className="text-sm text-slate-600">
-          You get a tenant, one attorney seat, and a public site at /firm/your-slug. Light is R1,199 per month and includes section 86 trust. New firms default to South Africa. Card billing for the seat uses PayFast once the operator sets sandbox or live keys.
+          You get a 14-day trial, your own Owlaw workspace and section 86 trust on every plan. {PRICE_NOTE} New firms default to South Africa.
         </p>
+        <fieldset>
+          <legend className="text-sm font-semibold text-navy">Plan</legend>
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {PLANS.map((p) => (
+              <label
+                key={p.slug}
+                className={`cursor-pointer rounded-xl border p-3 text-sm ${form.planSlug === p.slug ? "border-gold bg-amber-50" : "border-slate-200"}`}
+              >
+                <input
+                  type="radio"
+                  name="plan"
+                  value={p.slug}
+                  checked={form.planSlug === p.slug}
+                  onChange={() => set("planSlug", p.slug)}
+                  className="mr-2"
+                />
+                <span className="font-bold text-navy">{p.name}</span>
+                <span className="block text-slate-600">
+                  {p.price} {p.unit}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm name</Label>
@@ -135,7 +166,7 @@ export default function RegisterPage() {
           </div>
         </div>
         <Button className="w-full" variant="gold" disabled={loading}>
-          {loading ? "Creating tenant…" : "Create firm on Light"}
+          {loading ? "Creating your firm…" : `Create firm on ${chosen.name}`}
         </Button>
         <p className="text-center text-sm text-slate-600">
           Already registered?{" "}
