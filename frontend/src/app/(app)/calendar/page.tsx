@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader } from "@/components/page";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select } from "@/components/ui/input";
 import { Card, CardBody } from "@/components/ui/card";
 import type { CalEvent } from "@/lib/types";
@@ -12,6 +12,12 @@ import type { CalEvent } from "@/lib/types";
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [form, setForm] = useState({ title: "", type: "hearing", location: "", startTime: "" });
   const load = () => apiGet<CalEvent[]>("/api/v1/events").then(setEvents);
   useEffect(() => {
@@ -29,7 +35,7 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <PageHeader title="Calendar" subtitle="Court dates, depositions, and filing clocks. Color follows the event type." actions={<Button onClick={() => setOpen(true)}>New event</Button>} />
+      <PageHeader title="Calendar" subtitle="Court dates, depositions, and filing clocks. Color follows the event type." actions={<Button onClick={openDialog}>New event</Button>} />
       <div className="space-y-4">
         {byDay.length === 0 && <p className="text-sm text-slate-500">No events in the next 40 days.</p>}
         {byDay.map(([day, list]) => (
@@ -59,19 +65,29 @@ export default function CalendarPage() {
         title="Calendar event"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/events", {
-                ...form,
-                startTime: new Date(form.startTime).toISOString(),
-              });
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/events", {
+                  ...form,
+                  startTime: new Date(form.startTime).toISOString(),
+                });
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not save the event");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <div className="space-y-3">
           <Label>Title</Label>
           <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />

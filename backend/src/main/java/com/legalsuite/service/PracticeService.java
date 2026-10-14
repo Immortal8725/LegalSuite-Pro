@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
@@ -132,7 +133,7 @@ public class PracticeService {
                 ? new LegalCase()
                 : requireCase(id);
         c.setTenantId(tid());
-        if (body.get("clientId") != null) c.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
+        if (body.get("clientId") != null) c.setClientId(Ids.optUuid(body.get("clientId"), "client"));
         c.setTitle(str(body, "title", c.getTitle()));
         c.setDescription(str(body, "description", c.getDescription()));
         c.setCaseType(str(body, "caseType", c.getCaseType()));
@@ -145,7 +146,7 @@ public class PracticeService {
         c.setOpposingCounsel(str(body, "opposingCounsel", c.getOpposingCounsel()));
         c.setBillingType(str(body, "billingType", c.getBillingType() == null ? "hourly" : c.getBillingType()));
         if (body.get("billingRate") != null) c.setBillingRate(new BigDecimal(String.valueOf(body.get("billingRate"))));
-        if (body.get("leadAttorneyId") != null) c.setLeadAttorneyId(UUID.fromString(String.valueOf(body.get("leadAttorneyId"))));
+        if (body.get("leadAttorneyId") != null) c.setLeadAttorneyId(Ids.optUuid(body.get("leadAttorneyId"), "lead attorney"));
         LocalDate accrual = TexasDocketRules.parseDate(body.get("accrualDate"));
         if (accrual != null) c.setAccrualDate(accrual);
         LocalDate discovery = TexasDocketRules.parseDate(body.get("discoveryDate"));
@@ -173,13 +174,13 @@ public class PracticeService {
             c.setPendingRetainerAmount(new BigDecimal(String.valueOf(body.get("pendingRetainerAmount"))));
         }
         if (body.get("pendingTrustAccountId") != null) {
-            c.setPendingTrustAccountId(UUID.fromString(String.valueOf(body.get("pendingTrustAccountId"))));
+            c.setPendingTrustAccountId(Ids.optUuid(body.get("pendingTrustAccountId"), "trust account"));
         }
         if (body.get("engagementSignatureId") != null) {
-            c.setEngagementSignatureId(UUID.fromString(String.valueOf(body.get("engagementSignatureId"))));
+            c.setEngagementSignatureId(Ids.optUuid(body.get("engagementSignatureId"), "engagement signature"));
         }
         if (body.get("conflictWaiverSignatureId") != null) {
-            c.setConflictWaiverSignatureId(UUID.fromString(String.valueOf(body.get("conflictWaiverSignatureId"))));
+            c.setConflictWaiverSignatureId(Ids.optUuid(body.get("conflictWaiverSignatureId"), "waiver signature"));
         }
         if (body.get("conflictWaiverHash") != null) c.setConflictWaiverHash(String.valueOf(body.get("conflictWaiverHash")));
         Tenant tenant = tenants.findById(tid()).orElse(null);
@@ -386,7 +387,7 @@ public class PracticeService {
         e.setDescription(str(body, "description", null));
         e.setType(str(body, "type", "meeting"));
         e.setLocation(str(body, "location", null));
-        if (body.get("caseId") != null) e.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
+        if (body.get("caseId") != null) e.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
         e.setStartTime(Instant.parse(String.valueOf(body.get("startTime"))));
         if (body.get("endTime") != null) e.setEndTime(Instant.parse(String.valueOf(body.get("endTime"))));
         events.save(e);
@@ -408,8 +409,8 @@ public class PracticeService {
         t.setDescription(str(body, "description", t.getDescription()));
         t.setStatus(str(body, "status", t.getStatus() == null ? "todo" : t.getStatus()));
         t.setPriority(str(body, "priority", t.getPriority() == null ? "medium" : t.getPriority()));
-        if (body.get("caseId") != null) t.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
-        if (body.get("assignedTo") != null) t.setAssignedTo(UUID.fromString(String.valueOf(body.get("assignedTo"))));
+        if (body.get("caseId") != null) t.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
+        if (body.get("assignedTo") != null) t.setAssignedTo(Ids.optUuid(body.get("assignedTo"), "assignee"));
         if (body.get("dueDate") != null) t.setDueDate(Instant.parse(String.valueOf(body.get("dueDate"))));
         if ("completed".equals(t.getStatus())) t.setCompletedAt(Instant.now());
         tasks.save(t);

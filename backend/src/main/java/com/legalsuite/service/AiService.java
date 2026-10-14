@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
@@ -114,8 +115,9 @@ public class AiService {
                 }
             }
         }
-        if (body.get("clientId") != null && resolvedClient == null) {
-            resolvedClient = clients.findByIdAndTenantId(UUID.fromString(String.valueOf(body.get("clientId"))), TenantContext.requireTenant())
+        UUID draftClient = Ids.optUuid(body.get("clientId"), "client");
+        if (draftClient != null && resolvedClient == null) {
+            resolvedClient = clients.findByIdAndTenantId(draftClient, TenantContext.requireTenant())
                     .map(Client::displayName)
                     .orElse(null);
         }
@@ -129,8 +131,9 @@ public class AiService {
         String name = body.get("name") == null ? "" : String.valueOf(body.get("name"));
         String caseType = body.get("caseType") == null ? "" : String.valueOf(body.get("caseType"));
         String description = body.get("description") == null ? "" : String.valueOf(body.get("description"));
-        if (body.get("leadId") != null) {
-            Lead lead = leads.findByIdAndTenantId(UUID.fromString(String.valueOf(body.get("leadId"))), TenantContext.requireTenant())
+        UUID screenLead = Ids.optUuid(body.get("leadId"), "lead");
+        if (screenLead != null) {
+            Lead lead = leads.findByIdAndTenantId(screenLead, TenantContext.requireTenant())
                     .orElseThrow(() -> ApiException.notFound("Lead not found"));
             name = lead.getName();
             caseType = lead.getCaseType();

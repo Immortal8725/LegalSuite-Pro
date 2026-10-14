@@ -12,6 +12,12 @@ export default function EsignPage() {
   const [rows, setRows] = useState<SignReq[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [cases, setCases] = useState<Matter[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
   const [form, setForm] = useState({
@@ -35,7 +41,7 @@ export default function EsignPage() {
       <PageHeader
         title="E-signatures"
         subtitle="Built-in signing. Share the public link. No DocuSign account."
-        actions={<Button onClick={() => setOpen(true)}>Send for signature</Button>}
+        actions={<Button onClick={openDialog}>Send for signature</Button>}
       />
       <ErrorBanner error={error} />
       {rows.length === 0 ? (
@@ -92,16 +98,26 @@ export default function EsignPage() {
         wide
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/signatures", form);
-              setOpen(false);
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/signatures", { ...form, caseId: form.caseId || undefined, clientId: form.clientId || undefined });
+                setOpen(false);
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not create the signing link");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Create link
+            {saving ? "Saving…" : "Create link"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <Label>Title</Label>
         <Input className="mb-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
         <div className="mb-3 grid gap-3 sm:grid-cols-2">

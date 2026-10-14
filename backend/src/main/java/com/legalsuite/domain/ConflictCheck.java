@@ -1,5 +1,6 @@
 package com.legalsuite.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,6 +25,8 @@ public class ConflictCheck {
     private String searchName;
     private String status;
     private int matchCount;
+    /** Full match list as JSON. Several hits run well past 255 characters, so this is unbounded text. */
+    @Column(columnDefinition = "text")
     private String resultsJson;
     private UUID createdBy;
     private Instant createdAt = Instant.now();

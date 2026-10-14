@@ -65,7 +65,7 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/tenants/{id}/modules")
     public ApiResponse<?> toggle(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        UUID moduleId = UUID.fromString(String.valueOf(body.get("moduleId")));
+        UUID moduleId = Ids.requireUuid(body.get("moduleId"), "module", "Choose the module.");
         boolean enabled = Boolean.parseBoolean(String.valueOf(body.get("enabled")));
         return ApiResponse.ok(tenants.toggleModule(id, moduleId, enabled));
     }
@@ -198,7 +198,7 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/timers/start")
     public ApiResponse<?> startTimer(@RequestBody(required = false) Map<String, Object> body) {
-        UUID caseId = body != null && body.get("caseId") != null ? UUID.fromString(String.valueOf(body.get("caseId"))) : null;
+        UUID caseId = body == null ? null : Ids.optUuid(body.get("caseId"), "matter");
         return ApiResponse.ok(finance.startTimer(caseId));
     }
 
@@ -306,7 +306,8 @@ public class ApiControllers {
 
     @PostMapping("/api/v1/messages")
     public ApiResponse<?> send(@RequestBody Map<String, Object> body) {
-        UUID cid = body.get("conversationId") == null ? new UUID(0, 0) : UUID.fromString(String.valueOf(body.get("conversationId")));
+        UUID cid = Ids.optUuid(body.get("conversationId"), "conversation");
+        if (cid == null) cid = new UUID(0, 0);
         return ApiResponse.ok(comms.sendMessage(cid, String.valueOf(body.get("body"))));
     }
 

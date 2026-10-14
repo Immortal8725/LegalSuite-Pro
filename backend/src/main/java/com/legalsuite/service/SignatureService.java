@@ -1,5 +1,6 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.Note;
@@ -40,10 +41,10 @@ public class SignatureService {
     public Map<String, Object> create(Map<String, Object> body) {
         SignatureRequest s = new SignatureRequest();
         s.setTenantId(tid());
-        if (body.get("caseId") != null) s.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
-        if (body.get("clientId") != null) s.setClientId(UUID.fromString(String.valueOf(body.get("clientId"))));
-        if (body.get("leadId") != null) s.setLeadId(UUID.fromString(String.valueOf(body.get("leadId"))));
-        if (body.get("conflictCheckId") != null) s.setConflictCheckId(UUID.fromString(String.valueOf(body.get("conflictCheckId"))));
+        if (body.get("caseId") != null) s.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
+        if (body.get("clientId") != null) s.setClientId(Ids.optUuid(body.get("clientId"), "client"));
+        if (body.get("leadId") != null) s.setLeadId(Ids.optUuid(body.get("leadId"), "lead"));
+        if (body.get("conflictCheckId") != null) s.setConflictCheckId(Ids.optUuid(body.get("conflictCheckId"), "conflict check"));
         s.setPurpose(str(body, "purpose", "engagement"));
         s.setTitle(str(body, "title", "Engagement letter"));
         s.setDocumentBody(str(body, "documentBody", ""));

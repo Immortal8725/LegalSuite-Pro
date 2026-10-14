@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Textarea, Select } from "@/components/ui/input";
 import type { Task } from "@/lib/types";
 
@@ -12,6 +12,12 @@ const COLS = ["todo", "in_progress", "in_review", "blocked", "completed"];
 export default function TasksPage() {
   const [rows, setRows] = useState<Task[]>([]);
   const [open, setOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openDialog = () => {
+    setDialogError(null);
+    setOpen(true);
+  };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const load = () => apiGet<Task[]>("/api/v1/tasks").then(setRows);
@@ -26,7 +32,7 @@ export default function TasksPage() {
 
   return (
     <div>
-      <PageHeader title="Tasks" subtitle="Drag is a click: move a card by changing its status." actions={<Button onClick={() => setOpen(true)}>Add task</Button>} />
+      <PageHeader title="Tasks" subtitle="Drag is a click: move a card by changing its status." actions={<Button onClick={openDialog}>Add task</Button>} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {COLS.map((col) => (
           <div key={col} className="rounded-xl bg-slate-100 p-3">
@@ -63,17 +69,27 @@ export default function TasksPage() {
         title="Task"
         footer={
           <Button
+            disabled={saving}
             onClick={async () => {
-              await apiPost("/api/v1/tasks", { title, description, status: "todo" });
-              setOpen(false);
-              setTitle("");
-              load();
+              setSaving(true);
+              setDialogError(null);
+              try {
+                await apiPost("/api/v1/tasks", { title, description, status: "todo" });
+                setOpen(false);
+                setTitle("");
+                load();
+              } catch (err) {
+                setDialogError(err instanceof Error ? err.message : "Could not create the task");
+              } finally {
+                setSaving(false);
+              }
             }}
           >
-            Create
+            {saving ? "Saving…" : "Create"}
           </Button>
         }
       >
+        <ErrorBanner error={dialogError} />
         <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <Textarea className="mt-3" placeholder="Checklist notes" value={description} onChange={(e) => setDescription(e.target.value)} />
       </Dialog>

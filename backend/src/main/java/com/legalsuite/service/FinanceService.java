@@ -83,7 +83,7 @@ public class FinanceService {
         TimeEntry t = new TimeEntry();
         t.setTenantId(tid());
         t.setUserId(user.getId());
-        if (body.get("caseId") != null) t.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
+        t.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
         t.setDescription(String.valueOf(body.getOrDefault("description", "Legal services")));
         t.setActivityType(String.valueOf(body.getOrDefault("activityType", "legal")));
         t.setDurationMinutes(Integer.parseInt(String.valueOf(body.getOrDefault("durationMinutes", "15"))));
@@ -93,11 +93,11 @@ public class FinanceService {
         t.setBillable(body.get("billable") == null || Boolean.parseBoolean(String.valueOf(body.get("billable"))));
         t.setSource(String.valueOf(body.getOrDefault("source", "manual")));
         if (t.getCaseId() != null) {
-            cases.findByIdAndTenantId(t.getCaseId(), tid()).ifPresent(c -> {
-                if (t.isBillable() && !DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())) {
-                    throw ApiException.badRequest("Limited file: billable time is blocked until the engagement is signed.");
-                }
-            });
+            LegalCase c = cases.findByIdAndTenantId(t.getCaseId(), tid())
+                    .orElseThrow(() -> ApiException.notFound("Matter not found"));
+            if (t.isBillable() && !DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())) {
+                throw ApiException.badRequest("Limited file: billable time is blocked until the engagement is signed.");
+            }
         }
         timeEntries.save(t);
         return timeView(t);
@@ -424,7 +424,7 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> reconcile(Map<String, Object> body) {
-        UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
+        UUID accountId = Ids.requireUuid(body.get("accountId"), "trust account", "Choose the trust account.");
         TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
                 .orElseThrow(() -> ApiException.notFound("Trust account not found"));
         BigDecimal bank = new BigDecimal(String.valueOf(body.getOrDefault("bankBalance",
@@ -464,7 +464,7 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> importBankCsv(Map<String, Object> body) {
-        UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
+        UUID accountId = Ids.requireUuid(body.get("accountId"), "trust account", "Choose the trust account.");
         TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
                 .orElseThrow(() -> ApiException.notFound("Trust account not found"));
         String csv = body.get("csv") == null ? "" : String.valueOf(body.get("csv"));
