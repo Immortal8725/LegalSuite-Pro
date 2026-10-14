@@ -79,7 +79,7 @@ export default function MarketingPage() {
       <section className="mx-auto max-w-xl px-6 py-16">
         <h2 className="text-center text-3xl font-extrabold text-navy">Light</h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-slate-500">
-          Prices are in rand. Card billing starts when Stripe is connected. Until then the seat is recorded on the month-end preview and no card is charged.
+          Prices are in rand. The Light seat is a PayFast subscription once sandbox or live keys are set. Until then the seat stays on the month-end preview and no card is charged.
         </p>
         <div className="mt-10 rounded-2xl border border-gold p-6 shadow-lift">
           <p className="mb-2 text-xs font-bold uppercase text-gold">Solo launch</p>

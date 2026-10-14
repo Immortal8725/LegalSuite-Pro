@@ -20,21 +20,17 @@ export default function TrustPage() {
   const [open, setOpen] = useState(false);
   const [bankOpen, setBankOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
-  const [move, setMove] = useState({ type: "deposit", amount: "5000", description: "Retainer deposit", caseId: "", invoiceId: "" });
+  const [move, setMove] = useState({ type: "deposit", amount: "5000", description: "Retainer deposit", caseId: "" });
   const [matters, setMatters] = useState<Matter[]>([]);
-  const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const moveMatter = matters.find((m) => m.id === move.caseId);
   const moveClientId = moveMatter?.clientId || "";
-  const clientInvoices = openInvoices.filter((i) => i.clientId === moveClientId);
   const openMove = async () => {
     setMoveError(null);
     setOpen(true);
     try {
-      const [m, inv] = await Promise.all([apiGet<Matter[]>("/api/v1/cases"), apiGet<Invoice[]>("/api/v1/invoices")]);
-      setMatters(m);
-      setOpenInvoices(inv.filter((i) => i.status !== "draft" && i.status !== "paid"));
+      setMatters(await apiGet<Matter[]>("/api/v1/cases"));
     } catch (e) {
       setMoveError(e instanceof Error ? e.message : "Could not load matters");
     }
@@ -44,6 +40,9 @@ export default function TrustPage() {
     "Date,Description,Amount,Balance\n2026-09-01,Balance brought forward,0,438250.00\n2026-09-02,Unidentified transfer,-11750.00,438250.00"
   );
   const [error, setError] = useState<string | null>(null);
+  const [feeOpen, setFeeOpen] = useState(false);
+  const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
+  const [fee, setFee] = useState({ invoiceId: "", amount: "", note: "" });
 
   const load = async () => {
     const list = await apiGet<TrustAcct[]>("/api/v1/trust/accounts");
@@ -65,6 +64,28 @@ export default function TrustPage() {
   const live = acct?.recon;
   const unbalanced = live?.status === "unbalanced";
 
+  const ledgerFor = (clientId?: string) => {
+    const row = live?.ledgers?.find((l) => l.clientId === clientId);
+    return Number(row?.balance ?? 0);
+  };
+
+  const openFeeDialog = async () => {
+    try {
+      setError(null);
+      const rows = await apiGet<Invoice[]>("/api/v1/invoices");
+      const openRows = rows.filter((i) => Number(i.balanceDue) > 0);
+      setOpenInvoices(openRows);
+      const first = openRows[0];
+      const cap = first ? Math.min(Number(first.balanceDue), ledgerFor(first.clientId)) : 0;
+      setFee({ invoiceId: first?.id || "", amount: cap > 0 ? cap.toFixed(2) : "0.00", note: "" });
+      setFeeOpen(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load invoices");
+    }
+  };
+
+  const chosenInvoice = openInvoices.find((i) => i.id === fee.invoiceId);
+
   return (
     <div>
       <PageHeader
@@ -81,6 +102,9 @@ export default function TrustPage() {
             </Button>
             <Button variant="outline" onClick={() => setBankOpen(true)}>
               Enter bank balance
+            </Button>
+            <Button variant="outline" onClick={() => openFeeDialog()}>
+              Apply trust to fee
             </Button>
             <Button onClick={openMove}>Record movement</Button>
           </div>
@@ -199,7 +223,6 @@ export default function TrustPage() {
                   description: move.description,
                   caseId: move.caseId || undefined,
                   clientId: moveClientId || undefined,
-                  invoiceId: move.type === "fee_transfer" ? move.invoiceId || undefined : undefined,
                 });
                 setOpen(false);
                 await load();
@@ -216,13 +239,12 @@ export default function TrustPage() {
       >
         <ErrorBanner error={moveError} />
         <Label>Type</Label>
-        <Select aria-label="Type" value={move.type} onChange={(e) => setMove({ ...move, type: e.target.value, invoiceId: "" })}>
+        <Select aria-label="Type" value={move.type} onChange={(e) => setMove({ ...move, type: e.target.value })}>
           <option value="deposit">Deposit</option>
           <option value="withdrawal">Withdrawal</option>
-          <option value="fee_transfer">Transfer to fees (pays an invoice)</option>
         </Select>
         <Label className="mt-3">Matter</Label>
-        <Select aria-label="Matter" value={move.caseId} onChange={(e) => setMove({ ...move, caseId: e.target.value, invoiceId: "" })}>
+        <Select aria-label="Matter" value={move.caseId} onChange={(e) => setMove({ ...move, caseId: e.target.value })}>
           <option value="">{move.type === "deposit" ? "Unallocated (no client yet)" : "Choose the matter"}</option>
           {matters.map((m) => (
             <option key={m.id} value={m.id}>
@@ -236,25 +258,68 @@ export default function TrustPage() {
             ? `Posts to ${moveMatter.clientName || "this client"}'s ledger.`
             : move.type === "deposit"
               ? "Money with no matter sits in Unallocated until you move it to a client."
-              : "Withdrawals and fee transfers come off one client's ledger, so pick the matter."}
+              : "Withdrawals come off one client's ledger, so pick the matter. To pay an invoice from trust, use Apply trust to fee."}
         </p>
-        {move.type === "fee_transfer" && (
-          <>
-            <Label className="mt-3">Invoice</Label>
-            <Select aria-label="Invoice" value={move.invoiceId} onChange={(e) => setMove({ ...move, invoiceId: e.target.value })}>
-              <option value="">{moveClientId ? "Choose the invoice this pays" : "Pick a matter first"}</option>
-              {clientInvoices.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.invoiceNumber} owing {moneyExact(i.balanceDue ?? Number(i.total) - Number(i.amountPaid || 0))}
-                </option>
-              ))}
-            </Select>
-          </>
-        )}
         <Label className="mt-3">Amount</Label>
         <Input type="number" value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} />
         <Label className="mt-3">Memo</Label>
         <Input value={move.description} onChange={(e) => setMove({ ...move, description: e.target.value })} />
+      </Dialog>
+      <Dialog
+        open={feeOpen}
+        onClose={() => setFeeOpen(false)}
+        title="Apply trust to a fee invoice"
+        footer={
+          <Button
+            onClick={async () => {
+              if (!acct || !fee.invoiceId) return;
+              try {
+                setError(null);
+                await apiPost(`/api/v1/invoices/${fee.invoiceId}/apply-trust`, {
+                  accountId: acct.id,
+                  amount: fee.amount,
+                  note: fee.note || undefined,
+                });
+                setFeeOpen(false);
+                await load();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "Could not apply trust");
+              }
+            }}
+          >
+            Apply trust to fees
+          </Button>
+        }
+      >
+        <p className="mb-3 text-sm text-slate-600">
+          Withdraws from this client&apos;s ledger on {acct?.accountName || "the selected account"} and records the matching fee payment. Only this client&apos;s ledger is used. The amount starts at the smaller of the invoice balance and this client&apos;s ledger.
+        </p>
+        <Label>Invoice</Label>
+        <Select
+          value={fee.invoiceId}
+          onChange={(e) => {
+            const invoiceId = e.target.value;
+            const invoice = openInvoices.find((i) => i.id === invoiceId);
+            const cap = invoice ? Math.min(Number(invoice.balanceDue), ledgerFor(invoice.clientId)) : 0;
+            setFee({ ...fee, invoiceId, amount: cap > 0 ? cap.toFixed(2) : "0.00" });
+          }}
+        >
+          <option value="">Select invoice</option>
+          {openInvoices.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.invoiceNumber} · balance {moneyExact(i.balanceDue)}
+            </option>
+          ))}
+        </Select>
+        {chosenInvoice && (
+          <p className="mt-2 text-xs text-slate-500">
+            This client&apos;s ledger on the selected account is {moneyExact(ledgerFor(chosenInvoice.clientId))}. Invoice balance is {moneyExact(chosenInvoice.balanceDue)}.
+          </p>
+        )}
+        <Label className="mt-3">Amount</Label>
+        <Input value={fee.amount} onChange={(e) => setFee({ ...fee, amount: e.target.value })} />
+        <Label className="mt-3">Note</Label>
+        <Input value={fee.note} onChange={(e) => setFee({ ...fee, note: e.target.value })} />
       </Dialog>
       <Dialog
         open={bankOpen}

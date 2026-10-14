@@ -206,7 +206,7 @@ public class DemoDataLoader implements CommandLineRunner {
         module("Draft help", "ai", "Draft help on this tenant. The attorney remains responsible. No vendor key in the default build.", "analytics", "✨", 0, false, "light", 16);
         AppModule mVoice = module("Voice Calling", "voice", "In-app calls are included. Public-network minutes are pay-what-you-use. No minute bundle and no unlimited voice.", "communication", "📞", 0, true, "light", 17);
         module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 0, false, "light", 18);
-        module("Integrations", "integrations", "Stripe and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "light", 19);
+        module("Integrations", "integrations", "PayFast and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "light", 19);
         module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "light", 20);
 
         Tenant firm = new Tenant();

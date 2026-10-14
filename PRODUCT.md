@@ -1,6 +1,6 @@
 # LegalSuite Pro
 
-**Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, Stripe keys, a domain, and TLS are still operator work.  
+**Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, PayFast merchant signup, a domain, and TLS are still operator work.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
 **Effective:** 16 September 2026. Operator: LegalSuite Pro (the software described in this repository).
 
@@ -43,7 +43,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | --- | --- | --- |
 | 1 | Foundation | JWT, tenant isolation, register, onboarding, app shell |
 | 2 | Landing + practice | Public `/firm/{slug}`, intake, cases, clients, contacts, documents, calendar, tasks |
-| 3 | Financial | Timers, fee invoices (ZA VAT 15%), s 86 / IOLTA trust, expenses |
+| 3 | Financial | Timers, fee invoices (ZA VAT 15%), payments, write-offs, trust-to-fee, proof of payment, s 86 / IOLTA trust, expenses |
 | 4 | Communication | Internal messages, WebRTC voice, PSTN caller ID, SMS, WhatsApp, email, call registry, leads |
 | 5 | Advanced | Conflicts, reports, modules, team, settings, search |
 | 6 | Mobile | Responsive web + PWA; Flutter client in `mobile/` |
@@ -53,6 +53,16 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 | 10 | South Africa | Prescription / RAF / Act 40 / CCMA clocks, RICA, LPA s 86, VAT, docket hold |
 | 11 | Texas | Smith & Associates still runs CPRC 16 / 74 / 101 |
 | 12 | Inspection pack | FFC gate, bank CSV, POPIA/PAIA, TOTP, identity-bound e-sign, RAF 1 pack |
+
+### Bookkeeping
+
+Fee invoices keep the original total. A payment (cash, EFT, card, or other) can be partial. Overpayment is refused. `amountPaid` is the sum of the payment rows. A write-off stores the amount, reason, user, and time in `writeOffAmount` beside the original total. Balance due is total minus payments minus write-offs. Status becomes `partial`, `paid`, or `write_off` from those figures.
+
+Trust-to-fee withdraws from that client's section 86 or IOLTA ledger through the existing trust movement (FFC, per-client ledger, and limited-file gates) and records the matching invoice payment in the same step. The withdrawal uses the invoice's own client.
+
+Proof of payment is a PDF, JPEG, or PNG up to 10 MB, stored with the firm's other uploads. Status runs `pending_review`, then `accepted` or `rejected`. Accept records one real payment (EFT, cash, card, or other) for an amount within the balance due. A later accept of the same proof leaves that payment in place. Reject keeps the file and requires a note, and the invoice balance stays as it was. Clients can submit a slip from the portal. Staff review the queue on Billing.
+
+The firm remains the merchant of record for client fee invoices. Card collection for the LegalSuite subscription is separate and is not part of this ledger.
 
 ---
 
@@ -84,7 +94,7 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 **Phone:** public-network minutes are pay-what-you-use. `includedVoiceMinutes` is 0. A negative minute cap is treated as 0, not unlimited. A local number is optional at about R79 per month, or bundled. The per-minute carrier rate is `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`. Leave them blank until the carrier price is known. Blank does not invent a rate.
 
-**Not in the seat price:** card collection (Stripe) and the public-network bridge (Twilio). Both stay off until keys are in the environment. Draft help stays on the tenant unless the operator sets a model-vendor key.
+**Not in the seat price:** card collection (PayFast Aggregation) and the public-network bridge (Twilio). Both stay off until keys are in the environment. The seat is a monthly PayFast subscription. Phone minutes are a separate token charge. Draft help stays on the tenant unless the operator sets a model-vendor key. See [BILLING.md](BILLING.md).
 
 ---
 
@@ -103,7 +113,7 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 1. Three-way recon short **R11,750** (bank R438,250 vs book/ledgers R450,000). Do not certify.
 2. C-2002 Act 40 s 3 notice is overdue, so trial is blocked.
-3. Production ops on the H2 demo: TLS, a public domain, Stripe keys, and Twilio KYC are not done. Postgres is the hosted path (`docker compose` and `SPRING_PROFILES_ACTIVE=postgres`). The fitness row turns green only when that profile is actually running.
+3. Production ops on the H2 demo: TLS, a public domain, PayFast merchant signup, and Twilio KYC are not done. Postgres is the hosted path (`docker compose` and `SPRING_PROFILES_ACTIVE=postgres`). The fitness row turns green only when that profile is actually running.
 
 ---
 
@@ -131,12 +141,12 @@ Firms are the security boundary. Every row carries `tenant_id`. JWT writes `Tena
 
 ## 9. Still needs a person
 
-Coded in this repo: Postgres via Docker, `.env.example` for Twilio, Stripe, SMS, WhatsApp, and SMTP with no secrets, `GET /api/v1/health`, and the hosted runbook in [README.md](README.md).
+Coded in this repo: Postgres via Docker, `.env.example` for PayFast, Twilio, SMS, WhatsApp, and SMTP with no secrets, `GET /api/v1/health`, and the hosted runbook in [README.md](README.md). Product billing is [BILLING.md](BILLING.md).
 
 A person still has to:
 
 - Approve Twilio and finish KYC before a public number or outbound PSTN call can be real. Calls are real when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PUBLIC_BASE_URL` are set, plus a caller ID the account already owns or has verified (`TWILIO_VOICE_FROM`, an in-app verified personal number, or a number already on the account). Upgraded accounts no longer have the free trial From number. Trial accounts, if any remain, can only call verified destinations. SMS is real when `TWILIO_SMS_FROM` or a rented SMS-capable number is set. A verified landline cannot send SMS. WhatsApp sandbox recipients must join the sandbox first (`TWILIO_WHATSAPP_FROM` blank uses `+14155238886`). Email is real when SMTP is set; otherwise it is a dry run. Native CallKit is not built yet.
-- Create the Stripe account and put keys in the environment. Do not commit them. Card fields must be Stripe-hosted.
+- Open a PayFast Aggregation sandbox merchant, then set `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`, and the return, cancel, and notify URLs. Do not commit them. Checkout stays on PayFast. Live keys wait until KYC. See [BILLING.md](BILLING.md).
 - Choose a domain, put TLS in front of the web and API processes, and point `TWILIO_PUBLIC_BASE_URL` at the public HTTPS origin.
 - Set `LEGALSUITE_JWT_SECRET` and a non-default `DB_PASSWORD` on that host.
 - Set the per-minute PSTN rate from the carrier price. Do not treat a blank rate as a bundle of free minutes.
@@ -275,13 +285,14 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 ### 10.8 Merchant Services Agreement
 
-Applies if the operator (or a connected Stripe-class provider) takes card payments for subscriptions or usage invoices.
+Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
 
-- The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **LegalSuite Pro subscriptions**.
+- The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **LegalSuite Pro subscriptions and minute charges**.
 - Chargebacks: you must keep the engagement and invoice that support the debit.
 - Refunds of unused subscription days: as on the invoice. Public-network minutes already used are not refundable.
-- PCI: we do not store raw card PAN in this repository. A production Stripe connection must use Stripe-hosted fields.
-- The in-app “connect Stripe” control is a **stub** until keys exist. Do not treat a green “connected” flag in the demo as a live merchant account.
+- PCI: we do not store a raw card number in this repository. Checkout is hosted by PayFast. The server may store the PayFast token.
+- VAT: the operator issues its own tax invoice. The R1,199 seat is not grossed up inside PayFast.
+- Product billing is not live until the PayFast merchant id and key are in the environment. Sandbox first. Do not treat a green “connected” flag in the demo as a live merchant account.
 - Trust money is **never** mixed with subscription charges. s 86 / IOLTA ledgers are not a payment gateway.
 
 ---
@@ -294,7 +305,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 2. **Instructions.** Process only to provide the product, backups, and security. No secondary marketing.
 3. **Confidentiality.** Staff and subprocessors are bound to confidentiality. Privilege is the firm’s to assert.
 4. **Security.** Access control (JWT + tenant_id), optional TOTP, audit log. Production must add TLS, PostgreSQL, backups, and a written security programme. The demo’s H2 database is **not** that programme.
-5. **Subprocessors.** Only those listed in §10.10, plus any the firm connects (Stripe, Twilio).
+5. **Subprocessors.** Only those listed in §10.10, plus any the firm connects (PayFast, Twilio).
 6. **Breach.** Notify the firm without undue delay after becoming aware, with enough fact for a Regulator notification if required.
 7. **Deletion.** On written request after termination, delete or return tenant data except records we must keep by law.
 8. **Audit.** The firm may request the fitness snapshot, audit log export, and (in production) a SOC-style summary when one exists.
@@ -310,7 +321,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | Operator (LegalSuite Pro) | Host, support | Tenant database | In product |
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
 | PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
-| Stripe | Light subscription and usage invoices | Billing details | Keys via environment. Toggle is not a live account. |
+| PayFast Aggregation | Light seat subscription and phone-minute charges | Billing token, payment ids, amount | Keys via environment. Sandbox until live KYC. Toggle is not a live account. |
 | Twilio | PSTN, SMS, WhatsApp | Call and message metadata, numbers, caller ID | Real sends when server env vars are set. No keys in the repo. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
 | OpenAI or Anthropic (optional) | Model answers for one matter | Prompt and staff-visible matter context, not file bytes | Off unless `LEGALSUITE_AI_PROVIDER` and a key are set |
@@ -329,6 +340,8 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | 1.1 | 5 October 2026 | Matter-scoped staff assistant. Model vendor stays off unless an operator sets a key. |
 | 1.2 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
 | 1.3 | 5 October 2026 | SMS, WhatsApp, and email from a matter or contact. Messaging is pay-what-you-use. Email via SMTP is not metered. |
+| 1.4 | 5 October 2026 | Fee invoice payments, write-offs, trust-to-fee, and proof of payment. |
+| 1.5 | 5 October 2026 | PayFast Aggregation for the Light seat and phone minutes. Client invoices and trust stay separate. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

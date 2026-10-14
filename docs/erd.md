@@ -17,6 +17,9 @@ erDiagram
     TENANT ||--o{ TASK_ITEM : assigns
     TENANT ||--o{ TIME_ENTRY : logs
     TENANT ||--o{ INVOICE : bills
+    INVOICE ||--o{ INVOICE_PAYMENT : collects
+    INVOICE ||--o{ INVOICE_WRITE_OFF : writes_off
+    INVOICE ||--o{ PAYMENT_PROOF : evidences
     TENANT ||--o{ TRUST_ACCOUNT : holds
     TENANT ||--o{ EXPENSE : advances
     TENANT ||--o{ CONVERSATION : threads
@@ -27,6 +30,9 @@ erDiagram
     TENANT ||--o{ CONFLICT_CHECK : searches
     TENANT ||--o{ CONNECTED_INTEGRATION : connects
     TENANT ||--o{ AUDIT_LOG : traces
+    TENANT ||--o| BILLING_ACCOUNT : subscribes
+    TENANT ||--o{ PRODUCT_PAYMENT : "product pays"
+    TENANT ||--o{ MINUTES_INVOICE : "phone minutes"
     TENANT ||--o{ APP_NOTIFICATION : notifies
     PLAN ||--o{ TENANT : prices
     APP_MODULE ||--o{ TENANT_MODULE : catalog
@@ -88,6 +94,24 @@ erDiagram
         uuid client_id FK
         string status
         decimal total
+        decimal amount_paid
+        decimal write_off_amount
+    }
+    INVOICE_PAYMENT {
+        uuid id PK
+        uuid tenant_id FK
+        uuid invoice_id FK
+        decimal amount
+        string method
+        date paid_at
+    }
+    PAYMENT_PROOF {
+        uuid id PK
+        uuid tenant_id FK
+        uuid invoice_id FK
+        uuid document_id FK
+        string status
+        decimal amount_claimed
     }
     TRUST_ACCOUNT {
         uuid id PK
@@ -137,4 +161,5 @@ erDiagram
 - `RefreshToken` is omitted from the diagram; it is an auth satellite of `APP_USER`.
 - Seed documents may use a `seed://` storage key and are not downloadable until a real file is uploaded.
 - Landing pages are 1:1 with tenant (`LANDING_PAGE.tenant_id` unique in practice).
-- `USAGE_INVOICE` is the month-end bill to LegalSuite (modules + PSTN + SMS + WhatsApp), separate from client `INVOICE` rows.
+- `USAGE_INVOICE` is the month-end preview (seat line, PSTN, SMS, WhatsApp), separate from client `INVOICE` rows.
+- `BILLING_ACCOUNT`, `PRODUCT_CHECKOUT`, `PRODUCT_PAYMENT`, and `MINUTES_INVOICE` are PayFast product billing. The seat subscription and the minute adhoc charge live there. They are not client fee invoices and not trust transactions.

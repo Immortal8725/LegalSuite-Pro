@@ -35,6 +35,14 @@ export default function IntegrationsPage() {
             <CardBody>
               <p className="mb-3 text-sm text-slate-500">{row.description}</p>
               <p className="mb-4 text-xs text-slate-400">{row.statusNote}</p>
+              {row.provider === "payfast" && (
+                <p className="mb-4 text-xs text-slate-500">
+                  {row.credentialsPresent
+                    ? "Server merchant id and key are present. They are not shown here. The passphrase is never sent to the browser."
+                    : "No PayFast merchant id on this server yet. Set PAYFAST_MERCHANT_ID and PAYFAST_MERCHANT_KEY. Leave PAYFAST_ENV=sandbox until live keys exist."}
+                  {" Seat subscribe and minute charges are on Product billing, not on this toggle."}
+                </p>
+              )}
               {row.provider === "twilio" && (
                 <p className="mb-4 text-xs text-slate-500">
                   {row.credentialsPresent

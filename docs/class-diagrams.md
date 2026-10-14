@@ -80,17 +80,29 @@ classDiagram
         +logTime()
         +startTimer()
         +generateInvoice()
+        +recordPayment()
+        +writeOff()
+        +applyTrustToInvoice()
+        +submitProof()
+        +acceptProof()
         +trustMove()
         +addExpense()
     }
     class TimeEntry
     class Invoice
+    class InvoicePayment
+    class InvoiceWriteOff
+    class PaymentProof
     class TrustAccount
     class TrustTransaction
     class Expense
     FinanceService --> TimeEntry
     FinanceService --> Invoice
+    FinanceService --> InvoicePayment
+    FinanceService --> InvoiceWriteOff
+    FinanceService --> PaymentProof
     FinanceService --> TrustAccount
+    InvoicePayment --> Invoice
     TrustTransaction --> TrustAccount
 ```
 

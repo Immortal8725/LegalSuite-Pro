@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | 1 Foundation | Shipped | Register, login, JWT, tenant, shell, onboarding |
 | 2 Landing + practice | Shipped | `/firm/[slug]`, cases, clients, contacts, documents, calendar, tasks |
-| 3 Financial | Shipped | Time, invoices, trust, expenses |
+| 3 Financial | Shipped | Time, invoices, payments, write-offs, trust-to-fee, proof of payment, trust, expenses |
 | 4 Communication | Shipped | Messages, WebRTC voice, leads |
 | 5 Advanced | Shipped | Conflicts, reports, modules, team, settings, search |
 | 6 Mobile | Shipped | Responsive web + PWA; Flutter in `mobile/` |

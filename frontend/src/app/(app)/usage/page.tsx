@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { apiGet, apiPost } from "@/lib/api";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +58,13 @@ export default function UsagePage() {
         subtitle="Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
       />
       <ErrorBanner error={error} />
+      <p className="mb-4 text-sm text-slate-500">
+        The Light seat subscription and phone-minute card charges are on{" "}
+        <Link href="/product-billing" className="font-semibold text-navy underline">
+          Product billing
+        </Link>
+        . This preview does not collect client fees or trust money.
+      </p>
       {preview && (
         <Card className="mb-6">
           <CardHeader>
