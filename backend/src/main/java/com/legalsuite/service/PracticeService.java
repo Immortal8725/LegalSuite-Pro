@@ -53,6 +53,7 @@ public class PracticeService {
     private final FinanceService finance;
     private final TenantRepository tenants;
     private final Path uploadRoot;
+    private final AuditService audit;
 
     public PracticeService(
             ClientRepository clients,
@@ -64,7 +65,9 @@ public class PracticeService {
             NoteRepository notes,
             FinanceService finance,
             TenantRepository tenants,
-            @Value("${legalsuite.upload-dir:./uploads}") String uploadDir) throws IOException {
+            @Value("${legalsuite.upload-dir:./uploads}") String uploadDir,
+            AuditService audit) throws IOException {
+        this.audit = audit;
         this.clients = clients;
         this.cases = cases;
         this.contacts = contacts;
@@ -112,6 +115,7 @@ public class PracticeService {
         }
         c.setUpdatedAt(Instant.now());
         clients.save(c);
+        audit.record(id == null ? "client.create" : "client.update", "client", c.getId().toString(), c.displayName());
         return clientView(c);
     }
 
@@ -197,6 +201,7 @@ public class PracticeService {
         c.setUpdatedAt(Instant.now());
         cases.save(c);
         syncClockTasks(c, TenantContext.getUserId());
+        audit.record(id == null ? "case.create" : "case.update", "case", c.getId().toString(), c.getCaseNumber() + " " + c.getTitle());
         return caseView(c);
     }
 
@@ -216,6 +221,7 @@ public class PracticeService {
         }
         c.setUpdatedAt(Instant.now());
         cases.save(c);
+        audit.record("case.status", "case", c.getId().toString(), c.getCaseNumber() + " -> " + status);
         return caseView(c);
     }
 
@@ -255,6 +261,7 @@ public class PracticeService {
         notes.save(n);
         Map<String, Object> view = caseView(c);
         view.put("trust", trust);
+        audit.record("case.engagement_activated", "case", caseId.toString(), "Signature " + signatureId);
         return view;
     }
 
@@ -274,6 +281,7 @@ public class PracticeService {
         c.setPhone(str(body, "phone", null));
         c.setTitle(str(body, "title", null));
         contacts.save(c);
+        audit.record("contact.create", "contact", c.getId().toString(), c.getType());
         return contactView(c);
     }
 
@@ -301,6 +309,7 @@ public class PracticeService {
         doc.setSizeBytes(file.getSize());
         doc.setStoragePath(dest.toString());
         documents.save(doc);
+        audit.record("document.upload", "document", doc.getId().toString(), doc.getName());
         return docView(doc);
     }
 
@@ -362,6 +371,7 @@ public class PracticeService {
             notes.save(n);
             Map<String, Object> view = docView(doc);
             view.put("body", body);
+            audit.record("document.raf1", "case", caseId.toString(), filename);
             return view;
         } catch (IOException e) {
             throw ApiException.badRequest("Could not write RAF 1 pack: " + e.getMessage());
@@ -391,6 +401,7 @@ public class PracticeService {
         e.setStartTime(Instant.parse(String.valueOf(body.get("startTime"))));
         if (body.get("endTime") != null) e.setEndTime(Instant.parse(String.valueOf(body.get("endTime"))));
         events.save(e);
+        audit.record("event.create", "event", e.getId().toString(), e.getTitle());
         return eventView(e);
     }
 
@@ -414,6 +425,7 @@ public class PracticeService {
         if (body.get("dueDate") != null) t.setDueDate(Instant.parse(String.valueOf(body.get("dueDate"))));
         if ("completed".equals(t.getStatus())) t.setCompletedAt(Instant.now());
         tasks.save(t);
+        audit.record(id == null ? "task.create" : "task.update", "task", t.getId().toString(), t.getTitle());
         return taskView(t);
     }
 
@@ -428,6 +440,7 @@ public class PracticeService {
         n.setBody(str(body, "body", ""));
         n.setType(str(body, "type", "note"));
         notes.save(n);
+        audit.record("note.create", "case", caseId.toString(), n.getType());
         return noteView(n);
     }
 

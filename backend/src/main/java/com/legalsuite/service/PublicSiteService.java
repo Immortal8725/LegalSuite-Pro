@@ -34,13 +34,16 @@ public class PublicSiteService {
     private final PublicSiteFeatureRepository features;
     private final AppUserRepository users;
     private final NewsletterOptInRepository optIns;
+    private final AuditService audit;
 
     public PublicSiteService(
             TenantRepository tenants,
             TenantPublicSiteRepository sites,
             PublicSiteFeatureRepository features,
             AppUserRepository users,
-            NewsletterOptInRepository optIns) {
+            NewsletterOptInRepository optIns,
+            AuditService audit) {
+        this.audit = audit;
         this.tenants = tenants;
         this.sites = sites;
         this.features = features;
@@ -275,6 +278,7 @@ public class PublicSiteService {
         }
         site.setUpdatedAt(Instant.now());
         sites.save(site);
+        audit.record("public_site.update", "public_site", tenant.getId().toString(), String.join(",", body.keySet()));
         return adminView(tenant, site);
     }
 
@@ -299,6 +303,7 @@ public class PublicSiteService {
         site.setSubmittedAt(Instant.now());
         site.setUpdatedAt(Instant.now());
         sites.save(site);
+        audit.record("public_site.submit", "public_site", tenant.getId().toString(), site.getPublishStatus());
         return adminView(tenant, site);
     }
 
@@ -343,6 +348,7 @@ public class PublicSiteService {
         }
         site.setUpdatedAt(Instant.now());
         sites.save(site);
+        audit.recordFor(tenantId, "public_site.publish_" + decision, "public_site", tenantId.toString(), note);
         return Map.of("publishStatus", site.getPublishStatus(), "slug", tenant.getSlug());
     }
 
@@ -362,6 +368,7 @@ public class PublicSiteService {
         site.setBrandingNote(note);
         site.setUpdatedAt(Instant.now());
         sites.save(site);
+        audit.recordFor(tenantId, "public_site.branding_" + decision, "public_site", tenantId.toString(), note);
         return Map.of("brandingStatus", site.getBrandingStatus(), "slug", tenant.getSlug());
     }
 
@@ -379,6 +386,7 @@ public class PublicSiteService {
         features.save(row);
         TenantPublicSite site = sites.findByTenantId(tenantId).orElseThrow();
         boolean onSite = PublicSiteRules.live(site.getPublishStatus(), row.isRequested(), row.getApprovalStatus());
+        audit.recordFor(tenantId, "public_site.feature_" + decision, "public_site", tenantId.toString(), feature.key());
         return Map.of("feature", feature.key(), "approvalStatus", row.getApprovalStatus(), "live", onSite);
     }
 

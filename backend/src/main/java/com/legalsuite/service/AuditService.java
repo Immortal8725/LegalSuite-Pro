@@ -21,7 +21,11 @@ public class AuditService {
 
     @Transactional
     public void record(String action, String entityType, String entityId, String detail) {
-        UUID tenantId = TenantContext.getTenantId();
+        recordFor(TenantContext.getTenantId(), action, entityType, entityId, detail);
+    }
+
+    /** Write to a named firm's log, for example when the platform operator approves that firm's site. */
+    public void recordFor(UUID tenantId, String action, String entityType, String entityId, String detail) {
         if (tenantId == null) return;
         AuditLog log = new AuditLog();
         log.setTenantId(tenantId);

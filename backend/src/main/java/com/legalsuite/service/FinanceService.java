@@ -51,6 +51,7 @@ public class FinanceService {
     private final TenantRepository tenants;
     private final Map<UUID, Instant> runningTimers = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> timerCases = new ConcurrentHashMap<>();
+    private final AuditService audit;
 
     public FinanceService(
             TimeEntryRepository timeEntries,
@@ -61,7 +62,9 @@ public class FinanceService {
             TrustReconciliationRepository recons,
             AppUserRepository users,
             LegalCaseRepository cases,
-            TenantRepository tenants) {
+            TenantRepository tenants,
+            AuditService audit) {
+        this.audit = audit;
         this.timeEntries = timeEntries;
         this.invoices = invoices;
         this.expenses = expenses;
@@ -100,6 +103,7 @@ public class FinanceService {
             }
         }
         timeEntries.save(t);
+        audit.record("time.create", "time_entry", t.getId().toString(), t.getDurationMinutes() + " min " + t.getTotalAmount().toPlainString());
         return timeView(t);
     }
 
@@ -237,6 +241,7 @@ public class FinanceService {
             e.setInvoiceId(inv.getId());
             expenses.save(e);
         });
+        audit.record("invoice.generate", "invoice", inv.getId().toString(), inv.getInvoiceNumber() + " total " + inv.getTotal().toPlainString());
         return invoiceView(inv);
     }
 
@@ -249,6 +254,7 @@ public class FinanceService {
             inv.setAmountPaid(inv.getTotal());
         }
         invoices.save(inv);
+        audit.record("invoice.status", "invoice", inv.getId().toString(), inv.getInvoiceNumber() + " -> " + inv.getStatus());
         return invoiceView(inv);
     }
 
@@ -271,6 +277,7 @@ public class FinanceService {
         e.setAmount(new BigDecimal(String.valueOf(body.getOrDefault("amount", "0"))));
         e.setVendor(body.get("vendor") == null ? null : String.valueOf(body.get("vendor")));
         expenses.save(e);
+        audit.record("expense.create", "expense", e.getId().toString(), e.getCategory() + " " + e.getAmount().toPlainString());
         return expenseView(e);
     }
 
@@ -374,6 +381,7 @@ public class FinanceService {
                 "balanceAfter", tx.getBalanceAfter(),
                 "description", tx.getDescription(),
                 "createdAt", tx.getCreatedAt()));
+        audit.record("trust." + type, "trust_account", acct.getId().toString(), amount.toPlainString() + (clientId == null ? " unallocated" : " client " + clientId) + (feeInvoice == null ? "" : " invoice " + feeInvoice.getInvoiceNumber()));
         return view;
     }
 
@@ -459,6 +467,7 @@ public class FinanceService {
         recons.save(row);
         Map<String, Object> view = reconView(row);
         view.put("live", liveRecon(acct, bank));
+        audit.record(certify ? "trust.recon_certified" : "trust.recon", "trust_account", acct.getId().toString(), "Bank " + bank.toPlainString() + ", difference " + difference.toPlainString());
         return view;
     }
 
@@ -490,6 +499,7 @@ public class FinanceService {
         out.put("rows", parsed.rows().size());
         out.put("source", parsed.source());
         out.put("recon", recon);
+        audit.record("trust.bank_csv", "trust_account", accountId.toString(), parsed.rows().size() + " rows, closing " + parsed.closingBalance().toPlainString());
         return out;
     }
 
