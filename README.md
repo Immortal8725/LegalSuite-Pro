@@ -1,6 +1,15 @@
 # Owlaw
 
-Practice system for a solo South African attorney. Light is **R1,199 per month for one attorney** and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about **R79 per month**, or bundled when the operator includes it.
+Practice system for a solo South African attorney. Owlaw has three plans, priced per attorney per month, ex VAT: **Solo R899** (one attorney), **Firm R1,199** and **Practice R1,599**. Extra staff seats are R349 a month. Section 86 trust is in every plan. Calls on the firm number are R1.49 a minute, and a firm can use its own landline as caller ID for R149 a month plus R8.90 a minute. There is no minute bundle and no unlimited voice.
+
+| Plan | Price (ex VAT) | Includes |
+|---|---|---|
+| Solo | R899 per month, 1 attorney | Matters, statutory clocks, billing, invoices, payments, write-offs, proof-of-payment review, section 86 trust with trust-to-fee, documents, calendar, firm number, SMS, WhatsApp and email, 100 AI actions. Public website add-on R499 a month plus R1,500 setup. No staff seats. |
+| Firm | R1,199 per attorney per month | Everything in Solo, plus the public firm website and 300 AI actions per attorney. Staff seats R349 each. |
+| Practice | R1,599 per attorney per month | Everything in Firm, plus 1,000 AI actions per attorney, call recording, advanced reporting, priority support and website fast-track. |
+
+Add-ons: staff seat R349 a month. Calls R1.49 a minute. Own landline as caller ID R149 a month plus R8.90 a minute. Existing tenants on the old Light plan move to Firm at the same R1,199.
+
 
 This repository is a **modular monolith**: Next.js (App Router) in `frontend/` and Spring Boot 3.4 in `backend/`. There is no Eureka mesh and no required OpenAI or PayFast keys. The staff assistant stays on the tenant unless `LEGALSUITE_AI_PROVIDER` is set; see [docs/architecture.md](docs/architecture.md). Product billing is [BILLING.md](BILLING.md).
 
@@ -91,7 +100,7 @@ curl -fsS http://127.0.0.1:18081/api/v1/health
 
 ## Product billing
 
-PayFast Aggregation bills the firm for the Light seat and for public-network minutes. Client fee invoices and trust receipts stay in the firm books. Setup, sandbox versus live, and the ITN checks are in [BILLING.md](BILLING.md).
+PayFast Aggregation bills the firm for the plan subscription, staff seats and for public-network minutes. Client fee invoices and trust receipts stay in the firm books. Setup, sandbox versus live, and the ITN checks are in [BILLING.md](BILLING.md).
 
 ### All-in Docker (optional)
 
@@ -101,7 +110,7 @@ PayFast Aggregation bills the firm for the Light seat and for public-network min
 
 1. **Foundation.** JWT auth, tenant isolation, firm registration, onboarding, and the app shell.
 2. **Landing and practice.** Public site, intake, cases, clients, contacts, documents, calendar, and tasks.
-3. **Financial.** Timers, invoices, section 86 / IOLTA trust (no overdraw), and expenses. Trust is in the Light seat. Public-network minutes are the usage bill.
+3. **Financial.** Timers, invoices, section 86 / IOLTA trust (no overdraw), and expenses. Trust is in every plan. Public-network minutes are the usage bill.
 4. **Communication.** Internal messages, WebRTC voice (in-app free), a PSTN callback bridge (verified personal number or `TWILIO_VOICE_FROM`; renting a local number is optional), SMS, WhatsApp, and email, call registry, and recording opt-in. PSTN minutes, SMS, and WhatsApp are recorded for invoicing. Email through the firm's SMTP server is not metered. Emergency numbers stay on the device dialer and are refused for SMS.
 5. **Advanced.** Conflicts, reports, module toggles, team, settings, and global search.
 6. **Mobile.** Responsive web and a PWA. Flutter client in `mobile/` (`flutter run` after `flutter create .`).

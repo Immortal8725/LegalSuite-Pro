@@ -29,7 +29,8 @@ Copy `.env.example` to `.env` on the host. Never commit `.env`. Every secret is 
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_STARTTLS` | for email | Without SMTP, invites fall back to a one-time password shown to the admin. |
 | `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`, `PAYFAST_ENV`, `PAYFAST_RETURN_URL`, `PAYFAST_CANCEL_URL`, `PAYFAST_NOTIFY_URL` | for product billing | See section 5. Keep `PAYFAST_SANDBOX_LOCAL=false`. |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`, `TWILIO_VOICE_FROM`, `TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM` | for phone | See section 6. |
-| `LEGALSUITE_PSTN_OUTBOUND_PER_MIN`, `LEGALSUITE_PSTN_INBOUND_PER_MIN` | for phone billing | Rand per minute. Blank records duration at zero cost. |
+| `LEGALSUITE_PSTN_OUTBOUND_PER_MIN`, `LEGALSUITE_PSTN_INBOUND_PER_MIN` | for phone billing | Rand per minute, default 1.49. Blank records duration at zero cost. |
+| `LEGALSUITE_PSTN_LANDLINE_PER_MIN` | optional | Rand per minute when the firm's own landline is the caller ID, default 8.90. |
 | `NEXT_PUBLIC_API_URL` | web build | Where the web server proxies `/api`. Compose uses `http://api:18081`. Baked in at build time. |
 | `NEXT_PUBLIC_PUBLIC_SITE_ROOT` | optional | Root domain for firm public-site subdomains. |
 | `LEGALSUITE_UPLOAD_DIR` | yes on a VM | Folder for uploaded documents and payment proofs. Compose mounts a volume at `/app/uploads`. |
@@ -70,7 +71,7 @@ Flyway creates the schema on an empty database and upgrades an older one (see [d
 - [ ] Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_PUBLIC_BASE_URL` (the public https origin of the API, for example `https://app.example.co.za`).
 - [ ] Verify a caller ID or set `TWILIO_VOICE_FROM`. For SMS set `TWILIO_SMS_FROM` or a messaging service. For WhatsApp, register a sender (the sandbox is for testing only).
 - [ ] Connect Twilio under Integrations in the app, then place one test call and send one test SMS.
-- [ ] Set `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN` once the carrier price is known.
+- [ ] Confirm `LEGALSUITE_PSTN_OUTBOUND_PER_MIN`, `LEGALSUITE_PSTN_INBOUND_PER_MIN` (1.49) and `LEGALSUITE_PSTN_LANDLINE_PER_MIN` (8.90).
 
 ## 7. Email
 
