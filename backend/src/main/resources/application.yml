@@ -27,6 +27,8 @@ spring:
       max-request-size: 25MB
 
 legalsuite:
+  # Public address of the web app, used in invite links.
+  app-url: ${APP_URL:http://localhost:3000}
   jwt:
     secret: ${LEGALSUITE_JWT_SECRET:legalsuite-pro-dev-secret-change-in-production-must-be-64-chars-longXX}
     access-ms: 86400000
@@ -72,6 +74,7 @@ legalsuite:
     user: ${SMTP_USER:}
     password: ${SMTP_PASSWORD:}
     from: ${SMTP_FROM:}
+    starttls: ${SMTP_STARTTLS:true}
   messaging:
     sms-unit-cost: ${LEGALSUITE_SMS_UNIT_COST:0.08}
     whatsapp-unit-cost: ${LEGALSUITE_WHATSAPP_UNIT_COST:0.05}

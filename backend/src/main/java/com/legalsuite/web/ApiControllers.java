@@ -86,6 +86,11 @@ public class ApiControllers {
     @PostMapping("/api/v1/users/invite")
     public ApiResponse<?> invite(@RequestBody Map<String, Object> body) { return ApiResponse.ok(tenants.invite(body)); }
 
+    @PostMapping("/api/v1/users/{id}/resend-invite")
+    public ApiResponse<?> resendInvite(@PathVariable UUID id) {
+        return ApiResponse.ok(tenants.resendInvite(id));
+    }
+
     @PatchMapping("/api/v1/users/{id}")
     public ApiResponse<?> updateUser(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return ApiResponse.ok(tenants.updateUser(id, body));

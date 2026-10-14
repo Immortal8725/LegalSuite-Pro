@@ -33,6 +33,7 @@ type AuthCtx = {
   refreshTenant: (tenant: Tenant) => void;
   reloadMe: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  acceptInvite: (token: string, newPassword: string) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -146,6 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [apply, router]
   );
 
+  const acceptInvite = useCallback(
+    async (token: string, newPassword: string) => {
+      const data = await apiPost<{ accessToken: string; refreshToken: string; user: User; tenant: Tenant }>(
+        "/api/v1/auth/invite/accept",
+        { token, newPassword }
+      );
+      apply(data);
+      router.replace(data.tenant.onboardingCompleted === false ? "/onboarding" : "/dashboard");
+    },
+    [apply, router]
+  );
+
   useEffect(() => {
     if (!ready) return;
     const isPublic =
@@ -172,8 +185,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshTenant,
       reloadMe,
       changePassword,
+      acceptInvite,
     }),
-    [user, tenant, ready, login, registerFirm, portalLogin, logout, refreshTenant, reloadMe, changePassword]
+    [user, tenant, ready, login, registerFirm, portalLogin, logout, refreshTenant, reloadMe, changePassword, acceptInvite]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

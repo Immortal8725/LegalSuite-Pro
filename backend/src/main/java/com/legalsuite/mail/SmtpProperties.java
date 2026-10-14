@@ -12,6 +12,8 @@ public class SmtpProperties {
     private String user = "";
     private String password = "";
     private String from = "";
+    /** STARTTLS on ports other than 25 and 465. Turn off only for a local mail catcher such as Mailpit. */
+    private boolean starttls = true;
 
     public boolean configured() {
         return host != null && !host.isBlank() && from != null && !from.isBlank();
@@ -32,6 +34,8 @@ public class SmtpProperties {
     public void setUser(String user) { this.user = user == null ? "" : user; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password == null ? "" : password; }
+    public boolean isStarttls() { return starttls; }
+    public void setStarttls(boolean starttls) { this.starttls = starttls; }
     public String getFrom() { return from; }
     public void setFrom(String from) { this.from = from == null ? "" : from; }
 }
