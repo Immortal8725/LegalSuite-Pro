@@ -5,20 +5,25 @@ import { apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { InvoiceLines } from "@/components/invoice-lines";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/input";
-import type { Invoice, Party } from "@/lib/types";
+import type { Invoice, Matter, Party } from "@/lib/types";
 
 export default function BillingPage() {
   const [rows, setRows] = useState<Invoice[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState("");
+  const [invoiceCaseId, setInvoiceCaseId] = useState("");
+  const [invoiceMatters, setInvoiceMatters] = useState<Matter[]>([]);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const load = () => apiGet<Invoice[]>("/api/v1/invoices").then(setRows);
   useEffect(() => {
     load();
     apiGet<Party[]>("/api/v1/clients").then(setClients);
+    apiGet<Matter[]>("/api/v1/cases").then(setInvoiceMatters).catch(() => setInvoiceMatters([]));
   }, []);
 
   return (
@@ -26,7 +31,16 @@ export default function BillingPage() {
       <PageHeader
         title="Billing & invoices"
         subtitle="Generate a draft from unbilled time and expenses. Clients can pay from the portal."
-        actions={<Button onClick={() => setOpen(true)}>Generate from unbilled time and expenses</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setGenerateError(null);
+              setOpen(true);
+            }}
+          >
+            Generate from unbilled time and expenses
+          </Button>
+        }
       />
       <TableWrap>
         <thead>
@@ -91,17 +105,37 @@ export default function BillingPage() {
         title="Draft invoice"
         footer={
           <Button
+            disabled={!clientId || generating}
             onClick={async () => {
-              await apiPost("/api/v1/invoices/generate", { clientId });
-              setOpen(false);
-              load();
+              setGenerating(true);
+              setGenerateError(null);
+              try {
+                await apiPost("/api/v1/invoices/generate", { clientId, caseId: invoiceCaseId || undefined });
+                setOpen(false);
+                load();
+              } catch (e) {
+                setGenerateError(e instanceof Error ? e.message : "Could not create the draft");
+              } finally {
+                setGenerating(false);
+              }
             }}
           >
-            Create draft
+            {generating ? "Creating…" : "Create draft"}
           </Button>
         }
       >
-        <Select value={clientId} onChange={(e) => setClientId(e.target.value)}>
+        <ErrorBanner error={generateError} />
+        <p className="mb-3 text-sm text-slate-600">
+          Bills unbilled time and expenses on this client&apos;s matters only. Work logged without a matter stays off the invoice.
+        </p>
+        <Select
+          aria-label="Client"
+          value={clientId}
+          onChange={(e) => {
+            setClientId(e.target.value);
+            setInvoiceCaseId("");
+          }}
+        >
           <option value="">Select client</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
@@ -109,6 +143,18 @@ export default function BillingPage() {
             </option>
           ))}
         </Select>
+        {clientId && (
+          <Select className="mt-3" aria-label="Matter" value={invoiceCaseId} onChange={(e) => setInvoiceCaseId(e.target.value)}>
+            <option value="">All of this client&apos;s matters</option>
+            {invoiceMatters
+              .filter((m) => m.clientId === clientId)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.caseNumber} {m.title}
+                </option>
+              ))}
+          </Select>
+        )}
       </Dialog>
     </div>
   );

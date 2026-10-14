@@ -1,6 +1,7 @@
 package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
+import com.legalsuite.common.Ids;
 import com.legalsuite.common.JsonLists;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppUser;
@@ -30,6 +31,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
@@ -162,11 +165,25 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> generateInvoice(UUID clientId, UUID caseId) {
+        if (clientId == null) throw ApiException.badRequest("Choose the client to invoice.");
+        // Only this client's matters. Time or expenses with no matter, or on another client's
+        // matter, are never swept onto this invoice.
+        Set<UUID> matterIds = new HashSet<>();
+        if (caseId != null) {
+            LegalCase matter = cases.findByIdAndTenantId(caseId, tid())
+                    .orElseThrow(() -> ApiException.notFound("Matter not found"));
+            if (!clientId.equals(matter.getClientId())) {
+                throw ApiException.badRequest("That matter belongs to a different client.");
+            }
+            matterIds.add(caseId);
+        } else {
+            cases.findByTenantIdAndClientId(tid(), clientId).forEach(c -> matterIds.add(c.getId()));
+        }
         List<TimeEntry> unbilled = timeEntries.findByTenantIdAndBilledFalseAndBillableTrue(tid()).stream()
-                .filter(t -> caseId == null || caseId.equals(t.getCaseId()))
+                .filter(t -> t.getCaseId() != null && matterIds.contains(t.getCaseId()))
                 .toList();
         List<Expense> unbilledExpenses = expenses.findByTenantIdAndBilledFalseAndBillableTrue(tid()).stream()
-                .filter(e -> caseId == null || caseId.equals(e.getCaseId()))
+                .filter(e -> e.getCaseId() != null && matterIds.contains(e.getCaseId()))
                 .toList();
         Invoice inv = new Invoice();
         inv.setTenantId(tid());
@@ -244,7 +261,11 @@ public class FinanceService {
         Expense e = new Expense();
         e.setTenantId(tid());
         e.setUserId(TenantContext.requireUser());
-        if (body.get("caseId") != null) e.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
+        UUID expenseCase = Ids.optUuid(body.get("caseId"), "matter");
+        if (expenseCase != null) {
+            cases.findByIdAndTenantId(expenseCase, tid()).orElseThrow(() -> ApiException.notFound("Matter not found"));
+            e.setCaseId(expenseCase);
+        }
         e.setCategory(String.valueOf(body.getOrDefault("category", "other")));
         e.setDescription(String.valueOf(body.getOrDefault("description", "Expense")));
         e.setAmount(new BigDecimal(String.valueOf(body.getOrDefault("amount", "0"))));
@@ -264,31 +285,67 @@ public class FinanceService {
 
     @Transactional
     public Map<String, Object> trustMove(Map<String, Object> body, boolean internalUnlock) {
-        UUID accountId = UUID.fromString(String.valueOf(body.get("accountId")));
+        UUID accountId = Ids.requireUuid(body.get("accountId"), "trust account", "Choose the trust account.");
         TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
                 .orElseThrow(() -> ApiException.notFound("Trust account not found"));
         Compliance.requireFfcForTrust(tenants.findById(tid()).orElse(null));
-        String type = String.valueOf(body.getOrDefault("type", "deposit"));
-        BigDecimal amount = new BigDecimal(String.valueOf(body.get("amount")));
-        if (body.get("caseId") != null && !internalUnlock) {
-            UUID caseId = UUID.fromString(String.valueOf(body.get("caseId")));
-            LegalCase matter = cases.findByIdAndTenantId(caseId, tid()).orElse(null);
+        String type = String.valueOf(body.getOrDefault("type", "deposit")).trim().toLowerCase();
+        if (!TRUST_TYPES.contains(type)) {
+            throw ApiException.badRequest("Unknown trust movement type. Use deposit, withdrawal or fee_transfer.");
+        }
+        BigDecimal amount;
+        try {
+            amount = new BigDecimal(String.valueOf(body.get("amount")).trim());
+        } catch (NumberFormatException e) {
+            throw ApiException.badRequest("Enter the amount as a number.");
+        }
+        if (amount.signum() <= 0) throw ApiException.badRequest("The amount must be more than zero.");
+        UUID moveCase = Ids.optUuid(body.get("caseId"), "matter");
+        UUID clientId = Ids.optUuid(body.get("clientId"), "client");
+        if (moveCase != null) {
+            LegalCase owner = cases.findByIdAndTenantId(moveCase, tid())
+                    .orElseThrow(() -> ApiException.notFound("Matter not found"));
+            if (clientId == null) clientId = owner.getClientId();
+            else if (owner.getClientId() != null && !clientId.equals(owner.getClientId())) {
+                throw ApiException.badRequest("That matter belongs to a different client.");
+            }
+        }
+        if (isOutflow(type) && clientId == null) {
+            throw ApiException.badRequest("Choose the client whose trust money this is. Withdrawals come off one client's ledger.");
+        }
+        Invoice feeInvoice = null;
+        if ("fee_transfer".equals(type)) {
+            UUID invoiceId = Ids.requireUuid(body.get("invoiceId"), "invoice", "A transfer to fees needs the invoice it pays.");
+            feeInvoice = invoices.findByIdAndTenantId(invoiceId, tid())
+                    .orElseThrow(() -> ApiException.notFound("Invoice not found"));
+            if (!clientId.equals(feeInvoice.getClientId())) {
+                throw ApiException.badRequest("That invoice is for a different client.");
+            }
+            if ("draft".equals(feeInvoice.getStatus())) {
+                throw ApiException.badRequest("Send the invoice to the client before transferring trust money to fees.");
+            }
+            BigDecimal outstanding = nz(feeInvoice.getTotal()).subtract(nz(feeInvoice.getAmountPaid()));
+            if (amount.compareTo(outstanding) > 0) {
+                throw ApiException.badRequest("The transfer is more than the " + outstanding.toPlainString() + " still owing on " + feeInvoice.getInvoiceNumber() + ".");
+            }
+        }
+        if (moveCase != null && !internalUnlock) {
+            LegalCase matter = cases.findByIdAndTenantId(moveCase, tid()).orElse(null);
             if (matter != null && !DocumentHash.appearanceAuthorized(matter.getEngagementStatus(), matter.isAppearanceAuthorized())) {
                 throw ApiException.badRequest("Limited file: trust movements wait until the mandate is signed. The retainer is pledged, not posted.");
             }
         }
-        UUID clientId = body.get("clientId") == null ? null : UUID.fromString(String.valueOf(body.get("clientId")));
-        if ("withdrawal".equals(type) && clientId != null) {
+        if (isOutflow(type)) {
             BigDecimal ledger = clientLedger(acct.getId(), clientId);
             if (ledger.compareTo(amount) < 0) {
                 throw ApiException.badRequest("Cannot use another client's trust money. This client's section 86 / IOLTA ledger is "
                         + ledger.toPlainString() + ".");
             }
         }
-        if ("withdrawal".equals(type) && acct.getBalance().compareTo(amount) < 0) {
+        if (isOutflow(type) && acct.getBalance().compareTo(amount) < 0) {
             throw ApiException.badRequest("Insufficient trust funds for this client ledger");
         }
-        BigDecimal next = "withdrawal".equals(type) ? acct.getBalance().subtract(amount) : acct.getBalance().add(amount);
+        BigDecimal next = isOutflow(type) ? acct.getBalance().subtract(amount) : acct.getBalance().add(amount);
         acct.setBalance(next);
         trusts.save(acct);
         TrustTransaction tx = new TrustTransaction();
@@ -297,10 +354,17 @@ public class FinanceService {
         tx.setType(type);
         tx.setAmount(amount);
         tx.setBalanceAfter(next);
-        tx.setDescription(String.valueOf(body.getOrDefault("description", type)));
+        tx.setDescription(String.valueOf(body.getOrDefault("description",
+                feeInvoice == null ? type : "Transfer to fees for " + feeInvoice.getInvoiceNumber())));
         tx.setCreatedBy(TenantContext.getUserId());
         if (clientId != null) tx.setClientId(clientId);
-        if (body.get("caseId") != null) tx.setCaseId(UUID.fromString(String.valueOf(body.get("caseId"))));
+        if (moveCase != null) tx.setCaseId(moveCase);
+        if (feeInvoice != null) {
+            tx.setReferenceNumber(feeInvoice.getInvoiceNumber());
+            feeInvoice.setAmountPaid(nz(feeInvoice.getAmountPaid()).add(amount));
+            if (feeInvoice.getAmountPaid().compareTo(nz(feeInvoice.getTotal())) >= 0) feeInvoice.setStatus("paid");
+            invoices.save(feeInvoice);
+        }
         trustTx.save(tx);
         Map<String, Object> view = trustView(acct);
         view.put("transaction", Map.of(
@@ -311,6 +375,13 @@ public class FinanceService {
                 "description", tx.getDescription(),
                 "createdAt", tx.getCreatedAt()));
         return view;
+    }
+
+    /** The only trust movements the books understand. Anything else is refused, not booked as a deposit. */
+    static final Set<String> TRUST_TYPES = Set.of("deposit", "withdrawal", "fee_transfer");
+
+    static boolean isOutflow(String type) {
+        return "withdrawal".equals(type) || "fee_transfer".equals(type);
     }
 
     public List<Map<String, Object>> trustLedger(UUID accountId) {
@@ -430,7 +501,7 @@ public class FinanceService {
             } else if (!clientId.equals(tx.getClientId())) {
                 continue;
             }
-            if ("withdrawal".equals(tx.getType())) sum = sum.subtract(nz(tx.getAmount()));
+            if (isOutflow(tx.getType())) sum = sum.subtract(nz(tx.getAmount()));
             else sum = sum.add(nz(tx.getAmount()));
         }
         return sum;
@@ -440,7 +511,7 @@ public class FinanceService {
         Map<UUID, BigDecimal> byClient = new LinkedHashMap<>();
         BigDecimal unallocated = BigDecimal.ZERO;
         for (TrustTransaction tx : trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), acct.getId())) {
-            BigDecimal delta = "withdrawal".equals(tx.getType()) ? nz(tx.getAmount()).negate() : nz(tx.getAmount());
+            BigDecimal delta = isOutflow(tx.getType()) ? nz(tx.getAmount()).negate() : nz(tx.getAmount());
             if (tx.getClientId() == null) unallocated = unallocated.add(delta);
             else byClient.merge(tx.getClientId(), delta, BigDecimal::add);
         }
