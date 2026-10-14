@@ -60,6 +60,28 @@ public class UsageService {
         this.plans = plans;
     }
 
+    private static final java.util.Set<String> ATTORNEY_ROLES = java.util.Set.of("owner", "partner", "director", "attorney", "associate");
+    private static final java.util.Set<String> NOT_BILLED = java.util.Set.of("superadmin", "client");
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.legalsuite.repo.AppUserRepository users;
+
+    /** [attorneys, staff] among the firm's active users. Platform operators and clients are not seats. */
+    int[] seatCounts(UUID tid) {
+        if (users == null) return new int[] {1, 0};
+        int attorneys = 0;
+        int staff = 0;
+        for (var u : users.findByTenantIdOrderByLastNameAsc(tid)) {
+            String status = u.getStatus() == null ? "active" : u.getStatus();
+            if ("disabled".equals(status) || "inactive".equals(status) || "suspended".equals(status)) continue;
+            String role = u.getRole() == null ? "" : u.getRole();
+            if (NOT_BILLED.contains(role)) continue;
+            if (ATTORNEY_ROLES.contains(role)) attorneys++;
+            else staff++;
+        }
+        return new int[] {attorneys, staff};
+    }
+
     public Map<String, Object> preview() {
         return preview(YearMonth.now());
     }
@@ -72,11 +94,25 @@ public class UsageService {
         if (tenant != null && tenant.getPlanId() != null) {
             Plan plan = plans.findById(tenant.getPlanId()).orElse(null);
             if (plan != null && plan.getPriceMonthly() != null && plan.getPriceMonthly().signum() > 0) {
-                seat = plan.getPriceMonthly();
+                Pricing.PlanSpec spec = Pricing.plan(plan.getSlug());
+                int[] counts = seatCounts(tid);
+                int attorneys = Math.max(1, counts[0]);
+                if (spec.maxAttorneys() != null) attorneys = Math.min(attorneys, spec.maxAttorneys());
+                int staff = spec.staffSeats() ? counts[1] : 0;
+                BigDecimal attorneyTotal = spec.monthlyZar().multiply(BigDecimal.valueOf(attorneys));
+                seat = attorneyTotal;
                 lines.add(Map.of(
                         "kind", "seat",
-                        "description", plan.getName() + " seat (1 attorney, trust included)",
-                        "amount", seat));
+                        "description", spec.name() + " plan, " + attorneys + (attorneys == 1 ? " attorney" : " attorneys") + " at R" + spec.monthlyZar().toPlainString() + " (trust included)",
+                        "amount", attorneyTotal));
+                if (staff > 0) {
+                    BigDecimal staffTotal = Pricing.STAFF_SEAT_MONTHLY_ZAR.multiply(BigDecimal.valueOf(staff));
+                    seat = seat.add(staffTotal);
+                    lines.add(Map.of(
+                            "kind", "staff",
+                            "description", staff + (staff == 1 ? " staff seat" : " staff seats") + " at R" + Pricing.STAFF_SEAT_MONTHLY_ZAR.toPlainString(),
+                            "amount", staffTotal));
+                }
             }
         }
         BigDecimal modulesTotal = BigDecimal.ZERO;
@@ -147,7 +183,7 @@ public class UsageService {
         m.put("whatsappCount", whatsappCount);
         m.put("total", total);
         m.put("lineItems", lines);
-        m.put("note", "Light is the monthly seat and includes section 86 trust. The seat is a PayFast subscription. Public-network minutes are a separate PayFast charge. SMS and WhatsApp stay on this preview. There is no minute bundle. Email is not metered. A local number is optional at about R79 per month, or bundled. In-app calls are not billed. Client invoices and trust are not this bill.");
+        m.put("note", "Prices exclude VAT. Your plan is charged per attorney and includes section 86 trust. Support staff are R349 a seat on Firm and Practice. The plan is a PayFast subscription. Calls are R1.49 a minute on the firm number, or R8.90 a minute with your own landline as caller ID (R149 a month). There is no minute bundle. SMS and WhatsApp stay on this preview. Email is not metered. In-app calls are not billed. Client invoices and trust are not this bill.");
         m.put("issued", existing == null ? null : view(existing));
         return m;
     }

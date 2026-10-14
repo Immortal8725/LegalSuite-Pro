@@ -1,6 +1,15 @@
 # Product billing (PayFast Aggregation)
 
-Owlaw charges firms for the product. That is separate from client fee invoices and from section 86 / IOLTA trust. Client invoices stay on **Client invoices**. Trust stays on **Trust Accounting**. This document is only the operator's bill: the Light seat, and public-network minutes.
+Owlaw charges firms for the product. That is separate from client fee invoices and from section 86 / IOLTA trust. Client invoices stay on **Client invoices**. Trust stays on **Trust Accounting**. This document is only the operator's bill: the plan subscription (Solo, Firm or Practice), staff seats, and public-network minutes.
+
+| Plan | Price (ex VAT) | Includes |
+|---|---|---|
+| Solo | R899 per month, 1 attorney | Matters, statutory clocks, billing, invoices, payments, write-offs, proof-of-payment review, section 86 trust with trust-to-fee, documents, calendar, firm number, SMS, WhatsApp and email, 100 AI actions. Public website add-on R499 a month plus R1,500 setup. No staff seats. |
+| Firm | R1,199 per attorney per month | Everything in Solo, plus the public firm website and 300 AI actions per attorney. Staff seats R349 each. |
+| Practice | R1,599 per attorney per month | Everything in Firm, plus 1,000 AI actions per attorney, call recording, advanced reporting, priority support and website fast-track. |
+
+Add-ons: staff seat R349 a month. Calls R1.49 a minute. Own landline as caller ID R149 a month plus R8.90 a minute. Existing tenants on the old Light plan move to Firm at the same R1,199.
+
 
 PayFast Aggregation is the payments provider. Stripe is not used for this bill. PayGate is not used.
 
@@ -8,10 +17,11 @@ PayFast Aggregation is the payments provider. Stripe is not used for this bill. 
 
 | Charge | How | Amount |
 | --- | --- | --- |
-| Light seat | PayFast subscription, monthly, until cancelled | R1,199 per seat per month |
+| Plan seat | PayFast subscription, monthly, until cancelled | Solo R899, Firm R1,199, Practice R1,599 per attorney per month |
+| Staff seat | Same subscription, `custom_int2` | R349 per staff seat per month (Firm and Practice) |
 | Phone minutes | Tokenised adhoc charge, manual trigger in the pilot | Sum of public-network call cost for the month |
 
-One seat is **119900 cents** (R1,199.00). Two seats are 239800 cents. The checkout form sends rands with two decimals (`1199.00`) because that is what PayFast's process endpoint expects. The adhoc API sends cents (`119900`) because that is what PayFast's API expects.
+One Firm seat is **119900 cents** (R1,199.00). Two Firm seats are 239800 cents. Solo is 89900 cents and capped at one attorney with no staff seats. Practice is 159900 cents. Each staff seat adds 34900 cents. The item name is `Owlaw <Plan> plan`. The checkout form sends rands with two decimals (`1199.00`) because that is what PayFast's process endpoint expects. The adhoc API sends cents (`119900`) because that is what PayFast's API expects.
 
 PayFast wire values for the seat:
 
@@ -23,7 +33,7 @@ A second checkout, **Save a card token**, uses `subscription_type=2` and amount 
 
 ## VAT
 
-The operator issues its own tax invoice. PayFast is not asked to add VAT on top of the R1,199 seat. Do not treat the PayFast receipt as the tax invoice.
+The operator issues its own tax invoice. PayFast is not asked to add VAT on top of the plan price. Do not treat the PayFast receipt as the tax invoice.
 
 ## Environment
 

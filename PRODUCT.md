@@ -1,10 +1,10 @@
 # Owlaw
 
-**Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, PayFast merchant signup, a domain, and TLS are still operator work.  
+**Status:** Solo South African pilot. The three Owlaw plans and the hosted Postgres path are in the repo. Twilio KYC, PayFast merchant signup, a domain, and TLS are still operator work.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
 **Effective:** 16 September 2026. Operator: Owlaw (the software described in this repository).
 
-A multi-tenant practice system for a solo South African attorney. A firm registers once. It gets a public website, an intake form, a docket that watches statutory clocks, a hire gate that will not let an unsigned file appear, and a trust ledger that cannot spend another client’s money. Light is R1,199 per month for one attorney and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about R79 per month, or bundled when the operator includes it.
+A multi-tenant practice system for a solo South African attorney. A firm registers once. It gets a public website, an intake form, a docket that watches statutory clocks, a hire gate that will not let an unsigned file appear, and a trust ledger that cannot spend another client’s money. Owlaw has three plans, priced per attorney per month, ex VAT: **Solo R899** (one attorney), **Firm R1,199** and **Practice R1,599**. Extra staff seats are R349 a month. Section 86 trust is in every plan. Calls on the firm number are R1.49 a minute, and a firm can use its own landline as caller ID for R149 a month plus R8.90 a minute. There is no minute bundle and no unlimited voice.
 
 South Africa is the default jurisdiction. Texas still runs on a second tenant so both docket engines can be compared.
 
@@ -32,7 +32,7 @@ It is **not** a court e-filing system, a bank, a SANAS-accredited signature CSP,
 2. **The clock is the home screen.** RAF Act s 23, Prescription Act ss 11–13, Act 40 of 2002 s 3, LRA s 191 (ZA). Texas CPRC ch. 16, 74, 101 and Estates Code on the other tenant. Overdue lodge/notice/referral clocks spawn a task and **block trial status**.
 3. **The phone is on the file.** In-app WebRTC is free. Outbound PSTN is a callback bridge: the attorney's phone rings, then the other party sees a verified personal number (mobile or landline), `TWILIO_VOICE_FROM`, or a rented local number if the firm already has one. Buying a number is optional. No South Africa regulatory bundle is required for this path. A matter (or an explicit non-matter) is required before dial. Emergency numbers stay on the device dialer. Hangup writes a time entry when the call is on a matter. Recording is opt-in. RICA s 4 is one-party; the product still requires spoken notice (LPC ethics + POPIA). SMS and WhatsApp use the same Twilio account. Email uses the firm's SMTP server, or is logged on the firm when SMTP is not set. The attorney remains responsible for outbound client contact.
 4. **Trust that an inspector can read.** Per-client ledgers. LPA ss 86–87 three-way: bank statement = cashbook = sum of client ledgers. A withdrawal cannot spend another client’s money. ZA trust will not move without a **current FFC** (LPA s 84).
-5. **A seat, plus the phone you use.** Light is R1,199 per month for one attorney. The seat includes the practice desk and section 86 trust. Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. SMS and WhatsApp also roll onto the usage invoice. Email through the firm's SMTP server is not metered. There is no included minute bundle and no unlimited voice tier. A local number is optional at about R79 per month, or bundled with the seat. In-app calls stay on the seat.
+5. **A plan, plus the phone you use.** Solo is R899 for one attorney, Firm R1,199 and Practice R1,599 per attorney per month, ex VAT. Staff seats are R349. Every plan includes the practice desk and section 86 trust. Calls are R1.49 a minute, or R8.90 a minute on your own landline (R149 a month). Public-network minutes are pay-what-you-use and roll onto the month-end usage invoice. SMS and WhatsApp also roll onto the usage invoice. Email through the firm's SMTP server is not metered. There is no included minute bundle and no unlimited voice tier. In-app calls are included.
 6. **Draft help on the file.** Summaries, drafts, and intake screening stay on the tenant row unless the operator sets a model-vendor key. Tenant files are not used to train a shared model. The attorney remains responsible.
 
 ---
@@ -88,11 +88,20 @@ API prefix: `/api/v1`. Envelope: `{ success, data, message }`.
 
 ## 5. Plans and modules
 
-**Plan (seeded):** Light. R1,199 per month. One attorney. Currency is ZAR.
+**Plans (seeded):** Solo, Firm and Practice. Currency is ZAR. A database that still has the old Light row is moved to Firm by Flyway V5.
+
+| Plan | Price (ex VAT) | Includes |
+|---|---|---|
+| Solo | R899 per month, 1 attorney | Matters, statutory clocks, billing, invoices, payments, write-offs, proof-of-payment review, section 86 trust with trust-to-fee, documents, calendar, firm number, SMS, WhatsApp and email, 100 AI actions. Public website add-on R499 a month plus R1,500 setup. No staff seats. |
+| Firm | R1,199 per attorney per month | Everything in Solo, plus the public firm website and 300 AI actions per attorney. Staff seats R349 each. |
+| Practice | R1,599 per attorney per month | Everything in Firm, plus 1,000 AI actions per attorney, call recording, advanced reporting, priority support and website fast-track. |
+
+Add-ons: staff seat R349 a month. Calls R1.49 a minute. Own landline as caller ID R149 a month plus R8.90 a minute. Existing tenants on the old Light plan move to Firm at the same R1,199.
+
 
 **In the seat (not a separate charge):** cases, clients, contacts, calendar, tasks, documents, time, billing, messages, conflicts, reports, audit, in-app voice, and section 86 trust.
 
-**Phone:** public-network minutes are pay-what-you-use. `includedVoiceMinutes` is 0. A negative minute cap is treated as 0, not unlimited. A local number is optional at about R79 per month, or bundled. The per-minute carrier rate is `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN`. Leave them blank until the carrier price is known. Blank does not invent a rate.
+**Phone:** public-network minutes are pay-what-you-use. `includedVoiceMinutes` is 0. A negative minute cap is treated as 0, not unlimited. The per-minute rate is `LEGALSUITE_PSTN_OUTBOUND_PER_MIN` and `LEGALSUITE_PSTN_INBOUND_PER_MIN` (default 1.49). Calls with the firm's own landline as caller ID use `LEGALSUITE_PSTN_LANDLINE_PER_MIN` (default 8.90).
 
 **Not in the seat price:** card collection (PayFast Aggregation) and the public-network bridge (Twilio). Both stay off until keys are in the environment. The seat is a monthly PayFast subscription. Phone minutes are a separate token charge. Draft help stays on the tenant unless the operator sets a model-vendor key. See [BILLING.md](BILLING.md).
 
@@ -258,7 +267,7 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 **No legal advice.** Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. Fitness scores are a checklist, not an LPC audit.
 
-**Fees.** Light is R1,199 per month for one attorney and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled. Prices on `/` are in rand.
+**Fees.** Solo R899, Firm R1,199 and Practice R1,599 per attorney per month, ex VAT, with staff seats at R349. Calls R1.49 a minute. Own landline R149 a month plus R8.90 a minute. There is no minute bundle. Prices on `/` are in rand.
 
 **Warranties.** The software is provided as a running demo in this repository. Production SLAs exist only under a signed order form.
 
@@ -285,13 +294,13 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 ### 10.8 Merchant Services Agreement
 
-Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
+Applies when the operator takes card payments for the plan subscription or phone-minute charges through PayFast Aggregation.
 
 - The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **Owlaw subscriptions and minute charges**.
 - Chargebacks: you must keep the engagement and invoice that support the debit.
 - Refunds of unused subscription days: as on the invoice. Public-network minutes already used are not refundable.
 - PCI: we do not store a raw card number in this repository. Checkout is hosted by PayFast. The server may store the PayFast token.
-- VAT: the operator issues its own tax invoice. The R1,199 seat is not grossed up inside PayFast.
+- VAT: the operator issues its own tax invoice. The plan price is not grossed up inside PayFast.
 - Product billing is not live until the PayFast merchant id and key are in the environment. Sandbox first. Do not treat a green “connected” flag in the demo as a live merchant account.
 - Trust money is **never** mixed with subscription charges. s 86 / IOLTA ledgers are not a payment gateway.
 
@@ -321,7 +330,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 | Operator (Owlaw) | Host, support | Tenant database | In product |
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
 | PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
-| PayFast Aggregation | Light seat subscription and phone-minute charges | Billing token, payment ids, amount | Keys via environment. Sandbox until live KYC. Toggle is not a live account. |
+| PayFast Aggregation | Plan and staff seat subscription and phone-minute charges | Billing token, payment ids, amount | Keys via environment. Sandbox until live KYC. Toggle is not a live account. |
 | Twilio | PSTN, SMS, WhatsApp | Call and message metadata, numbers, caller ID | Real sends when server env vars are set. No keys in the repo. |
 | Google/Apple authenticator apps | TOTP | Shared secret stays on the user row | In product; user-chosen app |
 | OpenAI or Anthropic (optional) | Model answers for one matter | Prompt and staff-visible matter context, not file bytes | Off unless `LEGALSUITE_AI_PROVIDER` and a key are set |
@@ -341,7 +350,7 @@ Firms may not treat a demo “connected” integration as a live subprocessor un
 | 1.2 | 5 October 2026 | Light seat at R1,199 for one attorney. Phone is pay-what-you-use. Trust is in the seat. Hosted Postgres path, health check, and env template recorded. |
 | 1.3 | 5 October 2026 | SMS, WhatsApp, and email from a matter or contact. Messaging is pay-what-you-use. Email via SMTP is not metered. |
 | 1.4 | 5 October 2026 | Fee invoice payments, write-offs, trust-to-fee, and proof of payment. |
-| 1.5 | 5 October 2026 | PayFast Aggregation for the Light seat and phone minutes. Client invoices and trust stay separate. |
+| 1.5 | 5 October 2026 | PayFast Aggregation for the plan seat and phone minutes. Client invoices and trust stay separate. |
 
 Questions about the **software**: the repository owner.  
 Questions about a **matter**: the firm on the tenant, not the operator.

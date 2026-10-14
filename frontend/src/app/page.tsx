@@ -1,28 +1,16 @@
 import Link from "next/link";
 import { Check, Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
+import { ADD_ONS, PLANS, PRICE_NOTE } from "@/lib/pricing";
 
 const FEATURES = [
   ["Hire in one motion", "Website consult, conflict check, mandate, and e-sign stay on the same tenant."],
   ["The clock is the home screen", "RAF s 23, Act 40 notice, CCMA referrals, and prescription sit on the docket. The attorney remains responsible for the date."],
   ["The phone is on the file", "In-app calls are included. Public-network minutes are pay-what-you-use. Recording is opt-in, with a spoken notice."],
-  ["One attorney, one seat", "Light is R1,199 per month. Section 86 trust is in that seat. There is no minute bundle and no unlimited voice."],
+  ["Priced per attorney", "Solo R899, Firm R1,199 and Practice R1,599 per attorney a month, ex VAT. Section 86 trust is in every plan. Calls are R1.49 a minute with no bundle."],
   ["Drafts stay on the firm", "Summaries stay on this tenant unless the firm turns on a model vendor. The attorney remains responsible. This is not legal advice."],
   ["Trust an inspector can read", "Per-client ledgers. Three-way recon (bank, cashbook, and clients). One client cannot spend another's money."],
 ];
-
-const LIGHT = {
-  name: "Light",
-  price: "R1,199",
-  note: "per month, 1 attorney",
-  items: [
-    "Practice desk, hire gate, and docket clocks",
-    "Section 86 trust included",
-    "In-app calls included",
-    "Public-network minutes: pay-what-you-use",
-    "Local number optional, about R79, or bundled",
-  ],
-};
 
 export default function MarketingPage() {
   return (
@@ -42,7 +30,7 @@ export default function MarketingPage() {
             Client portal
           </Link>
           <Link href="/register" className="rounded-lg bg-gold px-4 py-2 text-sm font-bold text-navy-dark hover:bg-gold-light">
-            Start on Light
+            Start free trial
           </Link>
         </div>
       </nav>
@@ -51,7 +39,7 @@ export default function MarketingPage() {
         <p className="text-base font-semibold text-navy">Eyes on every matter.</p>
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">For a solo South African attorney</p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight text-navy sm:text-5xl">
-          One seat at R1,199 a month. The docket watches RAF and Act 40. The phone is what you use.
+          From R899 a month. The docket watches RAF and Act 40. The phone is what you use.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
           Landing, intake, conflict check, signed mandate, and section 86 trust stay in one firm. Trust is in the seat, not a later add-on. In-app calls are included and write time on hangup. Public-network minutes have no bundle. A local number is optional at about R79 a month, or bundled when you include it.
@@ -77,24 +65,48 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-xl px-6 py-16">
-        <h2 className="text-center text-3xl font-extrabold text-navy">Light</h2>
-        <p className="mx-auto mt-2 max-w-xl text-center text-slate-600">
-          Prices are in rand. The Light seat is a PayFast subscription once sandbox or live keys are set. Until then the seat stays on the month-end preview and no card is charged.
+      <section id="pricing" className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-3xl font-extrabold text-navy">Pricing</h2>
+        <p className="mx-auto mt-2 max-w-2xl text-center text-slate-600">
+          {PRICE_NOTE} Every plan includes section 86 trust. Start with a 14-day trial.
         </p>
-        <div className="mt-10 rounded-2xl border border-gold p-6 shadow-lift">
-          <p className="mb-2 text-xs font-bold uppercase text-gold">Solo launch</p>
-          <h3 className="text-lg font-bold">{LIGHT.name}</h3>
-          <p className="mt-2 text-3xl font-extrabold text-navy">{LIGHT.price}</p>
-          <p className="text-xs text-slate-600">{LIGHT.note}</p>
-          <ul className="mt-4 space-y-2 text-sm">
-            {LIGHT.items.map((item) => (
-              <li key={item} className="flex gap-2">
-                <Check className="mt-0.5 h-4 w-4 text-emerald-600" />
-                {item}
-              </li>
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.slug}
+              className={`flex flex-col rounded-2xl border p-6 ${plan.tag ? "border-gold shadow-lift" : "border-slate-200 shadow-card"}`}
+            >
+              <p className="mb-2 h-4 text-xs font-bold uppercase text-gold">{plan.tag ?? ""}</p>
+              <h3 className="text-lg font-bold text-navy">{plan.name}</h3>
+              <p className="mt-2 text-3xl font-extrabold text-navy">{plan.price}</p>
+              <p className="text-xs text-slate-600">{plan.unit}, ex VAT</p>
+              <ul className="mt-4 flex-1 space-y-2 text-sm">
+                {plan.items.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/register?plan=${plan.slug}`}
+                className={`mt-6 rounded-xl px-4 py-3 text-center font-bold ${plan.tag ? "bg-gold text-navy-dark" : "border text-navy"}`}
+              >
+                Start on {plan.name}
+              </Link>
+            </div>
+          ))}
+        </div>
+        <div className="mx-auto mt-10 max-w-3xl rounded-2xl bg-slate-50 p-6">
+          <h3 className="font-bold text-navy">Add-ons and usage</h3>
+          <dl className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+            {ADD_ONS.map(([name, price]) => (
+              <div key={name}>
+                <dt className="font-semibold text-navy">{name}</dt>
+                <dd className="text-slate-600">{price}</dd>
+              </div>
             ))}
-          </ul>
+          </dl>
         </div>
       </section>
 

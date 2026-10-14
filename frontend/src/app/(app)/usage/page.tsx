@@ -55,11 +55,11 @@ export default function UsagePage() {
     <div>
       <PageHeader
         title="Month-end usage"
-        subtitle="Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
+        subtitle="Your plan is billed per attorney and includes section 86 trust. Calls at R1.49 a minute, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
       />
       <ErrorBanner error={error} />
       <p className="mb-4 text-sm text-slate-600">
-        The Light seat subscription and phone-minute card charges are on{" "}
+        The plan subscription, staff seats and phone-minute card charges are on{" "}
         <Link href="/product-billing" className="font-semibold text-navy underline">
           Product billing
         </Link>
@@ -91,7 +91,7 @@ export default function UsagePage() {
             <p className="mb-4 text-sm text-slate-600">{preview.note}</p>
             <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <div>
-                <p className="text-xs text-slate-600">Light seat</p>
+                <p className="text-xs text-slate-600">Plan and staff seats</p>
                 <p className="text-xl font-extrabold text-navy">{moneyExact(preview.seatSubtotal ?? 0)}</p>
               </div>
               <div>
@@ -136,7 +136,7 @@ export default function UsagePage() {
         </CardHeader>
         <CardBody className="p-0">
           {history.length === 0 ? (
-            <p className="p-5 text-sm text-slate-600">None issued yet. The preview is the Light seat plus public-network minutes used this month. A local number is about R79 if you take one, or bundled if the operator includes it.</p>
+            <p className="p-5 text-sm text-slate-600">None issued yet. The preview is your plan per attorney, staff seats at R349, and calls at R1.49 a minute (R8.90 with your own landline as caller ID). Prices exclude VAT.</p>
           ) : (
             <TableWrap>
               <thead>

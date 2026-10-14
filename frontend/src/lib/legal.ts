@@ -90,7 +90,7 @@ Your data. You own the matter files. You licence us to host them to provide the 
 
 No legal advice. Docket dates are computed from statutes cited on the clock. Confirm interruptions, condonation, and service. The attorney remains responsible. Fitness scores are a checklist, not an LPC audit.
 
-Fees. Light is R1,199 per month for one attorney and includes section 86 trust. Public-network minutes are pay-what-you-use. There is no minute bundle. A local number is optional at about R79 per month, or bundled.
+Fees (excluding VAT). Solo is R899 a month for one attorney. Firm is R1,199 and Practice is R1,599 per attorney a month. Support staff seats are R349 a month. Every plan includes section 86 trust. Calls on the firm number are R1.49 a minute. Your own landline as caller ID is R149 a month plus R8.90 a minute. The public website for Solo is R499 a month plus R1,500 setup. There is no minute bundle.
 
 Liability. To the extent permitted by the CPA and other mandatory law, liability is capped at fees paid in the three months before the claim. We are not liable for missed prescription, an uncertified recon, or a claim the Fund rejects.
 
@@ -114,12 +114,12 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     slug: "merchant",
     title: "Merchant Services Agreement",
     section: "10.8",
-    body: `Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
+    body: `Applies when the operator takes card payments for Owlaw plans, staff seats or phone-minute charges through PayFast Aggregation.
 
 - The firm is the merchant of record for client fee invoices unless an order form says otherwise. The operator is the merchant of record for Owlaw subscriptions and minute charges.
 - Chargebacks: keep the engagement and invoice that support the debit.
 - PCI: this repository does not store a raw card number. Checkout is hosted by PayFast. The server stores the PayFast token, not the card.
-- VAT: the operator issues its own tax invoice. PayFast is not asked to add VAT on top of the R1,199 seat.
+- VAT: the operator issues its own tax invoice. Plan prices exclude VAT, and PayFast is not asked to add VAT on top.
 - The product billing page is not a live merchant until PAYFAST_MERCHANT_ID and PAYFAST_MERCHANT_KEY are set. Sandbox first.
 - Trust money is never mixed with subscription charges. Section 86 / IOLTA ledgers are not a payment gateway.`,
   },
@@ -148,7 +148,7 @@ Vercel (optional): web front end; request logs; UI can publish, API needs a JVM.
 
 PostgreSQL host (optional): all tenant rows; docker-compose / postgres profile; not the default.
 
-PayFast Aggregation: Light seat subscription and phone-minute charges. Keys stay in the server environment. Sandbox until live KYC.
+PayFast Aggregation: plan and staff-seat subscriptions and phone-minute charges. Keys stay in the server environment. Sandbox until live KYC.
 
 Twilio: PSTN, SMS, and WhatsApp metadata and caller ID when the firm connects it. Credentials stay in the server environment.
 

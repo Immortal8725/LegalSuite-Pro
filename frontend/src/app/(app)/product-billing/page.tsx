@@ -48,6 +48,12 @@ type Status = {
   passphraseSet: boolean;
   canManage: boolean;
   seatPrice: string;
+  planSlug?: string;
+  planName?: string;
+  planSummary?: string;
+  maxAttorneys?: number | null;
+  staffSeatsAllowed?: boolean;
+  staffSeatPrice?: string;
   seatCount: number;
   seatStatus: string;
   seatActiveUntil?: string | null;
@@ -86,6 +92,7 @@ export default function ProductBillingPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [seats, setSeats] = useState("1");
+  const [staff, setStaff] = useState("0");
   const [period, setPeriod] = useState(currentPeriod);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -114,22 +121,26 @@ export default function ProductBillingPage() {
     <div>
       <PageHeader
         title="Product billing"
-        subtitle="PayFast collects the Owlaw Light seat and public-network minutes. Client fee invoices and trust receipts are not charged here."
+        subtitle="PayFast collects your Owlaw plan, staff seats and phone minutes. Prices exclude VAT. Client fee invoices and trust receipts are not charged here."
       />
       <ErrorBanner error={error} />
       {status && (
         <>
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Light seat</CardTitle>
+              <CardTitle>{status.planName || "Firm"} plan</CardTitle>
               <StatusBadge status={status.seatStatus} />
             </CardHeader>
             <CardBody>
+              {status.planSummary && <p className="mb-2 text-sm text-slate-700">{status.planSummary}</p>}
               <p className="mb-4 text-sm text-slate-600">{status.note}</p>
               <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <p className="text-xs text-slate-600">Seat price</p>
+                  <p className="text-xs text-slate-600">Per attorney</p>
                   <p className="text-xl font-extrabold text-navy">{moneyExact(status.seatPrice, "ZAR")} / month</p>
+                  {status.staffSeatsAllowed && status.staffSeatPrice && (
+                    <p className="text-xs text-slate-600">Staff seat {moneyExact(status.staffSeatPrice, "ZAR")} / month</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-slate-600">Seats on the account</p>
@@ -166,15 +177,28 @@ export default function ProductBillingPage() {
                     <Input aria-label="Seats"
                       type="number"
                       min={1}
-                      max={100}
+                      max={status.maxAttorneys ?? 100}
                       value={seats}
                       onChange={(e) => setSeats(e.target.value)}
                       className="w-24"
                     />
                   </div>
+                  {status.staffSeatsAllowed && (
+                    <div>
+                      <Label>Staff seats</Label>
+                      <Input aria-label="Support staff"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={staff}
+                        onChange={(e) => setStaff(e.target.value)}
+                        className="w-24"
+                      />
+                    </div>
+                  )}
                   <Button
                     disabled={!status.checkoutReady || busy !== null}
-                    onClick={() => start("/api/v1/product-billing/seats/checkout", { seats: Number(seats) || 1 }, "seat")}
+                    onClick={() => start("/api/v1/product-billing/seats/checkout", { seats: Number(seats) || 1, staffSeats: status.staffSeatsAllowed ? Number(staff) || 0 : 0 }, "seat")}
                   >
                     {busy === "seat" ? "Opening PayFast…" : "Subscribe with PayFast"}
                   </Button>

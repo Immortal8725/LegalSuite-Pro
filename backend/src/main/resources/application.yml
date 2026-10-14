@@ -57,8 +57,10 @@ legalsuite:
     max-failures-per-ip: ${LOGIN_MAX_FAILURES_PER_IP:40}
     window-seconds: ${LOGIN_WINDOW_SECONDS:900}
   pstn:
-    outbound-per-minute: ${LEGALSUITE_PSTN_OUTBOUND_PER_MIN:}
-    inbound-per-minute: ${LEGALSUITE_PSTN_INBOUND_PER_MIN:}
+    # Owlaw price list (ex VAT): R1.49 per minute on the firm number, R8.90 with a verified own landline as caller ID.
+    outbound-per-minute: ${LEGALSUITE_PSTN_OUTBOUND_PER_MIN:1.49}
+    inbound-per-minute: ${LEGALSUITE_PSTN_INBOUND_PER_MIN:1.49}
+    landline-per-minute: ${LEGALSUITE_PSTN_LANDLINE_PER_MIN:8.90}
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

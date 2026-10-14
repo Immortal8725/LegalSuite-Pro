@@ -190,7 +190,9 @@ public class PayFastItnService {
         }
         if ("token".equals(kind)) return 0L;
         int seats = parseSeats(PayFastSignature.value(posted, "custom_int1"), 1);
-        return PayFastMoney.seatsCents(seats);
+        int staff = parseSeats(PayFastSignature.value(posted, "custom_int2"), 0);
+        // Without a stored checkout the plan is unknown, so the Firm price is the expected amount.
+        return Math.addExact(PayFastMoney.seatsCents(seats), Math.multiplyExact((long) staff, PayFastMoney.STAFF_SEAT_CENTS));
     }
 
     private BillingAccount load(UUID tenantId) {

@@ -13,7 +13,7 @@ export default function PayFastCancelPage() {
       />
       <Card>
         <CardBody>
-          <p className="text-sm text-slate-600">You can start the Light subscription again from product billing.</p>
+          <p className="text-sm text-slate-600">You can start the subscription again from product billing.</p>
           <Link href="/product-billing" className="mt-4 inline-block text-sm font-semibold text-navy underline">
             Product billing
           </Link>

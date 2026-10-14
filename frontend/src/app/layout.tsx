@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "Owlaw",
-  description: "Practice desk for a solo South African attorney. Light is R1,199 per month. The phone is pay-what-you-use.",
+  description: "Practice software for South African attorneys. Solo R899, Firm R1,199 and Practice R1,599 per attorney a month, ex VAT. Trust accounting included.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
