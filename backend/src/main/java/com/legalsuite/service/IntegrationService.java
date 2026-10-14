@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class IntegrationService {
     private static final List<Map<String, String>> CATALOG = List.of(
             Map.of("provider", "payfast", "name", "PayFast", "category", "payments",
-                    "description", "PayFast Aggregation for the Light seat and phone minutes. Product billing only. Client fee invoices and trust stay in the firm books. Keys stay in the server environment."),
+                    "description", "PayFast Aggregation for the Owlaw plan, staff seats and phone minutes. Product billing only. Client fee invoices and trust stay in the firm books. Keys stay in the server environment."),
             Map.of("provider", "twilio", "name", "Twilio", "category", "voice",
                     "description", "Public-network calls, SMS, and WhatsApp. Verify a personal mobile or landline, or set TWILIO_VOICE_FROM. Buying a number is optional. A verified landline cannot send SMS. Credentials stay in the server environment. This toggle does not store a password."),
             Map.of("provider", "google_calendar", "name", "Google Calendar", "category", "calendar",

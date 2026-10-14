@@ -9,6 +9,8 @@ import com.legalsuite.repo.AppUserRepository;
 import com.legalsuite.repo.BillingAccountRepository;
 import com.legalsuite.repo.ProductCheckoutRepository;
 import com.legalsuite.service.AuditService;
+import com.legalsuite.service.Pricing;
+import com.legalsuite.service.TenantPlans;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,19 +45,33 @@ public class PayFastCheckoutService {
         this.clock = clock;
     }
 
+    private TenantPlans tenantPlans;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setTenantPlans(TenantPlans tenantPlans) {
+        this.tenantPlans = tenantPlans;
+    }
+
     @Transactional
     public Map<String, Object> seatCheckout(int seats) {
+        return seatCheckout(seats, 0);
+    }
+
+    @Transactional
+    public Map<String, Object> seatCheckout(int seats, int staffSeats) {
         ProductBillingAccess.requireManager();
         requireReady();
         UUID tenantId = TenantContext.requireTenant();
         Buyer buyer = buyer();
         String mPaymentId = "seat-" + UUID.randomUUID().toString().replace("-", "");
         LocalDate billingDate = LocalDate.now(clock.withZone(ZoneId.of("Africa/Johannesburg")));
+        Pricing.PlanSpec plan = tenantPlans == null ? Pricing.FIRM : tenantPlans.planFor(tenantId);
         PayFastCheckoutForm.Built built = PayFastCheckoutForm.seat(
-                props, tenantId, buyer.first(), buyer.last(), buyer.email(), mPaymentId, seats, billingDate);
+                props, tenantId, buyer.first(), buyer.last(), buyer.email(), mPaymentId, plan.slug(), seats, staffSeats, billingDate);
         saveCheckout(tenantId, mPaymentId, "seat", seats, built.amountCents(), null);
         markPending(tenantId, seats);
-        audit.record("billing.checkout", "billing", mPaymentId, "seat " + seats + " " + built.amountCents());
+        audit.record("billing.checkout", "billing", mPaymentId,
+                plan.slug() + " seat " + seats + " staff " + staffSeats + " " + built.amountCents());
         return view(built);
     }
 

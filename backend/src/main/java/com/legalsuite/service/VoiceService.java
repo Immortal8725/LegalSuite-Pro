@@ -208,6 +208,9 @@ public class VoiceService {
         m.put("billablePstnMinutes", pstnMinutes);
         m.put("rateConfigured", rateSet);
         m.put("didMonthly", Pricing.DID_MONTHLY_ZAR);
+        m.put("callPerMinute", Pricing.CALL_PER_MINUTE_ZAR);
+        m.put("landlineMonthly", Pricing.LANDLINE_MONTHLY_ZAR);
+        m.put("landlinePerMinute", Pricing.LANDLINE_PER_MINUTE_ZAR);
         m.put("note", note);
         return m;
     }
@@ -272,7 +275,7 @@ public class VoiceService {
         rec.setFirmPhoneNumberId(line.getId());
         rec.setRecordingEnabled(record);
         rec.setRecordingConsentGiven(record && consent);
-        rec.setCostPerMinute(costFor("pstn_outbound"));
+        rec.setCostPerMinute(outboundCostFor(line.getKind()));
         rec.setBridgeToken(newToken());
         rec.setNonMatter(nonMatter);
         rec.setBillable(!nonMatter);
@@ -445,6 +448,18 @@ public class VoiceService {
         } catch (NumberFormatException ex) {
             return BigDecimal.ZERO;
         }
+    }
+
+    @Value("${legalsuite.pstn.landline-per-minute:8.90}")
+    private String landlinePerMinute;
+
+    /** A verified own landline as caller ID is not on the carrier's local rate, so it has its own price. */
+    BigDecimal outboundCostFor(String callerIdKind) {
+        if (com.legalsuite.domain.FirmPhoneNumber.KIND_LANDLINE.equals(callerIdKind)) {
+            BigDecimal r = rateOrZero(landlinePerMinute == null ? Pricing.LANDLINE_PER_MINUTE_ZAR.toPlainString() : landlinePerMinute);
+            return r.signum() > 0 ? r : costFor("pstn_outbound");
+        }
+        return costFor("pstn_outbound");
     }
 
     private BigDecimal costFor(String type) {

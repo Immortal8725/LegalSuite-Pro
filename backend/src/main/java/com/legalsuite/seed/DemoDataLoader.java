@@ -185,39 +185,44 @@ public class DemoDataLoader implements CommandLineRunner {
     public void run(String... args) {
         if (plans.count() > 0) return;
 
-        Plan light = plan(
-                "Light",
-                Pricing.LIGHT_SLUG,
-                "R1,199 per month for one attorney. The practice desk and section 86 trust are in the seat. Public-network minutes are pay-what-you-use. A local number is optional at about R79, or bundled.",
-                Pricing.LIGHT_MONTHLY_ZAR.intValue(),
-                Pricing.LIGHT_ATTORNEYS,
-                -1,
-                Pricing.INCLUDED_PSTN_MINUTES,
-                1);
-        light.setFeaturesJson(
-                "{\"currency\":\"ZAR\",\"seats\":1,\"trustIncluded\":true,\"includedPstnMinutes\":0,\"phone\":\"pay-what-you-use\",\"didMonthlyZar\":79,\"did\":\"Optional local number about R79 per month, or bundled with the seat.\"}");
-        plans.save(light);
+        Plan light = null;
+        for (Pricing.PlanSpec spec : Pricing.PLANS) {
+            Plan p = plan(
+                    spec.name(),
+                    spec.slug(),
+                    spec.summary(),
+                    spec.monthlyZar().intValue(),
+                    spec.maxAttorneys() == null ? -1 : spec.maxAttorneys(),
+                    -1,
+                    Pricing.INCLUDED_PSTN_MINUTES,
+                    spec.sortOrder());
+            p.setFeaturesJson(planFeatures(spec));
+            plans.save(p);
+            // Demo and platform firms sit on Firm, the headline plan.
+            if (Pricing.FIRM_SLUG.equals(spec.slug())) light = p;
+        }
 
-        AppModule mCases = module("Case Management", "cases", "Matters, status, courts, and parties.", "practice", "⚖️", 0, true, "light", 1);
-        module("Client CRM", "clients", "Every relationship the firm is responsible for.", "practice", "👥", 0, true, "light", 2);
-        module("Contacts", "contacts", "Opposing counsel, judges, vendors.", "practice", "📇", 0, true, "light", 3);
-        module("Calendar", "calendar", "Hearings, depositions, and filing deadlines.", "practice", "📅", 0, true, "light", 4);
-        module("Tasks", "tasks", "Work that has an owner and a due date.", "practice", "✅", 0, true, "light", 5);
-        module("Documents", "documents", "Case files with privilege flags.", "documents", "📄", 0, true, "light", 6);
-        module("Time Tracking", "timetracking", "Timers and 6-minute increments.", "financial", "⏱️", 0, true, "light", 7);
-        module("Billing & Invoices", "billing", "Draft, send, and record payment.", "financial", "💰", 0, true, "light", 8);
-        module("Messaging", "messages", "Internal threads tied to matters.", "communication", "💬", 0, true, "light", 9);
-        AppModule mTrust = module("Trust Accounting", "trust", "Included in Light. Per-client section 86 or IOLTA ledgers. Not a separate month-end charge.", "financial", "🏦", 0, true, "light", 10);
-        module("Expenses", "expenses", "Costs advanced and billed back.", "financial", "🧾", 0, false, "light", 11);
-        module("Client Portal", "clientportal", "Clients see their case, files, and invoices.", "communication", "🌐", 0, false, "light", 12);
-        module("E-Signatures", "esignatures", "Send retainers out for in-app signature. No DocuSign key required.", "documents", "✍️", 0, false, "light", 13);
-        module("Conflict Check", "conflicts", "Search clients, parties, and counsel.", "compliance", "🔍", 0, true, "light", 14);
-        module("Reports", "reports", "Realization, pipeline, and aging.", "analytics", "📈", 0, true, "light", 15);
-        module("Draft help", "ai", "Draft help on this tenant. The attorney remains responsible. No vendor key in the default build.", "analytics", "✨", 0, false, "light", 16);
-        AppModule mVoice = module("Voice Calling", "voice", "In-app calls are included. Public-network minutes are pay-what-you-use. No minute bundle and no unlimited voice.", "communication", "📞", 0, true, "light", 17);
-        module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 0, false, "light", 18);
-        module("Integrations", "integrations", "PayFast and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "light", 19);
-        module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "light", 20);
+
+        AppModule mCases = module("Case Management", "cases", "Matters, status, courts, and parties.", "practice", "⚖️", 0, true, "solo", 1);
+        module("Client CRM", "clients", "Every relationship the firm is responsible for.", "practice", "👥", 0, true, "solo", 2);
+        module("Contacts", "contacts", "Opposing counsel, judges, vendors.", "practice", "📇", 0, true, "solo", 3);
+        module("Calendar", "calendar", "Hearings, depositions, and filing deadlines.", "practice", "📅", 0, true, "solo", 4);
+        module("Tasks", "tasks", "Work that has an owner and a due date.", "practice", "✅", 0, true, "solo", 5);
+        module("Documents", "documents", "Case files with privilege flags.", "documents", "📄", 0, true, "solo", 6);
+        module("Time Tracking", "timetracking", "Timers and 6-minute increments.", "financial", "⏱️", 0, true, "solo", 7);
+        module("Billing & Invoices", "billing", "Draft, send, and record payment.", "financial", "💰", 0, true, "solo", 8);
+        module("Messaging", "messages", "Internal threads tied to matters.", "communication", "💬", 0, true, "solo", 9);
+        AppModule mTrust = module("Trust Accounting", "trust", "Included in every plan. Per-client section 86 or IOLTA ledgers. Not a separate month-end charge.", "financial", "🏦", 0, true, "solo", 10);
+        module("Expenses", "expenses", "Costs advanced and billed back.", "financial", "🧾", 0, false, "solo", 11);
+        module("Client Portal", "clientportal", "Clients see their case, files, and invoices.", "communication", "🌐", 0, false, "solo", 12);
+        module("E-Signatures", "esignatures", "Send retainers out for in-app signature. No DocuSign key required.", "documents", "✍️", 0, false, "solo", 13);
+        module("Conflict Check", "conflicts", "Search clients, parties, and counsel.", "compliance", "🔍", 0, true, "solo", 14);
+        module("Reports", "reports", "Realization, pipeline, and aging.", "analytics", "📈", 0, true, "solo", 15);
+        module("Draft help", "ai", "Draft help on this tenant. The attorney remains responsible. No vendor key in the default build.", "analytics", "✨", 0, false, "solo", 16);
+        AppModule mVoice = module("Voice Calling", "voice", "In-app calls are included. Public-network minutes are pay-what-you-use. No minute bundle and no unlimited voice.", "communication", "📞", 0, true, "solo", 17);
+        module("Document Templates", "templates", "Merge letters and pleadings with matter fields.", "documents", "📝", 0, false, "solo", 18);
+        module("Integrations", "integrations", "PayFast and Twilio stay off until the operator sets keys in the environment.", "platform", "🔌", 0, false, "solo", 19);
+        module("Audit Log", "audit", "Who changed what, and when.", "compliance", "📋", 0, true, "solo", 20);
 
         if (!demoData) {
             // Production: plans and modules only. No demo firms, no known passwords.
@@ -1035,6 +1040,25 @@ public class DemoDataLoader implements CommandLineRunner {
         }
         user(firm.getId(), "ops@legalsuite.pro", "password", "Platform", "Operator", "superadmin", "Platform operator", "0", "", "");
         publicSites.ensureDraft(firm);
+    }
+
+    static String planFeatures(Pricing.PlanSpec spec) {
+        return "{\"currency\":\"ZAR\",\"perAttorney\":true"
+                + ",\"maxAttorneys\":" + (spec.maxAttorneys() == null ? "null" : spec.maxAttorneys())
+                + ",\"trustIncluded\":true"
+                + ",\"websiteIncluded\":" + spec.websiteIncluded()
+                + ",\"aiActionsPerAttorney\":" + spec.aiActionsPerAttorney()
+                + ",\"staffSeats\":" + spec.staffSeats()
+                + ",\"staffSeatMonthlyZar\":" + Pricing.STAFF_SEAT_MONTHLY_ZAR
+                + ",\"callRecording\":" + spec.callRecording()
+                + ",\"prioritySupport\":" + spec.prioritySupport()
+                + ",\"includedPstnMinutes\":0"
+                + ",\"callPerMinuteZar\":" + Pricing.CALL_PER_MINUTE_ZAR
+                + ",\"landlineMonthlyZar\":" + Pricing.LANDLINE_MONTHLY_ZAR
+                + ",\"landlinePerMinuteZar\":" + Pricing.LANDLINE_PER_MINUTE_ZAR
+                + (spec.websiteIncluded() ? "" : ",\"websiteAddonMonthlyZar\":" + Pricing.SOLO_WEBSITE_MONTHLY_ZAR
+                        + ",\"websiteAddonSetupZar\":" + Pricing.SOLO_WEBSITE_SETUP_ZAR)
+                + "}";
     }
 
     private Plan plan(String name, String slug, String desc, int price, int users, int cases, int mins, int order) {

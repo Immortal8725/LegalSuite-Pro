@@ -43,7 +43,7 @@ public class ProductBillingController {
 
     @PostMapping("/api/v1/product-billing/seats/checkout")
     public ApiResponse<?> seatCheckout(@RequestBody(required = false) Map<String, Object> body) {
-        return ApiResponse.ok(checkout.seatCheckout(seats(body)));
+        return ApiResponse.ok(checkout.seatCheckout(seats(body), staffSeats(body)));
     }
 
     @PostMapping("/api/v1/product-billing/token/checkout")
@@ -71,6 +71,15 @@ public class ProductBillingController {
             return ResponseEntity.ok("OK");
         }
         return ResponseEntity.badRequest().body(outcome.reason());
+    }
+
+    private static int staffSeats(Map<String, Object> body) {
+        if (body == null || body.get("staffSeats") == null || String.valueOf(body.get("staffSeats")).isBlank()) return 0;
+        try {
+            return Integer.parseInt(String.valueOf(body.get("staffSeats")).trim());
+        } catch (NumberFormatException ex) {
+            throw ApiException.badRequest("Staff seats must be a whole number");
+        }
     }
 
     private static int seats(Map<String, Object> body) {

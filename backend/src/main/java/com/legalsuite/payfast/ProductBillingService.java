@@ -1,5 +1,6 @@
 package com.legalsuite.payfast;
 
+import com.legalsuite.service.Pricing;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.BillingAccount;
 import com.legalsuite.domain.ProductPayment;
@@ -29,6 +30,13 @@ public class ProductBillingService {
         this.minutes = minutes;
     }
 
+    private com.legalsuite.service.TenantPlans tenantPlans;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setTenantPlans(com.legalsuite.service.TenantPlans tenantPlans) {
+        this.tenantPlans = tenantPlans;
+    }
+
     public Map<String, Object> status() {
         ProductBillingAccess.requireStaff();
         var tenantId = TenantContext.requireTenant();
@@ -41,8 +49,17 @@ public class ProductBillingService {
         m.put("missing", props.missingCheckoutSettings());
         m.put("passphraseSet", props.getPassphrase() != null && !props.getPassphrase().isBlank());
         m.put("canManage", ProductBillingAccess.canManage());
-        m.put("seatPriceCents", PayFastMoney.LIGHT_SEAT_CENTS);
-        m.put("seatPrice", PayFastMoney.formatRands(PayFastMoney.LIGHT_SEAT_CENTS));
+        Pricing.PlanSpec plan = tenantPlans == null ? Pricing.FIRM : tenantPlans.planFor(tenantId);
+        long seatCents = PayFastMoney.planSeatCents(plan.slug());
+        m.put("planSlug", plan.slug());
+        m.put("planName", plan.name());
+        m.put("planSummary", plan.summary());
+        m.put("maxAttorneys", plan.maxAttorneys());
+        m.put("staffSeatsAllowed", plan.staffSeats());
+        m.put("seatPriceCents", seatCents);
+        m.put("seatPrice", PayFastMoney.formatRands(seatCents));
+        m.put("staffSeatPriceCents", PayFastMoney.STAFF_SEAT_CENTS);
+        m.put("staffSeatPrice", PayFastMoney.formatRands(PayFastMoney.STAFF_SEAT_CENTS));
         m.put("seatCount", account == null ? 0 : account.getSeatCount());
         m.put("seatStatus", account == null ? "inactive" : account.getSeatStatus());
         m.put("seatActiveUntil", account == null ? null : account.getSeatActiveUntil());
@@ -58,7 +75,7 @@ public class ProductBillingService {
         m.put("tokenHint", token.length() < 4 ? null : token.substring(token.length() - 4));
         m.put("payments", payments.findByTenantIdOrderByCreatedAtDesc(tenantId).stream().limit(20).map(this::payment).toList());
         m.put("minutes", minutes.findByTenantIdOrderByPeriodDesc(tenantId).stream().limit(12).map(MinutesChargeJob::view).toList());
-        m.put("note", "PayFast Aggregation bills the Owlaw Light seat and public-network minutes. Client fee invoices and trust receipts are not collected here. The operator issues the VAT tax invoice. The R1,199 seat is not grossed up inside PayFast.");
+        m.put("note", "PayFast Aggregation bills the Owlaw plan (per attorney), staff seats and phone minutes. Prices exclude VAT. Client fee invoices and trust receipts are not collected here. The operator issues the VAT tax invoice.");
         return m;
     }
 
