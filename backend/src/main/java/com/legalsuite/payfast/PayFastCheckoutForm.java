@@ -41,7 +41,7 @@ public final class PayFastCheckoutForm {
         String description = seats == 1 ? "1 attorney seat" : seats + " attorney seats";
         List<PayFastSignature.Field> fields = base(
                 props, firstName, lastName, email, mPaymentId, amount,
-                "LegalSuite Light seat", description, String.valueOf(seats), tenantId, "seat");
+                "Owlaw Light seat", description, String.valueOf(seats), tenantId, "seat");
         fields.add(new PayFastSignature.Field("subscription_type", SUBSCRIPTION_RECURRING));
         fields.add(new PayFastSignature.Field("billing_date", billingDate.toString()));
         fields.add(new PayFastSignature.Field("recurring_amount", amount));
@@ -59,7 +59,7 @@ public final class PayFastCheckoutForm {
             String mPaymentId) {
         List<PayFastSignature.Field> fields = base(
                 props, firstName, lastName, email, mPaymentId, "0.00",
-                "LegalSuite card token", "Card on file for phone minutes", "0", tenantId, "token");
+                "Owlaw card token", "Card on file for phone minutes", "0", tenantId, "token");
         fields.add(new PayFastSignature.Field("subscription_type", SUBSCRIPTION_TOKEN));
         return finish(props, "token", null, mPaymentId, 0L, "0.00", fields);
     }

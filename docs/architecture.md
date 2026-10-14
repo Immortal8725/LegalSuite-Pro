@@ -1,6 +1,6 @@
 # Architecture
 
-LegalSuite Pro is a **modular monolith**. One Spring Boot process owns every bounded context (auth, practice, finance, voice, comms, and draft help). One Next.js app is the attorney desk, public landing pages, client portal, and e-sign surface.
+Owlaw is a **modular monolith**. One Spring Boot process owns every bounded context (auth, practice, finance, voice, comms, and draft help). One Next.js app is the attorney desk, public landing pages, client portal, and e-sign surface.
 
 ```
 Browser / PWA / Flutter

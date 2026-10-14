@@ -114,7 +114,7 @@ export default function ProductBillingPage() {
     <div>
       <PageHeader
         title="Product billing"
-        subtitle="PayFast collects the LegalSuite Light seat and public-network minutes. Client fee invoices and trust receipts are not charged here."
+        subtitle="PayFast collects the Owlaw Light seat and public-network minutes. Client fee invoices and trust receipts are not charged here."
       />
       <ErrorBanner error={error} />
       {status && (

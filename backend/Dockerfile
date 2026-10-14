@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
     && useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin legalsuite \
     && mkdir -p /app/uploads && chown -R legalsuite:legalsuite /app
 WORKDIR /app
-COPY --from=build --chown=legalsuite:legalsuite /src/target/api-1.0.0.jar app.jar
+COPY --from=build --chown=legalsuite:legalsuite /src/target/owlaw-api-1.0.0.jar app.jar
 USER legalsuite
 ENV PORT=18081 \
     LEGALSUITE_UPLOAD_DIR=/app/uploads \

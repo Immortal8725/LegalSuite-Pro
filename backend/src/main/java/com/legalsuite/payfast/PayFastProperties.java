@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * PayFast Aggregation credentials for LegalSuite product billing.
+ * PayFast Aggregation credentials for Owlaw product billing.
  * Values come from the process environment. They are never written to the database.
  */
 @Component

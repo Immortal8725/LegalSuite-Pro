@@ -34,7 +34,7 @@ class PayFastCheckoutFormTest {
         assertEquals("0", value(built, "cycles"));
         assertEquals("1199.00", value(built, "recurring_amount"));
         assertEquals("seat", value(built, "custom_str2"));
-        assertEquals("4f8a7cac2b0c50c7bf3e8584c750cc04", value(built, "signature"));
+        assertEquals("dcef8513f8c97f3cd1084ef7d24f9cc1", value(built, "signature"));
         assertTrue(built.fields().stream().noneMatch(field -> "passphrase".equals(field.name())));
         assertTrue(PayFastSignature.matches(built.fields(), "sandbox-passphrase", value(built, "signature")));
     }

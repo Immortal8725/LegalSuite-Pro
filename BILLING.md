@@ -1,6 +1,6 @@
 # Product billing (PayFast Aggregation)
 
-LegalSuite charges firms for the product. That is separate from client fee invoices and from section 86 / IOLTA trust. Client invoices stay on **Client invoices**. Trust stays on **Trust Accounting**. This document is only the operator's bill: the Light seat, and public-network minutes.
+Owlaw charges firms for the product. That is separate from client fee invoices and from section 86 / IOLTA trust. Client invoices stay on **Client invoices**. Trust stays on **Trust Accounting**. This document is only the operator's bill: the Light seat, and public-network minutes.
 
 PayFast Aggregation is the payments provider. Stripe is not used for this bill. PayGate is not used.
 

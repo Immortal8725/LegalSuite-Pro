@@ -3,12 +3,12 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "LegalSuite Pro",
+  title: "Owlaw",
   description: "Practice desk for a solo South African attorney. Light is R1,199 per month. The phone is pay-what-you-use.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "LegalSuite Pro",
+    title: "Owlaw",
     statusBarStyle: "default",
   },
 };

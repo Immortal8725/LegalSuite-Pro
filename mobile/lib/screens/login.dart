@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 32),
-              const Text('LegalSuite Pro',
+              const Text('Owlaw',
                   style: TextStyle(color: Color(0xFFC6A052), fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2)),
               const SizedBox(height: 8),
               const Text('The docket in your pocket.',

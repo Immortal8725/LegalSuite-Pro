@@ -85,7 +85,7 @@ export default function WebsiteSettingsPage() {
     <div>
       <PageHeader
         title="Public site"
-        subtitle="Choose branding and which pages to ask for. A LegalSuite operator approves an enable before it appears on the public site."
+        subtitle="Choose branding and which pages to ask for. A Owlaw operator approves an enable before it appears on the public site."
         actions={
           site?.publishStatus === "published" ? (
             <Link href={`/firm/${site.slug}`} className="text-sm font-semibold text-navy underline">

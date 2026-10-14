@@ -30,7 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PayFastItnServiceTest {
     private static final UUID TENANT = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private static final String SIGNATURE = "dbca3407feb0e9743dfd61dc6e1b5d29";
+    private static final String SIGNATURE = "9f74df8f55162a3260f4cc305424f71c";
 
     @Mock BillingAccountRepository accounts;
     @Mock ProductPaymentRepository payments;
@@ -203,7 +203,7 @@ class PayFastItnServiceTest {
                 field("m_payment_id", "seat-abc"),
                 field("pf_payment_id", "1089250"),
                 field("payment_status", "COMPLETE"),
-                field("item_name", "LegalSuite Light seat"),
+                field("item_name", "Owlaw Light seat"),
                 field("amount_gross", "1199.00"),
                 field("amount_fee", "-27.58"),
                 field("amount_net", "1171.42"),

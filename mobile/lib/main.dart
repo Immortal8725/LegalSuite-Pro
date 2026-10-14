@@ -17,7 +17,7 @@ class LegalSuiteApp extends StatelessWidget {
     const navy = Color(0xFF1A365D);
     const gold = Color(0xFFC6A052);
     return MaterialApp(
-      title: 'LegalSuite Pro',
+      title: 'Owlaw',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: navy, primary: navy, secondary: gold),
         textTheme: GoogleFonts.sourceSans3TextTheme(),

@@ -21,8 +21,8 @@ public final class Totp {
 
     public static String otpauthUrl(String email, String secret) {
         String acct = email == null ? "user" : email.replace(" ", "%20");
-        return "otpauth://totp/LegalSuitePro:" + acct + "?secret=" + secret
-                + "&issuer=LegalSuitePro&digits=6&period=30";
+        return "otpauth://totp/Owlaw:" + acct + "?secret=" + secret
+                + "&issuer=Owlaw&digits=6&period=30";
     }
 
     public static boolean verify(String secret, String code) {

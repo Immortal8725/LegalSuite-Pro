@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Firm product-billing account. This is the LegalSuite seat, not a client fee invoice or a trust ledger. */
+/** Firm product-billing account. This is the Owlaw seat, not a client fee invoice or a trust ledger. */
 @Entity
 @Table(name = "billing_accounts")
 @Getter

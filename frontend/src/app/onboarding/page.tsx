@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="border-b bg-white px-8 py-4 font-bold text-navy">LegalSuite Pro setup · {tenant?.firmName}</div>
+      <div className="border-b bg-white px-8 py-4 font-bold text-navy">Owlaw setup · {tenant?.firmName}</div>
       <div className="mx-auto max-w-2xl px-6 py-10">
         <div className="mb-8 flex gap-2">
           {STEPS.map((s, i) => (

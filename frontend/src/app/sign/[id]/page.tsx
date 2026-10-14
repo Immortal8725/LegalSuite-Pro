@@ -42,7 +42,7 @@ export default function PublicSignPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">
             <Scale className="h-4 w-4" />
           </span>
-          LegalSuite Pro
+          OwLaw
         </div>
         <ErrorBanner error={error} />
         {!doc && !error && <p className="text-sm text-slate-600">Loading the document…</p>}

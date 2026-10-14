@@ -153,7 +153,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Scale className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-bold">LegalSuite Pro</p>
+            <p className="text-sm font-bold">OwLaw</p>
             <p className="text-[11px] text-white/50">{tenant?.firmName}</p>
           </div>
         </div>

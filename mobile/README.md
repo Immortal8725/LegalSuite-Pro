@@ -1,4 +1,4 @@
-# LegalSuite Pro Flutter client (Phase 6)
+# Owlaw Flutter client (Phase 6)
 
 Attorney mobile slice against the same Spring Boot API as the web app.
 

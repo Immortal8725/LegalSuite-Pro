@@ -331,7 +331,7 @@ export default function SettingsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>LegalSuite product billing</CardTitle>
+            <CardTitle>Owlaw product billing</CardTitle>
           </CardHeader>
           <CardBody>
             <p className="mb-3 text-sm text-slate-600">

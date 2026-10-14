@@ -38,7 +38,7 @@ public class HealthService {
         body.put("database", database);
         body.put("databaseUp", databaseUp);
         body.put("postgresProfile", postgresProfile);
-        body.put("service", "legalsuite-api");
+        body.put("service", "owlaw-api");
         return body;
     }
 }

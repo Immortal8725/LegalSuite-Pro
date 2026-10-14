@@ -32,7 +32,7 @@ export default function MarketingPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">
             <Scale className="h-4 w-4" />
           </span>
-          Legal<span className="text-gold">Suite</span> Pro
+          Ow<span className="text-gold">Law</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-navy">
@@ -48,6 +48,7 @@ export default function MarketingPage() {
       </nav>
 
       <section className="mx-auto max-w-4xl px-6 pb-16 pt-10 text-center">
+        <p className="text-base font-semibold text-navy">Eyes on every matter.</p>
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">For a solo South African attorney</p>
         <h1 className="mt-3 text-4xl font-extrabold leading-tight text-navy sm:text-5xl">
           One seat at R1,199 a month. The docket watches RAF and Act 40. The phone is what you use.
