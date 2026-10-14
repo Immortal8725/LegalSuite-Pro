@@ -34,7 +34,7 @@ class PayFastCheckoutFormTest {
         assertEquals("0", value(built, "cycles"));
         assertEquals("1199.00", value(built, "recurring_amount"));
         assertEquals("seat", value(built, "custom_str2"));
-        assertEquals("dcef8513f8c97f3cd1084ef7d24f9cc1", value(built, "signature"));
+        assertEquals("87001462d721de7b82412ddb5c8c93e2", value(built, "signature"));
         assertTrue(built.fields().stream().noneMatch(field -> "passphrase".equals(field.name())));
         assertTrue(PayFastSignature.matches(built.fields(), "sandbox-passphrase", value(built, "signature")));
     }
@@ -47,6 +47,26 @@ class PayFastCheckoutFormTest {
         assertEquals("2398.00", built.amount());
         assertEquals("2", value(built, "custom_int1"));
         assertEquals("2 attorney seats", value(built, "item_description"));
+    }
+
+    @Test
+    void soloPracticeAndStaffSeatsPriceCorrectly() {
+        PayFastCheckoutForm.Built solo = PayFastCheckoutForm.seat(
+                props("sandbox"), TENANT, "Thabo", "Ndlovu", "thabo@ndlovulaw.co.za", "seat-solo", "solo", 1, 0, LocalDate.parse("2026-10-05"));
+        assertEquals("899.00", solo.amount());
+        assertEquals("Owlaw Solo plan", value(solo, "item_name"));
+        PayFastCheckoutForm.Built practice = PayFastCheckoutForm.seat(
+                props("sandbox"), TENANT, "Thabo", "Ndlovu", "thabo@ndlovulaw.co.za", "seat-pr", "practice", 2, 3, LocalDate.parse("2026-10-05"));
+        assertEquals(2 * 159_900L + 3 * 34_900L, practice.amountCents());
+        assertEquals("3", value(practice, "custom_int2"));
+        assertEquals("2 attorney seats, 3 staff seats", value(practice, "item_description"));
+        PayFastCheckoutForm.Built legacy = PayFastCheckoutForm.seat(
+                props("sandbox"), TENANT, "Thabo", "Ndlovu", "thabo@ndlovulaw.co.za", "seat-l", "light", 1, 0, LocalDate.parse("2026-10-05"));
+        assertEquals("Owlaw Firm plan", value(legacy, "item_name"));
+        org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, () -> PayFastCheckoutForm.seat(
+                props("sandbox"), TENANT, "a", "b", "a@b.co.za", "x", "solo", 2, 0, LocalDate.parse("2026-10-05")));
+        org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, () -> PayFastCheckoutForm.seat(
+                props("sandbox"), TENANT, "a", "b", "a@b.co.za", "x", "solo", 1, 1, LocalDate.parse("2026-10-05")));
     }
 
     @Test

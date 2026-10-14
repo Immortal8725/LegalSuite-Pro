@@ -55,7 +55,7 @@ export default function UsagePage() {
     <div>
       <PageHeader
         title="Month-end usage"
-        subtitle="Light is the monthly seat and includes section 86 trust. Public-network minutes, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
+        subtitle="Your plan is billed per attorney and includes section 86 trust. Calls at R1.49 a minute, SMS, and WhatsApp are pay-what-you-use. There is no minute bundle. Email through the firm's SMTP server is not metered."
       />
       <ErrorBanner error={error} />
       <p className="mb-4 text-sm text-slate-600">

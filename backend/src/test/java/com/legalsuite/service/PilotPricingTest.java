@@ -32,8 +32,19 @@ class PilotPricingTest {
         assertEquals(0, Pricing.capIncludedMinutes(null));
         assertEquals(0, Pricing.capIncludedMinutes(-1));
         assertEquals(0, Pricing.INCLUDED_PSTN_MINUTES);
-        assertEquals(new BigDecimal("1199"), Pricing.LIGHT_MONTHLY_ZAR);
-        assertEquals(new BigDecimal("79"), Pricing.DID_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("899"), Pricing.SOLO_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("1199"), Pricing.FIRM_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("1599"), Pricing.PRACTICE_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("349"), Pricing.STAFF_SEAT_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("1.49"), Pricing.CALL_PER_MINUTE_ZAR);
+        assertEquals(new BigDecimal("149"), Pricing.LANDLINE_MONTHLY_ZAR);
+        assertEquals(new BigDecimal("8.90"), Pricing.LANDLINE_PER_MINUTE_ZAR);
+        assertEquals("firm", Pricing.canonicalSlug("light"));
+        assertEquals("solo", Pricing.canonicalSlug("Solo"));
+        assertEquals(Pricing.FIRM, Pricing.plan("light"));
+        assertEquals(new BigDecimal("899"), Pricing.monthlyTotal("solo", 1, 0));
+        assertEquals(new BigDecimal("3096"), Pricing.monthlyTotal("firm", 2, 2));
+        assertEquals(new BigDecimal("4797"), Pricing.monthlyTotal("practice", 3, 0));
         assertEquals(new BigDecimal("4200"), RetainService.resolveRetainer(null, null, new BigDecimal("4200")));
         assertEquals(new BigDecimal("5000"), RetainService.resolveRetainer("5000", null, new BigDecimal("4200")));
         assertEquals(BigDecimal.ZERO, RetainService.resolveRetainer(null, null, null));
@@ -63,19 +74,21 @@ class PilotPricingTest {
     }
 
     @Test
-    void lightIsTheOnlySeatAndHasNoMinuteBundle() throws Exception {
+    void threePlansSoloFirmPracticeWithNoMinuteBundle() throws Exception {
         mvc.perform(get("/api/v1/plans"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].slug").value("light"))
-                .andExpect(jsonPath("$.data[0].name").value("Light"))
-                .andExpect(jsonPath("$.data[0].priceMonthly").value(1199))
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].slug").value("solo"))
+                .andExpect(jsonPath("$.data[0].name").value("Solo"))
+                .andExpect(jsonPath("$.data[0].priceMonthly").value(899))
                 .andExpect(jsonPath("$.data[0].maxUsers").value(1))
                 .andExpect(jsonPath("$.data[0].includedVoiceMinutes").value(0))
                 .andExpect(jsonPath("$.data[0].currency").value("ZAR"))
-                .andExpect(jsonPath("$.data[0].phoneBilling").value("pay-what-you-use"))
-                .andExpect(jsonPath("$.data[0].didMonthly").value(79))
-                .andExpect(jsonPath("$.data[0].trustIncluded").value(true));
+                .andExpect(jsonPath("$.data[0].trustIncluded").value(true))
+                .andExpect(jsonPath("$.data[1].slug").value("firm"))
+                .andExpect(jsonPath("$.data[1].priceMonthly").value(1199))
+                .andExpect(jsonPath("$.data[2].slug").value("practice"))
+                .andExpect(jsonPath("$.data[2].priceMonthly").value(1599));
     }
 
     @Test
