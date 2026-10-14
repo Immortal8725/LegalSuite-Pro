@@ -42,7 +42,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       <div className="hidden flex-1 flex-col justify-center bg-gradient-to-br from-navy-dark via-navy to-navy-light px-16 text-white lg:flex">
         <h1 className="text-5xl font-extrabold">
-          Ow<span className="text-gold">Law</span>
+          <span>Ow<span className="text-gold">Law</span></span>
         </h1>
         <p className="mt-3 text-xl text-white/80">Built for South African firms. Texas still runs on the other tenant.</p>
         <ul className="mt-10 list-disc space-y-3 pl-5 text-white/85">

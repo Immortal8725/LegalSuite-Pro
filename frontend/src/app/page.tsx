@@ -32,7 +32,7 @@ export default function MarketingPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">
             <Scale className="h-4 w-4" />
           </span>
-          Ow<span className="text-gold">Law</span>
+          <span>Ow<span className="text-gold">Law</span></span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-navy">
