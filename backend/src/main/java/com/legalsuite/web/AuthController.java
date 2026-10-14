@@ -68,6 +68,11 @@ public class AuthController {
         return ApiResponse.ok(auth.totpConfirm(body), "Authenticator enabled");
     }
 
+    @PostMapping("/password")
+    public ApiResponse<Map<String, Object>> changePassword(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(auth.changePassword(body), "Password changed");
+    }
+
     @PostMapping("/totp/disable")
     public ApiResponse<Map<String, Object>> totpDisable(@RequestBody(required = false) Map<String, Object> body) {
         return ApiResponse.ok(auth.totpDisable(body == null ? Map.of() : body), "Authenticator disabled");

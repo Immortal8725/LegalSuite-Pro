@@ -2,6 +2,7 @@ package com.legalsuite.service;
 
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
+import com.legalsuite.common.Roles;
 import com.legalsuite.common.TenantContext;
 import com.legalsuite.domain.AppModule;
 import com.legalsuite.domain.CallRecord;
@@ -157,6 +158,7 @@ public class UsageService {
 
     @Transactional
     public Map<String, Object> issue() {
+        Roles.requireTenantAdmin("Only a firm owner or admin can issue the firm's usage invoice.");
         YearMonth month = YearMonth.now();
         UUID tid = TenantContext.requireTenant();
         String period = month.toString();
@@ -181,6 +183,7 @@ public class UsageService {
 
     @Transactional
     public Map<String, Object> pay(UUID id) {
+        Roles.requireTenantAdmin("Only a firm owner or admin can mark the firm's usage invoice paid.");
         UsageInvoice inv = invoices.findById(id)
                 .filter(u -> u.getTenantId().equals(TenantContext.requireTenant()))
                 .orElseThrow(() -> ApiException.notFound("Usage invoice not found"));

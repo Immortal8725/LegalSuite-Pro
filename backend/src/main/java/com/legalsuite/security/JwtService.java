@@ -35,6 +35,7 @@ public class JwtService {
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole())
                 .claim("name", user.getFullName())
+                .claim("pwc", user.mustChangePassword())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessMs))
                 .signWith(key)
@@ -60,6 +61,8 @@ public class JwtService {
                 .subject(user.getId().toString())
                 .claim("tenantId", user.getTenantId().toString())
                 .claim("type", "refresh")
+                // Unique id: two sign-ins in the same second must not mint the same refresh token.
+                .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshMs))
                 .signWith(key)

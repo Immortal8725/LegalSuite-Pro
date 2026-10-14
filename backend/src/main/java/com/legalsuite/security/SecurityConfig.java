@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -38,6 +40,10 @@ public class SecurityConfig {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"success\":false,\"message\":\"Sign in required\"}");
+                }).accessDeniedHandler((request, response, denied) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"message\":\"You do not have access to this.\"}");
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh",
@@ -57,7 +63,18 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
+                        // Client portal tokens only ever reach the portal endpoints.
+                        .requestMatchers("/api/v1/portal/**").hasRole("CLIENT")
+                        // Every other route is staff-only: a portal (client) token is refused.
+                        .anyRequest().access((authentication, context) -> {
+                            var current = authentication.get();
+                            boolean staff = current != null
+                                    && current.isAuthenticated()
+                                    && !(current instanceof AnonymousAuthenticationToken)
+                                    && current.getAuthorities().stream()
+                                            .noneMatch(a -> "ROLE_CLIENT".equals(a.getAuthority()));
+                            return new AuthorizationDecision(staff);
+                        }))
                 .headers(h -> h.frameOptions(f -> f.disable()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

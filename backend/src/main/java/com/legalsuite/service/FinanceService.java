@@ -314,6 +314,8 @@ public class FinanceService {
     }
 
     public List<Map<String, Object>> trustLedger(UUID accountId) {
+        trusts.findByIdAndTenantId(accountId, tid())
+                .orElseThrow(() -> ApiException.notFound("Trust account not found"));
         return trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), accountId).stream()
                 .map(tx -> {
                     Map<String, Object> m = new HashMap<>();

@@ -38,6 +38,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (token != null && !token.isBlank()) {
                 try {
                     Claims claims = jwtService.parse(token);
+                    if ("refresh".equals(claims.get("type", String.class))) {
+                        throw new IllegalArgumentException("refresh token used as access token");
+                    }
                     UUID userId = UUID.fromString(claims.getSubject());
                     UUID tenantId = UUID.fromString(claims.get("tenantId", String.class));
                     String role = claims.get("role", String.class);
@@ -51,6 +54,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + (role == null ? "STAFF" : role.toUpperCase()))));
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                    if (Boolean.TRUE.equals(claims.get("pwc", Boolean.class)) && !passwordChangeAllowed(request)) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write(
+                                "{\"success\":false,\"code\":\"password_change_required\",\"message\":\"Change your temporary password before you continue.\"}");
+                        return;
+                    }
                 } catch (Exception ignored) {
                     // invalid token; continue unauthenticated
                 }
@@ -60,5 +70,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             TenantContext.clear();
             SecurityContextHolder.clearContext();
         }
+    }
+
+    private static boolean passwordChangeAllowed(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.equals("/api/v1/auth/password")
+                || path.equals("/api/v1/auth/me")
+                || path.equals("/api/v1/auth/logout");
     }
 }
