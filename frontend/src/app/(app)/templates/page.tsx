@@ -11,6 +11,7 @@ import type { DocTemplate, Matter, Party } from "@/lib/types";
 export default function TemplatesPage() {
   const [rows, setRows] = useState<DocTemplate[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", category: "correspondence", body: "" });
   const [active, setActive] = useState<DocTemplate | null>(null);
@@ -37,7 +38,7 @@ export default function TemplatesPage() {
       {rows.length === 0 ? (
         <EmptyState title="No templates" body="Add an engagement letter or status update the firm sends every week." />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="space-y-3">
             {rows.map((t) => (
               <button
@@ -64,7 +65,7 @@ export default function TemplatesPage() {
                   value={active.body}
                   onChange={(e) => setActive({ ...active, body: e.target.value })}
                 />
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Select value={caseId} onChange={(e) => setCaseId(e.target.value)}>
                     <option value="">Matter (optional)</option>
                     {cases.map((c) => (
@@ -123,20 +124,24 @@ export default function TemplatesPage() {
         </div>
       )}
       <Dialog
+        error={dialogError}
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setDialogError(null);
+        }}
         title="New template"
         footer={
           <Button
             onClick={async () => {
-              setError(null);
+              setDialogError(null);
               try {
                 await apiPost("/api/v1/templates", form);
                 setOpen(false);
                 setForm({ name: "", category: "correspondence", body: "" });
                 load();
               } catch (err) {
-                setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+                setDialogError(err instanceof Error ? err.message : "Something went wrong. Try again.");
               }
             }}
           >

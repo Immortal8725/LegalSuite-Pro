@@ -239,11 +239,17 @@ public class AuthService {
             refreshTokens.delete(stored);
             throw ApiException.unauthorized("Refresh token expired");
         }
+        // Single use: if two requests race with the same token, only one gets a new session.
+        if (refreshTokens.consume(stored.getId()) == 0) {
+            throw ApiException.unauthorized("Session already refreshed");
+        }
         AppUser user = users.findById(stored.getUserId())
                 .orElseThrow(() -> ApiException.unauthorized("User not found"));
+        if (!"active".equals(user.getStatus())) {
+            throw ApiException.unauthorized("This account is no longer active");
+        }
         Tenant tenant = tenants.findById(user.getTenantId())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
-        refreshTokens.delete(stored);
         return tokens(user, tenant);
     }
 

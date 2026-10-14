@@ -194,7 +194,7 @@ export default function CaseDetailPage() {
         }
       />
       <ErrorBanner error={error} />
-      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-xl border bg-white p-4">
           <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Client</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.clientName || "Client not named"}</p>
@@ -232,12 +232,12 @@ export default function CaseDetailPage() {
           </p>
         </div>
       )}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Overview</CardTitle>
           </CardHeader>
-          <CardBody className="grid gap-3 text-sm sm:grid-cols-2">
+          <CardBody className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
             <p>
               <span className="text-slate-600">Court</span>
               <br />
@@ -398,13 +398,14 @@ export default function CaseDetailPage() {
               {(c.documents || []).length === 0 && <p className="text-slate-600">No files on this matter yet.</p>}
               {(c.documents || []).map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
-                  <div>
-                    <p className="font-semibold">{d.name}</p>
+                  <div className="min-w-0">
+                    <p className="break-all font-semibold">{d.name}</p>
                     <p className="text-xs text-slate-600">{d.category}</p>
                   </div>
                   <button
                     type="button"
-                    className="text-xs font-semibold text-navy underline"
+                    aria-label={`Download ${d.name}`}
+                    className="shrink-0 text-xs font-semibold text-navy underline"
                     onClick={() => downloadFile(d.id, d.name)}
                   >
                     Download

@@ -41,6 +41,7 @@ export default function TrustPage() {
     "Date,Description,Amount,Balance\n2026-09-01,Balance brought forward,0,438250.00\n2026-09-02,Unidentified transfer,-11750.00,438250.00"
   );
   const [error, setError] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [feeOpen, setFeeOpen] = useState(false);
   const [openInvoices, setOpenInvoices] = useState<Invoice[]>([]);
   const [fee, setFee] = useState({ invoiceId: "", amount: "", note: "" });
@@ -117,7 +118,7 @@ export default function TrustPage() {
           <CardHeader>
             <CardTitle>{unbalanced ? "Three-way unbalanced. Do not certify" : "Three-way balanced"}</CardTitle>
           </CardHeader>
-          <CardBody className="grid gap-4 sm:grid-cols-3 text-sm">
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm">
             <div>
               <p className="text-xs text-slate-600">Bank statement</p>
               <p className="text-xl font-extrabold">{moneyExact(live.bankBalance)}</p>
@@ -140,7 +141,7 @@ export default function TrustPage() {
           </CardBody>
         </Card>
       )}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {accounts.map((a) => (
           <button
             key={a.id}
@@ -262,20 +263,24 @@ export default function TrustPage() {
               : "Withdrawals come off one client's ledger, so pick the matter. To pay an invoice from trust, use Apply trust to fee."}
         </p>
         <Label className="mt-3">Amount</Label>
-        <Input type="number" value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} />
+        <Input aria-label="Amount" type="number" value={move.amount} onChange={(e) => setMove({ ...move, amount: e.target.value })} />
         <Label className="mt-3">Memo</Label>
-        <Input value={move.description} onChange={(e) => setMove({ ...move, description: e.target.value })} />
+        <Input aria-label="Memo" value={move.description} onChange={(e) => setMove({ ...move, description: e.target.value })} />
       </Dialog>
       <Dialog
+        error={dialogError}
         open={feeOpen}
-        onClose={() => setFeeOpen(false)}
+        onClose={() => {
+          setFeeOpen(false);
+          setDialogError(null);
+        }}
         title="Apply trust to a fee invoice"
         footer={
           <Button
             onClick={async () => {
               if (!acct || !fee.invoiceId) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/invoices/${fee.invoiceId}/apply-trust`, {
                   accountId: acct.id,
                   amount: fee.amount,
@@ -284,7 +289,7 @@ export default function TrustPage() {
                 setFeeOpen(false);
                 await load();
               } catch (e) {
-                setError(e instanceof Error ? e.message : "Could not apply trust");
+                setDialogError(e instanceof Error ? e.message : "Could not apply trust");
               }
             }}
           >
@@ -318,19 +323,23 @@ export default function TrustPage() {
           </p>
         )}
         <Label className="mt-3">Amount</Label>
-        <Input value={fee.amount} onChange={(e) => setFee({ ...fee, amount: e.target.value })} />
+        <Input aria-label="Amount" value={fee.amount} onChange={(e) => setFee({ ...fee, amount: e.target.value })} />
         <Label className="mt-3">Note</Label>
-        <Input value={fee.note} onChange={(e) => setFee({ ...fee, note: e.target.value })} />
+        <Input aria-label="Note" value={fee.note} onChange={(e) => setFee({ ...fee, note: e.target.value })} />
       </Dialog>
       <Dialog
+        error={dialogError}
         open={bankOpen}
-        onClose={() => setBankOpen(false)}
+        onClose={() => {
+          setBankOpen(false);
+          setDialogError(null);
+        }}
         title="Three-way recon"
         footer={
           <Button
             onClick={async () => {
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost("/api/v1/trust/reconcile", {
                   accountId: acct?.id,
                   bankBalance: bank.bankBalance || live?.bankBalance,
@@ -340,7 +349,7 @@ export default function TrustPage() {
                 setBankOpen(false);
                 load();
               } catch (e) {
-                setError(e instanceof Error ? e.message : "Could not save recon");
+                setDialogError(e instanceof Error ? e.message : "Could not save recon");
               }
             }}
           >
@@ -360,23 +369,27 @@ export default function TrustPage() {
           placeholder={live ? String(live.bankBalance) : ""}
         />
         <Label className="mt-3">Explanation</Label>
-        <Textarea value={bank.notes} onChange={(e) => setBank({ ...bank, notes: e.target.value })} />
+        <Textarea aria-label="Explanation" value={bank.notes} onChange={(e) => setBank({ ...bank, notes: e.target.value })} />
       </Dialog>
       <Dialog
+        error={dialogError}
         open={csvOpen}
-        onClose={() => setCsvOpen(false)}
+        onClose={() => {
+          setCsvOpen(false);
+          setDialogError(null);
+        }}
         title="Import bank statement CSV"
         wide
         footer={
           <Button
             onClick={async () => {
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost("/api/v1/trust/bank-import", { accountId: acct?.id, csv });
                 setCsvOpen(false);
                 load();
               } catch (e) {
-                setError(e instanceof Error ? e.message : "Could not import CSV");
+                setDialogError(e instanceof Error ? e.message : "Could not import CSV");
               }
             }}
           >
@@ -394,13 +407,13 @@ export default function TrustPage() {
           accept=".csv,text/csv,text/plain"
           className="mb-3 block text-sm"
           onChange={async (e) => {
-            setError(null);
+            setDialogError(null);
             try {
               const file = e.target.files?.[0];
               if (!file) return;
               setCsv(await file.text());
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+              setDialogError(err instanceof Error ? err.message : "Something went wrong. Try again.");
             }
           }}
         />

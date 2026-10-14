@@ -127,7 +127,7 @@ export default function VoicePage() {
       <ErrorBanner error={error} />
       {notice && <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{notice}</p>}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Calls logged", usage?.totalCalls ?? 0],
           ["WebRTC (free)", usage?.webrtcCalls ?? 0],
@@ -259,7 +259,7 @@ export default function VoicePage() {
             )}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div>
               <h3 className="mb-2 text-sm font-bold text-navy">Verify a personal number</h3>
               <p className="mb-3 text-xs text-slate-600">
@@ -294,7 +294,7 @@ export default function VoicePage() {
             <div>
               <h3 className="mb-2 text-sm font-bold text-navy">Rent a local number (optional)</h3>
               <p className="mb-3 text-xs text-slate-600">Optional. Search Twilio if you want a separate local number. Dialing does not require a purchase.</p>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <Label>Country</Label>
                   <Select aria-label="Country" value={country} onChange={(e) => setCountry(e.target.value)}>
@@ -367,7 +367,7 @@ export default function VoicePage() {
             <p className="mb-3 text-xs text-slate-600">
               Your mobile rings first. When you answer, we connect the other party and they see the automatic caller ID, or the one you pick. This is not a browser softphone. Emergency numbers stay on the handset dialer. Buying a number is optional.
             </p>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <Label>Number to call</Label>
                 <Input aria-label="Number to call" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="082 555 0199" />

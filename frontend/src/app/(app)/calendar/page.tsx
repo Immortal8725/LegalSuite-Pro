@@ -99,15 +99,15 @@ export default function CalendarPage() {
         <div className="space-y-3">
           <Label>Title</Label>
           <Input aria-label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+          <Select aria-label="Event type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             <option value="hearing">Hearing</option>
             <option value="deadline">Deadline</option>
             <option value="deposition">Deposition</option>
             <option value="meeting">Meeting</option>
             <option value="consultation">Consultation</option>
           </Select>
-          <Input type="datetime-local" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
-          <Input placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <Input type="datetime-local" aria-label="Start time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />
+          <Input aria-label="Location" placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
         </div>
       </Dialog>
     </div>

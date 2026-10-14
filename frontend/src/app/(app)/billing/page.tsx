@@ -42,6 +42,7 @@ export default function BillingPage() {
   const [generating, setGenerating] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [payFor, setPayFor] = useState<Invoice | null>(null);
   const [payForm, setPayForm] = useState({ amount: "", method: "eft", paidAt: today(), reference: "", note: "" });
   const [writeFor, setWriteFor] = useState<Invoice | null>(null);
@@ -188,7 +189,7 @@ export default function BillingPage() {
                   <StatusBadge status={i.status} />
                 </Td>
                 <Td className="space-x-2 whitespace-nowrap">
-                  <button className="text-sm font-semibold text-navy" onClick={() => setExpanded(expanded === i.id ? null : i.id)}>
+                  <button className="text-sm font-semibold text-navy" aria-expanded={expanded === i.id} onClick={() => setExpanded(expanded === i.id ? null : i.id)}>
                     {expanded === i.id ? "Hide" : "Detail"}
                   </button>
                   {i.status === "draft" && (
@@ -257,7 +258,7 @@ export default function BillingPage() {
                       <span className="font-semibold">Balance {moneyExact(i.balanceDue)}</span>
                     </div>
                     {i.notes && <p className="px-4 pb-3 text-xs text-slate-600">{i.notes}</p>}
-                    <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 px-4 pb-4 md:grid-cols-2">
                       <div>
                         <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">Payments</p>
                         {(i.payments || []).length === 0 ? (
@@ -381,20 +382,24 @@ export default function BillingPage() {
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!payFor}
-        onClose={() => setPayFor(null)}
+        onClose={() => {
+          setPayFor(null);
+          setDialogError(null);
+        }}
         title="Record payment"
         footer={
           <Button
             onClick={async () => {
               if (!payFor) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/invoices/${payFor.id}/payments`, payForm);
                 setPayFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not record the payment"));
+                setDialogError(message(e, "Could not record the payment"));
               }
             }}
           >
@@ -408,23 +413,27 @@ export default function BillingPage() {
         <Label>Amount</Label>
         <Input aria-label="Amount" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
-        <Select value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}>
+        <Select aria-label="Method" value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })}>
           <option value="eft">EFT</option>
           <option value="cash">Cash</option>
           <option value="card">Card</option>
           <option value="other">Other</option>
         </Select>
         <Label className="mt-3">Date</Label>
-        <Input type="date" value={payForm.paidAt} onChange={(e) => setPayForm({ ...payForm, paidAt: e.target.value })} />
+        <Input aria-label="Date" type="date" value={payForm.paidAt} onChange={(e) => setPayForm({ ...payForm, paidAt: e.target.value })} />
         <Label className="mt-3">Reference</Label>
-        <Input value={payForm.reference} onChange={(e) => setPayForm({ ...payForm, reference: e.target.value })} />
+        <Input aria-label="Reference" value={payForm.reference} onChange={(e) => setPayForm({ ...payForm, reference: e.target.value })} />
         <Label className="mt-3">Note</Label>
-        <Input value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} />
+        <Input aria-label="Note" value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} />
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!writeFor}
-        onClose={() => setWriteFor(null)}
+        onClose={() => {
+          setWriteFor(null);
+          setDialogError(null);
+        }}
         title="Write off balance"
         footer={
           <Button
@@ -432,12 +441,12 @@ export default function BillingPage() {
             onClick={async () => {
               if (!writeFor) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/invoices/${writeFor.id}/write-off`, writeForm);
                 setWriteFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not write off the balance"));
+                setDialogError(message(e, "Could not write off the balance"));
               }
             }}
           >
@@ -451,24 +460,28 @@ export default function BillingPage() {
         <Label>Amount</Label>
         <Input aria-label="Amount" value={writeForm.amount} onChange={(e) => setWriteForm({ ...writeForm, amount: e.target.value })} />
         <Label className="mt-3">Reason</Label>
-        <Textarea value={writeForm.reason} onChange={(e) => setWriteForm({ ...writeForm, reason: e.target.value })} placeholder="Why this balance is being written off" />
+        <Textarea aria-label="Reason" value={writeForm.reason} onChange={(e) => setWriteForm({ ...writeForm, reason: e.target.value })} placeholder="Why this balance is being written off" />
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!trustFor}
-        onClose={() => setTrustFor(null)}
+        onClose={() => {
+          setTrustFor(null);
+          setDialogError(null);
+        }}
         title="Apply trust to fees"
         footer={
           <Button
             onClick={async () => {
               if (!trustFor) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/invoices/${trustFor.id}/apply-trust`, trustForm);
                 setTrustFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not apply trust"));
+                setDialogError(message(e, "Could not apply trust"));
               }
             }}
           >
@@ -499,24 +512,28 @@ export default function BillingPage() {
           ))}
         </Select>
         <Label className="mt-3">Amount</Label>
-        <Input value={trustForm.amount} onChange={(e) => setTrustForm({ ...trustForm, amount: e.target.value })} />
+        <Input aria-label="Amount" value={trustForm.amount} onChange={(e) => setTrustForm({ ...trustForm, amount: e.target.value })} />
         <Label className="mt-3">Note</Label>
-        <Input value={trustForm.note} onChange={(e) => setTrustForm({ ...trustForm, note: e.target.value })} />
+        <Input aria-label="Note" value={trustForm.note} onChange={(e) => setTrustForm({ ...trustForm, note: e.target.value })} />
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!proofFor}
-        onClose={() => setProofFor(null)}
+        onClose={() => {
+          setProofFor(null);
+          setDialogError(null);
+        }}
         title="Add proof of payment"
         footer={
           <Button
             onClick={async () => {
               if (!proofFor || !proofFile) {
-                setError("Choose a PDF, JPEG, or PNG.");
+                setDialogError("Choose a PDF, JPEG, or PNG.");
                 return;
               }
               try {
-                setError(null);
+                setDialogError(null);
                 const fd = new FormData();
                 fd.append("file", proofFile);
                 if (proofForm.amount) fd.append("amount", proofForm.amount);
@@ -526,7 +543,7 @@ export default function BillingPage() {
                 setProofFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not submit the proof"));
+                setDialogError(message(e, "Could not submit the proof"));
               }
             }}
           >
@@ -544,28 +561,32 @@ export default function BillingPage() {
           onChange={(e) => setProofFile(e.target.files?.[0] || null)}
         />
         <Label className="mt-3">Amount claimed</Label>
-        <Input value={proofForm.amount} onChange={(e) => setProofForm({ ...proofForm, amount: e.target.value })} />
+        <Input aria-label="Amount claimed" value={proofForm.amount} onChange={(e) => setProofForm({ ...proofForm, amount: e.target.value })} />
         <Label className="mt-3">Reference</Label>
-        <Input value={proofForm.reference} onChange={(e) => setProofForm({ ...proofForm, reference: e.target.value })} />
+        <Input aria-label="Reference" value={proofForm.reference} onChange={(e) => setProofForm({ ...proofForm, reference: e.target.value })} />
         <Label className="mt-3">Note</Label>
-        <Input value={proofForm.note} onChange={(e) => setProofForm({ ...proofForm, note: e.target.value })} />
+        <Input aria-label="Note" value={proofForm.note} onChange={(e) => setProofForm({ ...proofForm, note: e.target.value })} />
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!acceptFor}
-        onClose={() => setAcceptFor(null)}
+        onClose={() => {
+          setAcceptFor(null);
+          setDialogError(null);
+        }}
         title="Accept proof of payment"
         footer={
           <Button
             onClick={async () => {
               if (!acceptFor) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/payment-proofs/${acceptFor.id}/accept`, acceptForm);
                 setAcceptFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not accept the proof"));
+                setDialogError(message(e, "Could not accept the proof"));
               }
             }}
           >
@@ -579,19 +600,23 @@ export default function BillingPage() {
         <Label>Amount</Label>
         <Input aria-label="Amount" value={acceptForm.amount} onChange={(e) => setAcceptForm({ ...acceptForm, amount: e.target.value })} />
         <Label className="mt-3">Method</Label>
-        <Select value={acceptForm.method} onChange={(e) => setAcceptForm({ ...acceptForm, method: e.target.value })}>
+        <Select aria-label="Method" value={acceptForm.method} onChange={(e) => setAcceptForm({ ...acceptForm, method: e.target.value })}>
           <option value="eft">EFT</option>
           <option value="cash">Cash</option>
           <option value="card">Card</option>
           <option value="other">Other</option>
         </Select>
         <Label className="mt-3">Note</Label>
-        <Input value={acceptForm.note} onChange={(e) => setAcceptForm({ ...acceptForm, note: e.target.value })} />
+        <Input aria-label="Note" value={acceptForm.note} onChange={(e) => setAcceptForm({ ...acceptForm, note: e.target.value })} />
       </Dialog>
 
       <Dialog
+        error={dialogError}
         open={!!rejectFor}
-        onClose={() => setRejectFor(null)}
+        onClose={() => {
+          setRejectFor(null);
+          setDialogError(null);
+        }}
         title="Reject proof of payment"
         footer={
           <Button
@@ -599,12 +624,12 @@ export default function BillingPage() {
             onClick={async () => {
               if (!rejectFor) return;
               try {
-                setError(null);
+                setDialogError(null);
                 await apiPost(`/api/v1/payment-proofs/${rejectFor.id}/reject`, { note: rejectNote });
                 setRejectFor(null);
                 await load();
               } catch (e) {
-                setError(message(e, "Could not reject the proof"));
+                setDialogError(message(e, "Could not reject the proof"));
               }
             }}
           >

@@ -104,7 +104,7 @@ export default function ExpensesPage() {
           ))}
         </Select>
         <Label className="mt-3">Category</Label>
-        <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+        <Select aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
           <option>filing fees</option>
           <option>travel</option>
           <option>expert fees</option>

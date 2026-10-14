@@ -54,7 +54,7 @@ export default function MessagesPage() {
           New thread
         </Button>
       </div>
-      <div className="grid min-h-[480px] gap-4 lg:grid-cols-[280px_1fr]">
+      <div className="grid grid-cols-1 min-h-[480px] gap-4 lg:grid-cols-[280px_1fr]">
         <Card>
           <CardBody className="p-0">
             {threads.length === 0 ? (

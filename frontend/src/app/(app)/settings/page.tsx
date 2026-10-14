@@ -95,7 +95,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Profile</CardTitle>
           </CardHeader>
-          <CardBody className="grid gap-4 sm:grid-cols-2">
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Firm name</Label>
               <Input aria-label="Firm name" value={form.firmName} onChange={(e) => setForm({ ...form, firmName: e.target.value })} />
@@ -148,7 +148,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>{za ? "Fidelity Fund Certificate (LPA s 84)" : "Bar / IOLTA enrolment"}</CardTitle>
           </CardHeader>
-          <CardBody className="grid gap-4 sm:grid-cols-2">
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <p className="sm:col-span-2 text-sm text-slate-600">
               {za
                 ? "Trust money cannot move on a South African tenant without a current FFC on this record."
@@ -187,7 +187,7 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>{za ? "POPIA information officer and PAIA manual" : "Privacy officer"}</CardTitle>
           </CardHeader>
-          <CardBody className="grid gap-4 sm:grid-cols-2">
+          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label>Information officer</Label>
               <Input aria-label="Information officer"
@@ -300,7 +300,7 @@ export default function SettingsPage() {
               </>
             )}
             {user?.totpEnabled && (
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div>
                   <Label>Current code or password</Label>
                   <Input aria-label="Current code or password" value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="Authenticator code" />

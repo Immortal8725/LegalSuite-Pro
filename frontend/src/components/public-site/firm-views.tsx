@@ -217,7 +217,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="ps-hero bg-[var(--ps-paper)]">
-        <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-24 pt-14 lg:grid-cols-12 lg:pb-28 lg:pt-20">
+        <div className="mx-auto grid grid-cols-1 max-w-6xl items-center gap-14 px-6 pb-24 pt-14 lg:grid-cols-12 lg:pb-28 lg:pt-20">
           <div className="ps-hero-copy lg:col-span-7">
             <p className="ps-kicker text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--ps-meta)]">{place(site) || "Law firm"}</p>
             <HeroHeadline text={site.tagline || site.firmName} />
@@ -281,7 +281,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
               <SectionTitle kicker="The firm" title="People" />
               <Link href={href(base, "/people")} className="text-sm font-medium text-[var(--ps-body)] underline decoration-[var(--ps-line)] underline-offset-4">Directory</Link>
             </div>
-            <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
               {site.people.map((person, index) => (
                 <PersonCard key={person.id} person={person} base={base} index={index} />
               ))}
@@ -294,7 +294,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
         <section className="bg-[var(--ps-paper)]">
           <div className="mx-auto max-w-6xl px-6 py-24 lg:py-28">
             <SectionTitle kicker="Reading" title="Insights" />
-            <div className="mt-12 grid gap-8 md:grid-cols-2">
+            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
               {site.insights.map((article) => (
                 <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
                   <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
@@ -309,7 +309,7 @@ function Home({ site, base }: { site: PublicSite; base: string }) {
 
       {features.has("booking") ? (
         <section className="bg-[var(--ps-cream)]">
-          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-2 lg:py-28">
+          <div className="mx-auto grid grid-cols-1 max-w-6xl gap-12 px-6 py-24 lg:grid-cols-2 lg:py-28">
             <div>
               <SectionTitle kicker="Instruct the firm" title="Make an enquiry" />
               <p className="mt-6 max-w-md text-lg leading-relaxed text-[var(--ps-body)]">Tell the firm what happened. A conflict check comes before any mandate.</p>
@@ -414,7 +414,7 @@ function People({ site, base }: { site: PublicSite; base: string }) {
               ))}
             </div>
           </div>
-          <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((person, index) => (
               <PersonCard key={person.id} person={person} base={base} index={index} />
             ))}
@@ -434,7 +434,7 @@ function Person({ site, base }: { site: PublicSite; base: string }) {
   }
   return (
     <>
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-12">
+      <div className="mx-auto grid grid-cols-1 max-w-6xl gap-10 px-6 py-16 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <div className={floatShadow} style={{ transform: "rotate(-1.25deg)" }}>
             <Portrait initials={person.initials} name={person.fullName} src={portraitSrc(person.fullName)} />
@@ -484,7 +484,7 @@ function Insights({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Insights" title="Notes from the firm" lede="Short notes for general reading. They are not advice on your matter." />
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-12 md:grid-cols-2">
+      <div className="mx-auto grid grid-cols-1 max-w-6xl gap-6 px-6 py-12 md:grid-cols-2">
         {(site.insights || []).map((article) => (
           <Link key={article.slug} href={href(base, `/insights/${article.slug}`)} className={`ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 ${floatShadow}`}>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--ps-meta)]">{article.type} / {article.date}</p>
@@ -548,7 +548,7 @@ function Contact({ site, base }: { site: PublicSite; base: string }) {
   return (
     <>
       <PageIntro kicker="Contact" title="Talk to the firm" lede={place(site) ? `The office is in ${place(site)}.` : undefined} />
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-2">
+      <div className="mx-auto grid grid-cols-1 max-w-6xl gap-8 px-6 py-12 lg:grid-cols-2">
         <div className="ps-panel border border-[var(--ps-line)] bg-[var(--ps-card)] p-8 text-sm text-[var(--ps-body)]">
           <p className="text-2xl text-[var(--ps-ink)]" style={serifStyle}>{site.firmName}</p>
           <p className="mt-4">{[site.addressLine1, site.city, site.state, site.zip].filter(Boolean).join(", ")}</p>

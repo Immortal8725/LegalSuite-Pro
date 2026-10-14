@@ -7,6 +7,8 @@ export PGPASSWORD=${DB_PASSWORD:-legalsuite}
 psql -h 127.0.0.1 -U legalsuite -d postgres -qc "drop database if exists $DB"
 psql -h 127.0.0.1 -U legalsuite -d postgres -qc "create database $DB"
 cd "$(dirname "$0")/.."
+# The postgres profile has no default credentials, so pass them explicitly.
 LEGALSUITE_DEMO_DATA=true SPRING_PROFILES_ACTIVE=postgres DATABASE_URL=jdbc:postgresql://127.0.0.1:5432/$DB \
+  DB_USER=legalsuite DB_PASSWORD="$PGPASSWORD" \
   LEGALSUITE_JWT_SECRET=${LEGALSUITE_JWT_SECRET:-test-only-$(date +%s)-not-for-production-use-xxxxxxxx} \
   ./mvnw -B test

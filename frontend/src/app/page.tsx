@@ -66,7 +66,7 @@ export default function MarketingPage() {
       </section>
 
       <section className="bg-slate-50 py-16">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid grid-cols-1 max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(([title, body]) => (
             <div key={title} className="rounded-2xl bg-white p-6 shadow-card">
               <h3 className="font-bold text-navy">{title}</h3>

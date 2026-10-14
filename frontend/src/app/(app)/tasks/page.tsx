@@ -41,7 +41,7 @@ export default function TasksPage() {
     <div>
       <PageHeader title="Tasks" subtitle="Move a card by changing its status." actions={<Button onClick={openDialog}>Add task</Button>} />
       <ErrorBanner error={error} />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         {COLS.map((col) => (
           <div key={col} className="rounded-xl bg-slate-100 p-3">
             <p className="mb-3 text-xs font-bold uppercase text-slate-600">
