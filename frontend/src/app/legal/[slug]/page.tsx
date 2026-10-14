@@ -28,7 +28,7 @@ export default function LegalPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">
             <Scale className="h-4 w-4" />
           </span>
-          Legal<span className="text-gold">Suite</span> Pro
+          <span>Ow<span className="text-gold">Law</span></span>
         </Link>
         <Link href="/legal/privacy" className="text-sm font-semibold text-sky-600">
           Legal pack

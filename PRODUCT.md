@@ -1,8 +1,8 @@
-# LegalSuite Pro
+# Owlaw
 
 **Status:** Solo South African pilot. The Light seat and the hosted Postgres path are in the repo. Twilio KYC, PayFast merchant signup, a domain, and TLS are still operator work.  
 **Source of truth for what the product is.** Run instructions live in [README.md](README.md). Architecture in [docs/architecture.md](docs/architecture.md).  
-**Effective:** 16 September 2026. Operator: LegalSuite Pro (the software described in this repository).
+**Effective:** 16 September 2026. Operator: Owlaw (the software described in this repository).
 
 A multi-tenant practice system for a solo South African attorney. A firm registers once. It gets a public website, an intake form, a docket that watches statutory clocks, a hire gate that will not let an unsigned file appear, and a trust ledger that cannot spend another client’s money. Light is R1,199 per month for one attorney and includes section 86 trust. In-app calls are included. Public-network minutes are pay-what-you-use. There is no minute bundle and no unlimited voice. A local number is optional at about R79 per month, or bundled when the operator includes it.
 
@@ -62,7 +62,7 @@ Trust-to-fee withdraws from that client's section 86 or IOLTA ledger through the
 
 Proof of payment is a PDF, JPEG, or PNG up to 10 MB, stored with the firm's other uploads. Status runs `pending_review`, then `accepted` or `rejected`. Accept records one real payment (EFT, cash, card, or other) for an amount within the balance due. A later accept of the same proof leaves that payment in place. Reject keeps the file and requires a note, and the invoice balance stays as it was. Clients can submit a slip from the portal. Staff review the queue on Billing.
 
-The firm remains the merchant of record for client fee invoices. Card collection for the LegalSuite subscription is separate and is not part of this ledger.
+The firm remains the merchant of record for client fee invoices. Card collection for the Owlaw subscription is separate and is not part of this ledger.
 
 ---
 
@@ -158,7 +158,7 @@ Not in the product: live Open Banking, a SANAS-accredited signature, CaseLines o
 
 ## 10. Legal pack
 
-These texts are the product’s public legal documents. They apply to **LegalSuite Pro the software** (the operator of this repository and any production domain that serves it). They do **not** replace a firm’s own engagement letter, PAIA manual, or FFC.
+These texts are the product’s public legal documents. They apply to **Owlaw the software** (the operator of this repository and any production domain that serves it). They do **not** replace a firm’s own engagement letter, PAIA manual, or FFC.
 
 Publish these ten documents on the public site at `/legal/{slug}` (footer on `/`). Long-form control copy is this file.
 
@@ -170,7 +170,7 @@ Governing law for the **operator-customer** relationship: Republic of South Afri
 
 ### 10.1 Privacy & Cookie Policy
 
-**Controller:** the operator of LegalSuite Pro.  
+**Controller:** the operator of Owlaw.  
 **Information officer (demo / until production appointment):** the firm owner on the tenant; for the operator, the address published on the marketing site.
 
 **What we process**
@@ -216,7 +216,7 @@ We may suspend a tenant that breaks this policy. Trust ledgers are not deleted s
 
 ### 10.3 Event Privacy Policy
 
-Applies if LegalSuite Pro hosts a webinar, launch, or in-person event.
+Applies if Owlaw hosts a webinar, launch, or in-person event.
 
 - We collect name, email, firm, and dietary/access needs you give us.
 - Purpose: run the event, send joining instructions, follow up once.
@@ -287,7 +287,7 @@ Applies to people who open `/`, `/firm/{slug}`, `/legal/*`, or send an intake wi
 
 Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
 
-- The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **LegalSuite Pro subscriptions and minute charges**.
+- The firm is the merchant of record for **client fee invoices** unless we say otherwise in an order form. The operator is the merchant of record for **Owlaw subscriptions and minute charges**.
 - Chargebacks: you must keep the engagement and invoice that support the debit.
 - Refunds of unused subscription days: as on the invoice. Public-network minutes already used are not refundable.
 - PCI: we do not store a raw card number in this repository. Checkout is hosted by PayFast. The server may store the PayFast token.
@@ -299,7 +299,7 @@ Applies when the operator takes card payments for the Light seat or phone-minute
 
 ### 10.9 Data Processing Agreement (operator)
 
-This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible party)** and **LegalSuite Pro (operator)** for personal information in the tenant.
+This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible party)** and **Owlaw (operator)** for personal information in the tenant.
 
 1. **Subject.** Hosting of client files, ledgers, users, signatures, and logs.
 2. **Instructions.** Process only to provide the product, backups, and security. No secondary marketing.
@@ -318,7 +318,7 @@ This DPA is the POPIA ss 20–22 operator terms between **the firm (responsible 
 
 | Party | Role | Data | Status in this repo |
 | --- | --- | --- | --- |
-| Operator (LegalSuite Pro) | Host, support | Tenant database | In product |
+| Operator (Owlaw) | Host, support | Tenant database | In product |
 | Vercel (optional) | Web front end | Request logs, cookies | UI can publish; API needs a JVM |
 | PostgreSQL host (optional) | Database | All tenant rows | `docker-compose` / postgres profile; **not** default |
 | PayFast Aggregation | Light seat subscription and phone-minute charges | Billing token, payment ids, amount | Keys via environment. Sandbox until live KYC. Toggle is not a live account. |

@@ -85,7 +85,7 @@ export default function BillingPage() {
     <div>
       <PageHeader
         title="Billing & invoices"
-        subtitle="Draft from unbilled time and expenses. Record payments, write-offs, trust applied to fees, and proof of payment. This is not the LegalSuite seat or the phone-minute charge."
+        subtitle="Draft from unbilled time and expenses. Record payments, write-offs, trust applied to fees, and proof of payment. This is not the Owlaw seat or the phone-minute charge."
         actions={
           <Button
             onClick={() => {

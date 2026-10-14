@@ -10,7 +10,7 @@ export const LEGAL_DOCS: LegalDoc[] = [
     slug: "privacy",
     title: "Privacy & Cookie Policy",
     section: "10.1",
-    body: `Controller: the operator of LegalSuite Pro.
+    body: `Controller: the operator of Owlaw.
 
 What we process
 - Account data: name, email, firm slug, role, hashed password, optional TOTP secret.
@@ -48,7 +48,7 @@ We may suspend a tenant that breaks this policy. Trust ledgers are not deleted s
     slug: "event-privacy",
     title: "Event Privacy Policy",
     section: "10.3",
-    body: `Applies if LegalSuite Pro hosts a webinar, launch, or in-person event.
+    body: `Applies if Owlaw hosts a webinar, launch, or in-person event.
 
 - We collect name, email, firm, and dietary/access needs you give us.
 - Purpose: run the event, send joining instructions, follow up once.
@@ -116,7 +116,7 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     section: "10.8",
     body: `Applies when the operator takes card payments for the Light seat or phone-minute charges through PayFast Aggregation.
 
-- The firm is the merchant of record for client fee invoices unless an order form says otherwise. The operator is the merchant of record for LegalSuite Pro subscriptions and minute charges.
+- The firm is the merchant of record for client fee invoices unless an order form says otherwise. The operator is the merchant of record for Owlaw subscriptions and minute charges.
 - Chargebacks: keep the engagement and invoice that support the debit.
 - PCI: this repository does not store a raw card number. Checkout is hosted by PayFast. The server stores the PayFast token, not the card.
 - VAT: the operator issues its own tax invoice. PayFast is not asked to add VAT on top of the R1,199 seat.
@@ -127,7 +127,7 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     slug: "dpa",
     title: "Data Processing Agreement",
     section: "10.9",
-    body: `POPIA ss 20–22 operator terms between the firm (responsible party) and LegalSuite Pro (operator).
+    body: `POPIA ss 20–22 operator terms between the firm (responsible party) and Owlaw (operator).
 
 1. Subject. Hosting of client files, ledgers, users, signatures, and logs.
 2. Instructions. Process only to provide the product, backups, and security. No secondary marketing.
@@ -142,7 +142,7 @@ The assistant does not invent case-law citations as fact. Deadlines follow the m
     slug: "subprocessors",
     title: "Service Providers, Sub-processors, and Affiliates",
     section: "10.10",
-    body: `Operator (LegalSuite Pro): host and support; tenant database; in product.
+    body: `Operator (Owlaw): host and support; tenant database; in product.
 
 Vercel (optional): web front end; request logs; UI can publish, API needs a JVM.
 

@@ -73,7 +73,7 @@ export default function PlatformSitesPage() {
   if (user?.role !== "superadmin") {
     return (
       <div>
-        <PageHeader title="Site approvals" subtitle="This queue is for the LegalSuite operator." />
+        <PageHeader title="Site approvals" subtitle="This queue is for the Owlaw operator." />
         <p className="text-sm text-slate-600">Sign in as the platform operator to approve public sites.</p>
       </div>
     );

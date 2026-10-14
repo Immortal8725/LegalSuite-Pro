@@ -25,7 +25,7 @@ class PayFastSignatureTest {
                 field("email_address", "thabo@ndlovulaw.co.za"),
                 field("m_payment_id", "seat-abc"),
                 field("amount", "1199.00"),
-                field("item_name", "LegalSuite Light seat"),
+                field("item_name", "Owlaw Light seat"),
                 field("item_description", "1 attorney seat"),
                 field("custom_int1", "1"),
                 field("custom_str1", "11111111-1111-1111-1111-111111111111"),
@@ -40,14 +40,14 @@ class PayFastSignatureTest {
                 + "&cancel_url=https%3A%2F%2Fapp.example.com%2Fproduct-billing%2Fcancel"
                 + "&notify_url=https%3A%2F%2Fapp.example.com%2Fapi%2Fv1%2Fproduct-billing%2Fpayfast%2Fitn"
                 + "&name_first=Thabo&name_last=Ndlovu&email_address=thabo%40ndlovulaw.co.za"
-                + "&m_payment_id=seat-abc&amount=1199.00&item_name=LegalSuite+Light+seat"
+                + "&m_payment_id=seat-abc&amount=1199.00&item_name=Owlaw+Light+seat"
                 + "&item_description=1+attorney+seat&custom_int1=1"
                 + "&custom_str1=11111111-1111-1111-1111-111111111111&custom_str2=seat"
                 + "&subscription_type=1&billing_date=2026-10-05&recurring_amount=1199.00"
                 + "&frequency=3&cycles=0&passphrase=sandbox-passphrase";
         assertEquals(canonical, PayFastSignature.canonical(fields, PASSPHRASE));
-        assertEquals("4f8a7cac2b0c50c7bf3e8584c750cc04", PayFastSignature.sign(fields, PASSPHRASE));
-        assertTrue(PayFastSignature.matches(fields, PASSPHRASE, "4f8a7cac2b0c50c7bf3e8584c750cc04"));
+        assertEquals("dcef8513f8c97f3cd1084ef7d24f9cc1", PayFastSignature.sign(fields, PASSPHRASE));
+        assertTrue(PayFastSignature.matches(fields, PASSPHRASE, "dcef8513f8c97f3cd1084ef7d24f9cc1"));
         assertFalse(PayFastSignature.matches(fields, PASSPHRASE, "00000000000000000000000000000000"));
     }
 
@@ -55,14 +55,14 @@ class PayFastSignatureTest {
     void itnSignatureMatchesTheFixtureAndRejectsATamperedAmount() {
         List<PayFastSignature.Field> fields = itn("1199.00");
         String canonical = "m_payment_id=seat-abc&pf_payment_id=1089250&payment_status=COMPLETE"
-                + "&item_name=LegalSuite+Light+seat&amount_gross=1199.00&amount_fee=-27.58"
+                + "&item_name=Owlaw+Light+seat&amount_gross=1199.00&amount_fee=-27.58"
                 + "&amount_net=1171.42&custom_str1=11111111-1111-1111-1111-111111111111"
                 + "&custom_str2=seat&custom_int1=1&token=00000000-0000-0000-0000-00000000abcd"
                 + "&merchant_id=10000100&passphrase=sandbox-passphrase";
         assertEquals(canonical, PayFastSignature.canonical(fields, PASSPHRASE));
-        assertEquals("dbca3407feb0e9743dfd61dc6e1b5d29", PayFastSignature.sign(fields, PASSPHRASE));
-        assertFalse(PayFastSignature.matches(itn("10.00"), PASSPHRASE, "dbca3407feb0e9743dfd61dc6e1b5d29"));
-        assertFalse(PayFastSignature.matches(fields, "other-passphrase", "dbca3407feb0e9743dfd61dc6e1b5d29"));
+        assertEquals("9f74df8f55162a3260f4cc305424f71c", PayFastSignature.sign(fields, PASSPHRASE));
+        assertFalse(PayFastSignature.matches(itn("10.00"), PASSPHRASE, "9f74df8f55162a3260f4cc305424f71c"));
+        assertFalse(PayFastSignature.matches(fields, "other-passphrase", "9f74df8f55162a3260f4cc305424f71c"));
         assertFalse(PayFastSignature.matches(fields, PASSPHRASE, ""));
     }
 
@@ -73,14 +73,14 @@ class PayFastSignatureTest {
                 PASSPHRASE,
                 "2026-10-05T18:00:00+00:00",
                 "119900",
-                "LegalSuite phone minutes",
+                "Owlaw phone minutes",
                 "2026-09 public-network minutes",
                 "min-abc");
         String canonical = "amount=119900&item_description=2026-09+public-network+minutes"
-                + "&item_name=LegalSuite+phone+minutes&m_payment_id=min-abc&merchant-id=10000100"
+                + "&item_name=Owlaw+phone+minutes&m_payment_id=min-abc&merchant-id=10000100"
                 + "&passphrase=sandbox-passphrase&timestamp=2026-10-05T18%3A00%3A00%2B00%3A00&version=v1";
         assertEquals(canonical, PayFastSignature.canonicalAlphabetical(prepared.signedFields(), PASSPHRASE));
-        assertEquals("e9319ea9356f6f443bb838dc2bbdc872", prepared.signature());
+        assertEquals("687696a0d4f096bca92b558d183408c0", prepared.signature());
     }
 
     @Test
@@ -133,7 +133,7 @@ class PayFastSignatureTest {
                 field("m_payment_id", "seat-abc"),
                 field("pf_payment_id", "1089250"),
                 field("payment_status", "COMPLETE"),
-                field("item_name", "LegalSuite Light seat"),
+                field("item_name", "Owlaw Light seat"),
                 field("amount_gross", gross),
                 field("amount_fee", "-27.58"),
                 field("amount_net", "1171.42"),

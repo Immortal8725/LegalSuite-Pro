@@ -569,7 +569,7 @@ public class PublicSiteService {
     private void requireSuperadmin() {
         String role = TenantContext.getRole();
         if (role == null || !"superadmin".equalsIgnoreCase(role)) {
-            throw ApiException.forbidden("Platform approval is limited to the LegalSuite operator.");
+            throw ApiException.forbidden("Platform approval is limited to the Owlaw operator.");
         }
     }
 

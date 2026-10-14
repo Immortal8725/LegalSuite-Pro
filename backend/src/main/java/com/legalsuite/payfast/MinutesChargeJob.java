@@ -111,7 +111,7 @@ public class MinutesChargeJob {
         PayFastAdhocGateway.AdhocReceipt receipt = gateway.charge(new PayFastAdhocGateway.AdhocCharge(
                 token,
                 usage.cents(),
-                "LegalSuite phone minutes",
+                "Owlaw phone minutes",
                 period + " public-network minutes",
                 mPaymentId));
         if (!receipt.accepted()) {

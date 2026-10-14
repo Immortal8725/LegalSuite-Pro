@@ -1,6 +1,6 @@
 {
-  "name": "LegalSuite Pro",
-  "short_name": "LegalSuite",
+  "name": "Owlaw",
+  "short_name": "Owlaw",
   "description": "Law firm operating system for cases, billing, voice, and a live website.",
   "start_url": "/dashboard",
   "display": "standalone",

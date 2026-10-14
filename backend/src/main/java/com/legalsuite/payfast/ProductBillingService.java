@@ -58,7 +58,7 @@ public class ProductBillingService {
         m.put("tokenHint", token.length() < 4 ? null : token.substring(token.length() - 4));
         m.put("payments", payments.findByTenantIdOrderByCreatedAtDesc(tenantId).stream().limit(20).map(this::payment).toList());
         m.put("minutes", minutes.findByTenantIdOrderByPeriodDesc(tenantId).stream().limit(12).map(MinutesChargeJob::view).toList());
-        m.put("note", "PayFast Aggregation bills the LegalSuite Light seat and public-network minutes. Client fee invoices and trust receipts are not collected here. The operator issues the VAT tax invoice. The R1,199 seat is not grossed up inside PayFast.");
+        m.put("note", "PayFast Aggregation bills the Owlaw Light seat and public-network minutes. Client fee invoices and trust receipts are not collected here. The operator issues the VAT tax invoice. The R1,199 seat is not grossed up inside PayFast.");
         return m;
     }
 

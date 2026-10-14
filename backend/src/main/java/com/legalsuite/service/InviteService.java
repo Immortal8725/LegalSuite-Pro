@@ -166,13 +166,13 @@ public class InviteService {
     }
 
     private static String subject(Tenant tenant) {
-        return "You have been invited to " + tenant.getFirmName() + " on LegalSuite";
+        return "You have been invited to " + tenant.getFirmName() + " on Owlaw";
     }
 
     private static String body(AppUser user, Tenant tenant, String link) {
         String first = user.getFirstName() == null || user.getFirstName().isBlank() ? "there" : user.getFirstName();
         return "Hi " + first + ",\n\n"
-                + tenant.getFirmName() + " has added you to LegalSuite.\n\n"
+                + tenant.getFirmName() + " has added you to Owlaw.\n\n"
                 + "Choose your password here (the link works once and expires in 72 hours):\n"
                 + link + "\n\n"
                 + "Your sign-in email is " + user.getEmail() + " and the firm code is " + tenant.getSlug() + ".\n\n"

@@ -1,4 +1,4 @@
-# LegalSuite Pro deploy checklist
+# Owlaw deploy checklist
 
 Work through this top to bottom for each environment (staging, then production). Tick each line. Nothing here needs a code change.
 
@@ -87,7 +87,7 @@ Flyway creates the schema on an empty database and upgrades an older one (see [d
 
 ## 9. POPIA notes
 
-LegalSuite holds personal information of clients, opposing parties and staff, some of it special personal information (health records in RAF matters, criminal records, identity numbers).
+Owlaw holds personal information of clients, opposing parties and staff, some of it special personal information (health records in RAF matters, criminal records, identity numbers).
 
 - [ ] Each firm records its Information Officer in Settings and registers them with the Information Regulator.
 - [ ] Each firm generates and publishes its PAIA manual from Settings.

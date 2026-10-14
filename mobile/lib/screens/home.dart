@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pages = [_dash(), _cases(), _time(), CallsScreen(api: widget.api)];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('LegalSuite Pro'),
+        title: const Text('Owlaw'),
         actions: [
           IconButton(
             onPressed: () async {

@@ -1,4 +1,4 @@
-# LegalSuite Pro AWS hosting checklist (Cape Town / af-south-1)
+# Owlaw AWS hosting checklist (Cape Town / af-south-1)
 
 Plan for the South Africa production pilot in AWS Cape Town (`af-south-1`). This file is a checklist only. Writing it did not create AWS resources, change application code, or store secrets.
 

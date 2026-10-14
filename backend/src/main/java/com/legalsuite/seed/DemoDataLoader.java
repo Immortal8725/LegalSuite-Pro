@@ -985,7 +985,7 @@ public class DemoDataLoader implements CommandLineRunner {
 
     private Tenant platformTenant(Plan light, String email) {
         Tenant firm = new Tenant();
-        firm.setFirmName("LegalSuite");
+        firm.setFirmName("Owlaw");
         firm.setSlug("legalsuite");
         firm.setEmail(email);
         firm.setCountry("ZA");
@@ -1012,7 +1012,7 @@ public class DemoDataLoader implements CommandLineRunner {
 
     private void seedPlatform(Plan light) {
         Tenant firm = new Tenant();
-        firm.setFirmName("LegalSuite");
+        firm.setFirmName("Owlaw");
         firm.setSlug("legalsuite");
         firm.setEmail("ops@legalsuite.pro");
         firm.setCountry("ZA");
