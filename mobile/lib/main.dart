@@ -1,66 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:legalsuite_mobile/api.dart';
-import 'package:legalsuite_mobile/screens/home.dart';
-import 'package:legalsuite_mobile/screens/login.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
-  runApp(const LegalSuiteApp());
+import 'api/api_client.dart';
+import 'config.dart';
+import 'screens/login.dart';
+import 'screens/shell.dart';
+import 'ui/theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('en_ZA');
+  final api = ApiClient(baseUrl: await AppConfig.loadBaseUrl());
+  runApp(OwlawApp(api: api, signedIn: await api.hasSession()));
 }
 
-class LegalSuiteApp extends StatelessWidget {
-  const LegalSuiteApp({super.key});
-
+class OwlawApp extends StatefulWidget {
+  const OwlawApp({super.key, required this.api, this.signedIn = false});
+  final ApiClient api;
+  final bool signedIn;
   @override
-  Widget build(BuildContext context) {
-    const navy = Color(0xFF1A365D);
-    const gold = Color(0xFFC6A052);
-    return MaterialApp(
-      title: 'Owlaw',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: navy, primary: navy, secondary: gold),
-        textTheme: GoogleFonts.sourceSans3TextTheme(),
-        useMaterial3: true,
-      ),
-      home: const Gate(),
-    );
-  }
+  State<OwlawApp> createState() => _OwlawAppState();
 }
 
-class Gate extends StatefulWidget {
-  const Gate({super.key});
-
-  @override
-  State<Gate> createState() => _GateState();
-}
-
-class _GateState extends State<Gate> {
-  final api = LegalSuiteApi();
-  bool ready = false;
-  bool signedIn = false;
+class _OwlawAppState extends State<OwlawApp> {
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+  late bool signedIn = widget.signedIn;
 
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((p) {
-      setState(() {
-        signedIn = p.getString('ls_access') != null;
-        ready = true;
-      });
-    });
+    widget.api.onSessionExpired = () {
+      if (!mounted) return;
+      setState(() => signedIn = false);
+      _messenger.currentState?.showSnackBar(const SnackBar(content: Text('Your session has ended. Please sign in again.')));
+    };
+  }
+
+  Future<void> _logout() async {
+    await widget.api.logout();
+    if (mounted) setState(() => signedIn = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!ready) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    return signedIn
-        ? HomeScreen(api: api, onLogout: () => setState(() => signedIn = false))
-        : LoginScreen(
-            api: api,
-            onLoggedIn: () => setState(() => signedIn = true),
-          );
+    return MaterialApp(
+      title: 'Owlaw',
+      debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _messenger,
+      theme: owlawTheme(),
+      home: signedIn
+          ? HomeShell(api: widget.api, onLogout: _logout)
+          : LoginScreen(api: widget.api, onSignedIn: () => setState(() => signedIn = true)),
+    );
   }
 }

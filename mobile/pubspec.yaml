@@ -1,5 +1,5 @@
 name: owlaw_mobile
-description: Owlaw attorney app for cases, time, and the docket.
+description: Owlaw attorney app for matters, time, the docket and calls.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -11,12 +11,39 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   shared_preferences: ^2.3.2
-  google_fonts: ^6.2.1
+  flutter_secure_storage: ^9.2.2
+  url_launcher: ^6.3.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon.png
+  adaptive_icon_background: "#1A365D"
+  adaptive_icon_foreground: assets/icon_fg.png
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: assets/icon.png
+    background_color: "#1A365D"
+    theme_color: "#1A365D"
+
+flutter_native_splash:
+  color: "#1A365D"
+  image: assets/splash.png
+  android_12:
+    color: "#1A365D"
+    image: assets/splash.png
+  web: true
