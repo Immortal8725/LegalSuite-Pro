@@ -56,6 +56,17 @@ Flyway creates the schema on an empty database and upgrades an older one (see [d
 - [ ] The proxy must pass `X-Forwarded-For` and `X-Forwarded-Proto`, and must allow WebSocket upgrades on `/ws/` (in-app calls).
 - [ ] In-app call signalling (`/ws/signal`) only accepts browsers whose origin is `APP_URL` or in `CORS_ALLOWED_ORIGINS`, and only with a signed-in staff token. If calls do not connect, check those two values first.
 - [ ] Only the proxy is public. Postgres and the API port stay private.
+- [ ] Set HSTS at the proxy as well, so every response (including proxy error pages) carries it. Caddy sends nothing by default; add it:
+
+  ```
+  app.example.co.za {
+      header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+      reverse_proxy 127.0.0.1:3000
+  }
+  ```
+
+  nginx: `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;` inside the `server { listen 443 ssl; ... }` block, plus a port 80 server that only returns `301 https://$host$request_uri`. Add `preload` only once every subdomain is on HTTPS for good.
+- [ ] The web app sends HSTS on production builds. The API sends it on HTTPS requests; with `FORWARD_HEADERS_STRATEGY=native` it sees the proxy's `X-Forwarded-Proto`. If your proxy cannot forward that header, set `LEGALSUITE_HSTS_ALWAYS=true` (`LEGALSUITE_HSTS_MAX_AGE` changes the age, default one year).
 - [ ] Check the headers: `curl -sI https://app.example.co.za/login` shows `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
 
 ## 5. PayFast (product billing)

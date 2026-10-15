@@ -52,6 +52,10 @@ legalsuite:
     refresh-ms: ${LEGALSUITE_REFRESH_TOKEN_MS:604800000}
   upload-dir: ${LEGALSUITE_UPLOAD_DIR:${user.dir}/uploads}
   # Optional ClamAV (clamd) scan of every document upload. Off when the host is blank. Fails closed when on.
+  # HSTS: always sent on HTTPS requests. Set LEGALSUITE_HSTS_ALWAYS=true when the TLS proxy does not forward X-Forwarded-Proto.
+  hsts:
+    always: ${LEGALSUITE_HSTS_ALWAYS:false}
+    max-age-seconds: ${LEGALSUITE_HSTS_MAX_AGE:31536000}
   clamav:
     host: ${LEGALSUITE_CLAMAV_HOST:}
     port: ${LEGALSUITE_CLAMAV_PORT:3310}

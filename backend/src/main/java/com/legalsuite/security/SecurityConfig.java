@@ -20,6 +20,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.hsts.always:false}")
+    private boolean hstsAlways;
+    @org.springframework.beans.factory.annotation.Value("${legalsuite.hsts.max-age-seconds:31536000}")
+    private long hstsMaxAge;
+
     private final JwtAuthFilter jwtAuthFilter;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
@@ -83,7 +88,12 @@ public class SecurityConfig {
                         .contentTypeOptions(Customizer.withDefaults())
                         .referrerPolicy(r -> r.policy(
                                 org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                        .httpStrictTransportSecurity(hsts -> {
+                            hsts.includeSubDomains(true).maxAgeInSeconds(hstsMaxAge);
+                            // Behind a TLS proxy that does not forward X-Forwarded-Proto, the app cannot see HTTPS.
+                            // LEGALSUITE_HSTS_ALWAYS=true sends the header on every response anyway.
+                            if (hstsAlways) hsts.requestMatcher(r -> true);
+                        })
                         .addHeaderWriter(new org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter(
                                 new org.springframework.security.web.util.matcher.NegatedRequestMatcher(
                                         org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults().matcher("/h2-console/**")),
