@@ -1,5 +1,7 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.UploadPolicy;
+
 import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
@@ -294,16 +296,17 @@ public class PracticeService {
         UUID tenantId = tid();
         Path dir = uploadRoot.resolve(tenantId.toString());
         Files.createDirectories(dir);
-        String stored = UUID.randomUUID() + "-" + file.getOriginalFilename();
-        Path dest = dir.resolve(stored);
+        String display = UploadPolicy.safeName(file.getOriginalFilename(), "document");
+        Path dest = dir.resolve(UploadPolicy.storageName(display)).normalize();
+        if (!dest.startsWith(dir)) throw ApiException.badRequest("Invalid file name.");
         file.transferTo(dest.toFile());
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tenantId);
         doc.setCaseId(caseId);
         doc.setClientId(clientId);
         doc.setUploadedBy(TenantContext.requireUser());
-        doc.setName(file.getOriginalFilename());
-        doc.setOriginalName(file.getOriginalFilename());
+        doc.setName(display);
+        doc.setOriginalName(display);
         doc.setCategory(category == null ? "other" : category);
         doc.setMimeType(file.getContentType());
         doc.setSizeBytes(file.getSize());

@@ -1031,7 +1031,7 @@ public class FinanceService {
     private DocumentFile storeProof(Invoice inv, MultipartFile file) throws IOException {
         Path dir = uploadRoot.resolve(tid().toString());
         Files.createDirectories(dir);
-        String stored = UUID.randomUUID() + "-" + safeName(file.getOriginalFilename());
+        String stored = com.legalsuite.common.UploadPolicy.storageName(file.getOriginalFilename());
         Path dest = dir.resolve(stored).normalize();
         if (!dest.startsWith(uploadRoot)) {
             throw ApiException.badRequest("Invalid file name.");
@@ -1043,7 +1043,7 @@ public class FinanceService {
         doc.setClientId(inv.getClientId());
         doc.setUploadedBy(TenantContext.getUserId());
         doc.setName(safeName(file.getOriginalFilename()));
-        doc.setOriginalName(file.getOriginalFilename());
+        doc.setOriginalName(safeName(file.getOriginalFilename()));
         doc.setCategory("proof_of_payment");
         String mime = file.getContentType() == null ? "application/octet-stream" : file.getContentType();
         doc.setMimeType(mime);
