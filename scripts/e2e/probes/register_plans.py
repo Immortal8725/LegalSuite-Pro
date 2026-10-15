@@ -22,5 +22,5 @@ for plan in ['solo','firm','practice']:
     bad=[(k,('1.00' if k=='amount_gross' else v)) for k,v in base]; bb=urllib.parse.urlencode(bad+[('signature',pfsign(bad))]).encode()
     i_b=req('POST','/api/v1/product-billing/payfast/itn',raw=bb,ctype='application/x-www-form-urlencoded')
     st2=j(req('GET','/api/v1/product-billing',tok=tok)[2]).get('data') or {}
-    R.append(dict(plan=plan,register=s,planOnMe=(me.get('tenant') or {}).get('plan') or me.get('planSlug') or me.get('plan'),checkout=cs,amount=g.get('amount'),item=g.get('item_name'),sigok=sigok,soloStaffRefused=xs,itn=i_s[0],itnBody=i_s[2][:80],replay=i_r[0],tampered=i_b[0],tamperedBody=i_b[2][:80],seatStatus=st2.get('seatStatus'),seatCount=st2.get('seatCount'),staffSeatCount=st2.get('staffSeatCount') or st2.get('staffSeats'),checkoutErr=None if cs==200 else cb[:200]))
+    R.append(dict(plan=plan,register=s,planOnMe=(me.get('tenant') or {}).get('plan') or me.get('planSlug') or me.get('plan'),checkout=cs,amount=g.get('amount'),item=g.get('item_name'),sigok=sigok,soloStaffRefused=xs,itn=i_s[0],itnBody=i_s[2][:80],replay=i_r[0],tampered=i_b[0],tamperedBody=i_b[2][:80],seatStatus=st2.get('seatStatus'),seatCount=st2.get('seatCount'),staffSeatCount=st2.get('staffSeatCount'),staffOk=st2.get('staffSeatCount')==staff,checkoutErr=None if cs==200 else cb[:200]))
 for r in R: print(json.dumps(r,default=str))

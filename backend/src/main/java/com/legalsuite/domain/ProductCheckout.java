@@ -28,6 +28,8 @@ public class ProductCheckout {
     @Column(length = 16)
     private String kind;
     private int seatCount;
+    /** Staff (non-attorney) seats bought in this checkout. Null on rows from before V9. */
+    private Integer staffSeatCount;
     private long amountCents;
     @Column(length = 16)
     private String status = "pending";
