@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface NoteRepository extends JpaRepository<Note, UUID> {
     List<Note> findByTenantIdAndCaseIdOrderByCreatedAtDesc(UUID tenantId, UUID caseId);
     List<Note> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<Note> findByTenantIdAndClientId(UUID tenantId, UUID clientId);
 }

@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TrustTransactionRepository extends JpaRepository<TrustTransaction, UUID> {
     List<TrustTransaction> findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(UUID tenantId, UUID accountId);
+    List<TrustTransaction> findByTenantIdAndClientId(UUID tenantId, UUID clientId);
 }

@@ -10,4 +10,5 @@ public interface DocumentFileRepository extends JpaRepository<DocumentFile, UUID
     List<DocumentFile> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     Optional<DocumentFile> findByIdAndTenantId(UUID id, UUID tenantId);
     List<DocumentFile> findByTenantIdAndCaseId(UUID tenantId, UUID caseId);
+    List<DocumentFile> findByTenantIdAndClientId(UUID tenantId, UUID clientId);
 }
