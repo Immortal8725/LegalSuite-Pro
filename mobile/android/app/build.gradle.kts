@@ -85,10 +85,8 @@ gradle.taskGraph.whenReady {
         throw GradleException("Release signing is not set up. Create android/key.properties or set OWLAW_KEYSTORE_PATH, OWLAW_KEYSTORE_PASSWORD, OWLAW_KEY_ALIAS and OWLAW_KEY_PASSWORD (see mobile/README.md).")
     }
     val api = dartDefines["API_BASE_URL"]
-    if (api.isNullOrBlank()) {
-        throw GradleException("Release builds need --dart-define=API_BASE_URL=https://your-api-host (https://app.owlaw.co.za is only a placeholder).")
-    }
-    if (!api.startsWith("https://")) {
+    // No API_BASE_URL means the app's release default, https://owlaw-api.onrender.com.
+    if (!api.isNullOrBlank() && !api.startsWith("https://")) {
         throw GradleException("API_BASE_URL for a release build must start with https:// (got $api).")
     }
 }

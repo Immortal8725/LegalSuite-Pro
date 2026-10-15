@@ -12,6 +12,7 @@ s,h,bb=req('POST','/api/v1/auth/totp/confirm',{'code':totp(sec)},tok=T); rec('2F
 s,h,bb=req('POST','/api/v1/auth/login',{'firmSlug':slug,'email':f'o@{slug}.co.za','password':pw}); d=j(bb).get('data') or {}
 rec('2FA','Password alone no longer yields a token',not d.get('accessToken'),(s,str(d)[:120]))
 s,h,bb=req('POST','/api/v1/auth/login',{'firmSlug':slug,'email':f'o@{slug}.co.za','password':pw,'totpCode':'123456'}); rec('2FA','Wrong TOTP refused',s>=400 or not (j(bb).get('data') or {}).get('accessToken'),s)
+time.sleep(31-time.time()%30)  # the confirm code is spent (replay guard), so wait for the next 30 s step
 s,h,bb=req('POST','/api/v1/auth/login',{'firmSlug':slug,'email':f'o@{slug}.co.za','password':pw,'totpCode':totp(sec)}); T2=(j(bb).get('data') or {}).get('accessToken'); rec('2FA','Password + TOTP signs in',bool(T2),s)
 code=totp(sec); s1=req('POST','/api/v1/auth/login',{'firmSlug':slug,'email':f'o@{slug}.co.za','password':pw,'totpCode':code})[0]
 rec('2FA','Same TOTP code cannot be used twice (replay guard)', s1==401, s1)

@@ -4,19 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// API base URL. Build-time default comes from --dart-define=API_BASE_URL,
 /// and the attorney can override it on the sign-in screen.
 class AppConfig {
-  /// Release builds must be given --dart-define=API_BASE_URL=https://... (the Gradle build stops otherwise).
-  /// https://app.owlaw.co.za is only a placeholder. Debug builds default to the emulator's view of a local API.
+  /// Release builds default to the live Owlaw API on Render; --dart-define=API_BASE_URL=https://... overrides it.
+  /// Debug builds default to the emulator's view of a local API.
   static const String _define = String.fromEnvironment('API_BASE_URL');
-  static const String releasePlaceholder = 'https://app.owlaw.co.za';
+  static const String releaseDefault = 'https://owlaw-api.onrender.com';
   static String get defaultBaseUrl =>
-      _define.isNotEmpty ? _define : (kReleaseMode ? releasePlaceholder : 'http://10.0.2.2:18081');
+      _define.isNotEmpty ? _define : (kReleaseMode ? releaseDefault : 'http://10.0.2.2:18081');
 
   /// Release builds only talk HTTPS. Returns a message when the address is not allowed, otherwise null.
   static String? checkBaseUrl(String url, {bool release = kReleaseMode}) {
     final u = Uri.tryParse(url.trim());
     if (u == null || !u.hasScheme || u.host.isEmpty) return 'Enter the full address, for example https://app.example.co.za';
     if (u.scheme != 'https' && u.scheme != 'http') return 'The address must start with https://';
-    if (release && u.scheme != 'https') return 'This build only connects over HTTPS.';
+    // Loopback stays allowed for local web test builds; Android release builds also block cleartext in the network security config.
+    final loopback = u.host == 'localhost' || u.host == '127.0.0.1';
+    if (release && u.scheme != 'https' && !loopback) return 'This build only connects over HTTPS.';
     return null;
   }
   static const _key = 'owlaw_api_base_url';

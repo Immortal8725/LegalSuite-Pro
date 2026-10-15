@@ -43,7 +43,7 @@ Build-time default:
 flutter run --dart-define=API_BASE_URL=https://api.owlaw.co.za
 ```
 
-Debug and profile builds default to `http://10.0.2.2:18081` (the host machine from an Android emulator). Release builds have no usable default: the Gradle build stops unless `--dart-define=API_BASE_URL=https://...` is given, and `https://app.owlaw.co.za` in the code is only a placeholder. The attorney can change the address on the sign-in screen; it is remembered on the device. A release build refuses any address that is not `https://`.
+Debug and profile builds default to `http://10.0.2.2:18081` (the host machine from an Android emulator). Release builds default to the live API, `https://owlaw-api.onrender.com`; pass `--dart-define=API_BASE_URL=https://...` to point at another host. The Gradle build stops if that value is not `https://`. The attorney can change the address on the sign-in screen; it is remembered on the device. A release build refuses any address that is not `https://`.
 
 For Flutter web, add the web origin to `CORS_ALLOWED_ORIGINS` on the API.
 
