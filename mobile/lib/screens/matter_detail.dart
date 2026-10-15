@@ -115,6 +115,26 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                   onPressed: () => showTimeEntrySheet(context, widget.api, presetCaseId: widget.caseId),
                 ),
                 ActionChip(avatar: const Icon(Icons.note_add_outlined, size: 18), label: const Text('Add note'), onPressed: _addNote),
+                if (phone != null && phone.isNotEmpty && phone != 'null') ...[
+                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
+                  ActionChip(
+                    avatar: const Icon(Icons.support_agent, size: 18),
+                    label: const Text('Call via firm'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallsScreen(api: widget.api, initialTo: phone))),
+                  ),
+                ],
+                if (email != null && email.isNotEmpty && email != 'null')
+                  ActionChip(
+                    avatar: const Icon(Icons.email_outlined, size: 18),
+                    label: const Text('Email client'),
+                    onPressed: () => openUri(context, mailUri(email, subject: '${m['caseNumber']} ${m['title']}')),
+                  ),
+              ]),
+            ),
+            const SectionTitle('Work on this matter'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Wrap(spacing: 8, runSpacing: 8, children: [
                 if (Access.current.billing)
                   ActionChip(
                     key: const Key('matterInvoices'),
@@ -180,20 +200,6 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     onPressed: () async {
                       if (await showExpenseSheet(context, widget.api, caseId: widget.caseId) && context.mounted) snack(context, 'Expense saved');
                     },
-                  ),
-                if (phone != null && phone.isNotEmpty && phone != 'null') ...[
-                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
-                  ActionChip(
-                    avatar: const Icon(Icons.support_agent, size: 18),
-                    label: const Text('Call via firm'),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallsScreen(api: widget.api, initialTo: phone))),
-                  ),
-                ],
-                if (email != null && email.isNotEmpty && email != 'null')
-                  ActionChip(
-                    avatar: const Icon(Icons.email_outlined, size: 18),
-                    label: const Text('Email client'),
-                    onPressed: () => openUri(context, mailUri(email, subject: '${m['caseNumber']} ${m['title']}')),
                   ),
               ]),
             ),

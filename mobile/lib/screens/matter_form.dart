@@ -178,7 +178,7 @@ class _MatterFormScreenState extends State<MatterFormScreen> {
     final stale = conflict != null && conflictFor != _checkKey;
     return Scaffold(
       appBar: AppBar(title: Text(editing ? 'Edit matter' : 'New matter')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
+      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           Expanded(
             child: choice('Client', clientId, clients.map((c) => MapEntry('${c['id']}', clientLabel(c))).toList(), (v) => setState(() => clientId = v)),
@@ -254,7 +254,7 @@ class _MatterFormScreenState extends State<MatterFormScreen> {
         if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: Colors.red.shade700))),
         const SizedBox(height: 16),
         FilledButton(key: const Key('saveMatter'), onPressed: busy ? null : _save, child: Text(editing ? 'Save changes' : 'Open matter')),
-      ]),
+      ])),
     );
   }
 }
