@@ -39,7 +39,7 @@ Copy `.env.example` to `.env` on the host. Never commit `.env`. Every secret is 
 | `JPA_DDL_AUTO` | optional | Hibernate schema mode on the postgres profile, default `validate`. Flyway owns the schema; do not change this on a live system. |
 | `OPENAI_MODEL`, `OPENAI_BASE_URL` | optional | Model and endpoint when `LEGALSUITE_AI_PROVIDER=openai`. Defaults `gpt-4o-mini` and `https://api.openai.com/v1` (any OpenAI-compatible endpoint works). |
 | `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL` | optional | Model and endpoint when `LEGALSUITE_AI_PROVIDER=anthropic`. Defaults `claude-3-5-haiku-latest` and `https://api.anthropic.com/v1`. |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY` | not used | Left from an earlier billing design. Product billing is PayFast. Leave blank. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY` | not used for billing | Left from an earlier billing design; only the operator credentials check reads them. Product billing is PayFast. Leave blank. |
 | `NEXT_OUTPUT` | web build | `standalone` in the Docker image (set by `frontend/Dockerfile`). Leave unset for `next start`. |
 | `NODE_ENV` | web | Set by Next.js (`production` for `next build` and `next start`). Production adds HSTS and drops `unsafe-eval` from the CSP. Do not set it by hand. |
 | `LEGALSUITE_CLAMAV_HOST`, `LEGALSUITE_CLAMAV_PORT`, `LEGALSUITE_CLAMAV_TIMEOUT_MS` | optional | ClamAV (clamd) virus scan of every document upload. Off when the host is blank; port 3310, timeout 15000 ms. When on, uploads are refused while clamd is unreachable. |
