@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'billing.dart';
 import 'calls.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -15,14 +17,21 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = Access.current;
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(children: [
         const SizedBox(height: 8),
+        if (a.billing) _item(context, Icons.receipt_outlined, 'Client invoices', 'Generate, record payments, proofs and write-offs', () => _open(context, InvoicesScreen(api: api, access: a))),
         _item(context, Icons.people_outline, 'Clients and contacts', 'Tap to call or email', () => _open(context, PeopleScreen(api: api))),
         _item(context, Icons.phone_in_talk_outlined, 'Calls', 'Call through the firm number', () => _open(context, CallsScreen(api: api))),
         _item(context, Icons.notifications_outlined, 'Notifications', 'Intakes, payments and reminders', () => _open(context, NotificationsScreen(api: api))),
         _item(context, Icons.person_outline, 'Profile', 'Your details and sign out', () => _open(context, ProfileScreen(api: api, onLogout: onLogout))),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Text('Team, the public website, the Owlaw subscription and firm settings are managed in the Owlaw web app.',
+              style: TextStyle(color: Colors.black54, fontSize: 12)),
+        ),
       ]),
     );
   }

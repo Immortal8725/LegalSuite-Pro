@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
 import 'dashboard.dart';
 import 'diary.dart';
@@ -17,6 +18,19 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Access.current = Access.everything;
+    Access.load(widget.api).then((a) {
+      if (!mounted) return;
+      setState(() {
+        Access.current = a;
+        _visits[4]++;
+      });
+    });
+  }
   final _visits = List<int>.filled(5, 0);
 
   void _go(int i) => setState(() {

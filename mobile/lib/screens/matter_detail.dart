@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'billing.dart';
 import 'calls.dart';
 import 'time.dart';
 
@@ -94,6 +96,21 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                   onPressed: () => showTimeEntrySheet(context, widget.api, presetCaseId: widget.caseId),
                 ),
                 ActionChip(avatar: const Icon(Icons.note_add_outlined, size: 18), label: const Text('Add note'), onPressed: _addNote),
+                if (Access.current.billing)
+                  ActionChip(
+                    key: const Key('matterInvoices'),
+                    avatar: const Icon(Icons.receipt_outlined, size: 18),
+                    label: const Text('Invoices'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InvoicesScreen(api: widget.api, access: Access.current, caseId: widget.caseId))),
+                  ),
+                if (Access.current.expenses)
+                  ActionChip(
+                    avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                    label: const Text('Add expense'),
+                    onPressed: () async {
+                      if (await showExpenseSheet(context, widget.api, caseId: widget.caseId) && context.mounted) snack(context, 'Expense saved');
+                    },
+                  ),
                 if (phone != null && phone.isNotEmpty && phone != 'null') ...[
                   ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
                   ActionChip(
