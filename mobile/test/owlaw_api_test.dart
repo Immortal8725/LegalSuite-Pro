@@ -198,4 +198,25 @@ void main() {
       expect(calls.last.json, {'status': 'completed'});
     });
   });
+
+  group('draft help and messaging', () {
+    test('chat, draft email and summary', () async {
+      final (api, calls) = recordingApi((c) => {'reply': 'ok', 'draft': 'Dear', 'summary': 'S'});
+      expect((await api.aiChat('What is due?', caseId: 'c1'))['reply'], 'ok');
+      expect(calls.last.json, {'prompt': 'What is due?', 'caseId': 'c1'});
+      await api.aiDraftEmail('demand');
+      expect(calls.last.json, {'kind': 'demand'});
+      await api.aiSummarize('c1');
+      expect(calls.last.path, '/api/v1/ai/summarize');
+    });
+
+    test('outbound posts to the channel and lists by matter', () async {
+      final (api, calls) = recordingApi((c) => c.method == 'GET' ? [] : {'status': 'dry_run'});
+      await api.sendMessage('whatsapp', {'to': '+27820000000', 'body': 'Hi', 'caseId': 'c1', 'clientId': null});
+      expect(calls.last.path, '/api/v1/outbound/whatsapp');
+      expect(calls.last.json, {'to': '+27820000000', 'body': 'Hi', 'caseId': 'c1'});
+      await api.outbound(caseId: 'c1');
+      expect(calls.last.query['caseId'], 'c1');
+    });
+  });
 }

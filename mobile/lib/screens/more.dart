@@ -5,6 +5,7 @@ import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'assist.dart';
 import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
@@ -29,6 +30,7 @@ class MoreScreen extends StatelessWidget {
         if (a.trust) _item(context, Icons.account_balance_outlined, 'Trust', 'Client ledgers, deposits and trust to fees', () => _open(context, TrustScreen(api: api, access: a))),
         if (a.documents) _item(context, Icons.folder_copy_outlined, 'Documents', 'Open, upload from camera or files', () => _open(context, DocumentsScreen(api: api))),
         if (a.esign) _item(context, Icons.draw_outlined, 'E-sign', 'Send for signature and track status', () => _open(context, SignaturesScreen(api: api))),
+        if (a.ai) _item(context, Icons.edit_note, 'Draft help', 'Ask about a matter, draft client emails', () => _open(context, DraftHelpScreen(api: api))),
         _item(context, Icons.people_outline, 'Clients and contacts', 'Tap to call or email', () => _open(context, PeopleScreen(api: api))),
         _item(context, Icons.phone_in_talk_outlined, 'Calls', 'Call through the firm number', () => _open(context, CallsScreen(api: api))),
         _item(context, Icons.notifications_outlined, 'Notifications', 'Intakes, payments and reminders', () => _open(context, NotificationsScreen(api: api))),

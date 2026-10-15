@@ -5,6 +5,7 @@ import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'assist.dart';
 import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
@@ -126,6 +127,23 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     avatar: const Icon(Icons.account_balance_outlined, size: 18),
                     label: const Text('Client trust'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrustScreen(api: widget.api, access: Access.current, clientId: '${m['clientId']}'))),
+                  ),
+                if (Access.current.messages)
+                  ActionChip(
+                    key: const Key('messageClient'),
+                    avatar: const Icon(Icons.sms_outlined, size: 18),
+                    label: const Text('Message'),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => MessageScreen(
+                                api: widget.api, caseId: widget.caseId, clientId: m['clientId']?.toString(), phone: phone, email: email, subject: '${m['caseNumber']} ${m['title']}'))),
+                  ),
+                if (Access.current.ai)
+                  ActionChip(
+                    avatar: const Icon(Icons.edit_note, size: 18),
+                    label: const Text('Draft help'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DraftHelpScreen(api: widget.api, caseId: widget.caseId))),
                   ),
                 if (Access.current.tasks)
                   ActionChip(
