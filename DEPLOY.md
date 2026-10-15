@@ -35,6 +35,9 @@ Copy `.env.example` to `.env` on the host. Never commit `.env`. Every secret is 
 | `NEXT_PUBLIC_API_URL` | web build | Where the web server proxies `/api`. Compose uses `http://api:18081`. Baked in at build time. |
 | `NEXT_PUBLIC_PUBLIC_SITE_ROOT` | optional | Root domain for firm public-site subdomains. |
 | `LEGALSUITE_UPLOAD_DIR` | yes on a VM | Folder for uploaded documents and payment proofs. Compose mounts a volume at `/app/uploads`. |
+| `LEGALSUITE_STORAGE_TYPE` | no | `local` (default, files in `LEGALSUITE_UPLOAD_DIR`) or `s3`. Use `s3` on hosts without a persistent disk (Render free). Old local files stay readable after switching. |
+| `LEGALSUITE_STORAGE_S3_ENDPOINT`, `_REGION`, `_BUCKET`, `_ACCESS_KEY`, `_SECRET_KEY` | with `s3` | Any S3-compatible store. Supabase Storage: endpoint `https://<ref>.storage.supabase.co/storage/v1/s3`, region as shown under Storage > S3, keys from Storage > S3 access keys. Keep the bucket private. |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | instead of `DATABASE_URL` | Used to build the JDBC URL when `DATABASE_URL` is not set (Render blueprint). |
 
 ## 3. Start it
 
@@ -111,3 +114,7 @@ Owlaw holds personal information of clients, opposing parties and staff, some of
 - Login throttling is held in memory per API instance. On more than one instance, also rate limit `/api/v1/auth/login` and `/api/v1/portal/login` at the load balancer.
 - Documents are stored on the API's disk (`LEGALSUITE_UPLOAD_DIR`), so run one API instance with a persistent volume, or a shared file system (EFS) if you scale out.
 - The web app keeps its refresh token in browser storage. The Content-Security-Policy limits script sources to the app itself to reduce the risk.
+
+## Render (free tier)
+
+`render.yaml` at the repo root defines `owlaw-db` (free Postgres), `owlaw-api` (Docker, free) and `owlaw-web` (Node, free), all in Frankfurt. Free limits: services sleep after 15 minutes idle and take about a minute to wake; 512 MB RAM and 0.1 CPU; no persistent disk, so set `LEGALSUITE_STORAGE_TYPE=s3`; the free database expires 30 days after it is created unless upgraded. Values marked `sync: false` are entered in the Render dashboard.
