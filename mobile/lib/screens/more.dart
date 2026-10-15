@@ -7,6 +7,7 @@ import '../ui/launch.dart';
 import '../ui/theme.dart';
 import 'billing.dart';
 import 'calls.dart';
+import 'trust_ledger.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, required this.api, required this.onLogout});
@@ -23,6 +24,7 @@ class MoreScreen extends StatelessWidget {
       body: ListView(children: [
         const SizedBox(height: 8),
         if (a.billing) _item(context, Icons.receipt_outlined, 'Client invoices', 'Generate, record payments, proofs and write-offs', () => _open(context, InvoicesScreen(api: api, access: a))),
+        if (a.trust) _item(context, Icons.account_balance_outlined, 'Trust', 'Client ledgers, deposits and trust to fees', () => _open(context, TrustScreen(api: api, access: a))),
         _item(context, Icons.people_outline, 'Clients and contacts', 'Tap to call or email', () => _open(context, PeopleScreen(api: api))),
         _item(context, Icons.phone_in_talk_outlined, 'Calls', 'Call through the firm number', () => _open(context, CallsScreen(api: api))),
         _item(context, Icons.notifications_outlined, 'Notifications', 'Intakes, payments and reminders', () => _open(context, NotificationsScreen(api: api))),

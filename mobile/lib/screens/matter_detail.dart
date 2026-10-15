@@ -7,6 +7,7 @@ import '../ui/launch.dart';
 import '../ui/theme.dart';
 import 'billing.dart';
 import 'calls.dart';
+import 'trust_ledger.dart';
 import 'time.dart';
 
 class MatterDetailScreen extends StatefulWidget {
@@ -102,6 +103,12 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     avatar: const Icon(Icons.receipt_outlined, size: 18),
                     label: const Text('Invoices'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InvoicesScreen(api: widget.api, access: Access.current, caseId: widget.caseId))),
+                  ),
+                if (Access.current.trust && m['clientId'] != null)
+                  ActionChip(
+                    avatar: const Icon(Icons.account_balance_outlined, size: 18),
+                    label: const Text('Client trust'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrustScreen(api: widget.api, access: Access.current, clientId: '${m['clientId']}'))),
                   ),
                 if (Access.current.expenses)
                   ActionChip(

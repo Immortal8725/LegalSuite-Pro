@@ -116,4 +116,16 @@ void main() {
       expect(parseAmount('abc'), isNull);
     });
   });
+
+  group('trust', () {
+    test('accounts, ledger and deposit', () async {
+      final (api, calls) = recordingApi((c) => c.method == 'GET' ? [{'id': 'a1'}] : {});
+      expect((await api.trustAccounts()).single['id'], 'a1');
+      await api.trustLedger('a1');
+      expect(calls.last.path, '/api/v1/trust/accounts/a1/ledger');
+      await api.trustMove({'accountId': 'a1', 'type': 'deposit', 'amount': '500.00', 'clientId': 'cl1', 'caseId': null});
+      expect(calls.last.path, '/api/v1/trust/move');
+      expect(calls.last.json, {'accountId': 'a1', 'type': 'deposit', 'amount': '500.00', 'clientId': 'cl1'});
+    });
+  });
 }
