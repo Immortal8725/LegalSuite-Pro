@@ -66,6 +66,22 @@ public class VoiceController {
         return ApiResponse.ok(numbers.release(id), "Caller ID released");
     }
 
+    @GetMapping("/api/v1/voice/app/token")
+    public ApiResponse<?> appToken() {
+        return ApiResponse.ok(voice.appToken());
+    }
+
+    @PostMapping("/api/v1/calls/app")
+    public ApiResponse<?> placeApp(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(voice.placeAppCall(body), "Connecting in the app.");
+    }
+
+    @PostMapping(value = "/api/v1/voice/twilio/app-dial", produces = "text/xml;charset=UTF-8")
+    public ResponseEntity<String> appDial(HttpServletRequest request) {
+        signed(request, "/api/v1/voice/twilio/app-dial");
+        return xml(voice.appDialTwiml(request.getParameter("bridgeToken"), first(request, "Caller", "From"), request.getParameter("CallSid")));
+    }
+
     @PostMapping("/api/v1/calls/pstn")
     public ApiResponse<?> placePstn(@RequestBody Map<String, Object> body) {
         return ApiResponse.ok(voice.placePstn(body), "Calling your phone. Answer to connect.");

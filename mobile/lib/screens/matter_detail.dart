@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'assist.dart';
+import 'billing.dart';
 import 'calls.dart';
+import 'documents.dart';
 import 'generate_document.dart';
+import 'in_app_call.dart';
+import 'matter_form.dart';
+import 'trust_ledger.dart';
 import 'time.dart';
 
 class MatterDetailScreen extends StatefulWidget {
@@ -56,7 +63,22 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Matter')),
+      appBar: AppBar(title: const Text('Matter'), actions: [
+        IconButton(
+          key: const Key('editMatter'),
+          tooltip: 'Edit matter',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () async {
+            final m = _loader.currentState?.data;
+            if (m == null) return;
+            final saved = await Navigator.push(context, MaterialPageRoute(builder: (_) => MatterFormScreen(api: widget.api, matter: m)));
+            if (saved != null && context.mounted) {
+              snack(context, 'Matter saved');
+              _loader.currentState?.reload();
+            }
+          },
+        ),
+      ]),
       body: Loader<Map<String, dynamic>>(
         key: _loader,
         load: _load,
@@ -105,10 +127,17 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                   },
                 ),
                 if (phone != null && phone.isNotEmpty && phone != 'null') ...[
-                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
+                  ActionChip(
+                    key: const Key('callInApp'),
+                    avatar: const Icon(Icons.wifi_calling_3, size: 18),
+                    label: const Text('Call in app'),
+                    onPressed: () => Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => InAppCallScreen(api: widget.api, to: phone, name: m['clientName']?.toString(), caseId: widget.caseId))),
+                  ),
+                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call from my phone'), onPressed: () => openUri(context, telUri(phone))),
                   ActionChip(
                     avatar: const Icon(Icons.support_agent, size: 18),
-                    label: const Text('Call via firm'),
+                    label: const Text('Callback via firm'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallsScreen(api: widget.api, initialTo: phone))),
                   ),
                 ],
@@ -117,6 +146,78 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     avatar: const Icon(Icons.email_outlined, size: 18),
                     label: const Text('Email client'),
                     onPressed: () => openUri(context, mailUri(email, subject: '${m['caseNumber']} ${m['title']}')),
+                  ),
+              ]),
+            ),
+            const SectionTitle('Work on this matter'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Wrap(spacing: 8, runSpacing: 8, children: [
+                if (Access.current.billing)
+                  ActionChip(
+                    key: const Key('matterInvoices'),
+                    avatar: const Icon(Icons.receipt_outlined, size: 18),
+                    label: const Text('Invoices'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InvoicesScreen(api: widget.api, access: Access.current, caseId: widget.caseId))),
+                  ),
+                if (Access.current.trust && m['clientId'] != null)
+                  ActionChip(
+                    avatar: const Icon(Icons.account_balance_outlined, size: 18),
+                    label: const Text('Client trust'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrustScreen(api: widget.api, access: Access.current, clientId: '${m['clientId']}'))),
+                  ),
+                if (Access.current.messages)
+                  ActionChip(
+                    key: const Key('messageClient'),
+                    avatar: const Icon(Icons.sms_outlined, size: 18),
+                    label: const Text('Message'),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => MessageScreen(
+                                api: widget.api, caseId: widget.caseId, clientId: m['clientId']?.toString(), phone: phone, email: email, subject: '${m['caseNumber']} ${m['title']}'))),
+                  ),
+                if (Access.current.ai)
+                  ActionChip(
+                    avatar: const Icon(Icons.edit_note, size: 18),
+                    label: const Text('Draft help'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DraftHelpScreen(api: widget.api, caseId: widget.caseId))),
+                  ),
+                if (Access.current.tasks)
+                  ActionChip(
+                    avatar: const Icon(Icons.checklist, size: 18),
+                    label: const Text('Tasks'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TasksScreen(api: widget.api, caseId: widget.caseId))),
+                  ),
+                ActionChip(
+                  avatar: const Icon(Icons.event_available_outlined, size: 18),
+                  label: const Text('Add deadline'),
+                  onPressed: () async {
+                    if (await showEventSheet(context, widget.api, caseId: widget.caseId) && context.mounted) snack(context, 'Saved to the diary');
+                  },
+                ),
+                if (Access.current.documents)
+                  ActionChip(
+                    key: const Key('matterUpload'),
+                    avatar: const Icon(Icons.upload_file, size: 18),
+                    label: const Text('Upload document'),
+                    onPressed: () async {
+                      if (await uploadDocumentFlow(context, widget.api, caseId: widget.caseId, clientId: m['clientId']?.toString())) _loader.currentState?.reload();
+                    },
+                  ),
+                if (Access.current.esign)
+                  ActionChip(
+                    avatar: const Icon(Icons.draw_outlined, size: 18),
+                    label: const Text('E-sign'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SignaturesScreen(api: widget.api, caseId: widget.caseId))),
+                  ),
+                if (Access.current.expenses)
+                  ActionChip(
+                    avatar: const Icon(Icons.receipt_long_outlined, size: 18),
+                    label: const Text('Add expense'),
+                    onPressed: () async {
+                      if (await showExpenseSheet(context, widget.api, caseId: widget.caseId) && context.mounted) snack(context, 'Expense saved');
+                    },
                   ),
               ]),
             ),
@@ -145,6 +246,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     leading: Icon(d['privileged'] == true ? Icons.lock_outline : Icons.description_outlined, color: navy),
                     title: Text('${d['name']}'),
                     subtitle: Text([d['category'], niceDate(d['createdAt'])].where((x) => x != null && '$x'.isNotEmpty).join(' · ')),
+                    trailing: const Icon(Icons.open_in_new, size: 18),
+                    onTap: () => openDocument(context, widget.api, d.cast<String, dynamic>()),
                   ),
                 )),
           ]);

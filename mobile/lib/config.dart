@@ -7,6 +7,16 @@ class AppConfig {
       String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:18081');
   static const _key = 'owlaw_api_base_url';
 
+  /// Where the Owlaw web app lives, for links a client opens (e-sign).
+  /// Set with --dart-define=WEB_BASE_URL. Without it the API address is used, which suits
+  /// a single-host deployment where the web app and API share an origin.
+  static const String webBaseUrlDefine = String.fromEnvironment('WEB_BASE_URL');
+
+  static String webLink(String apiBase, String path) {
+    final base = normalise(webBaseUrlDefine.isNotEmpty ? webBaseUrlDefine : apiBase);
+    return '$base${path.startsWith('/') ? path : '/$path'}';
+  }
+
   static String normalise(String url) {
     var u = url.trim();
     while (u.endsWith('/')) {

@@ -23,6 +23,28 @@ public class TwilioProperties {
     private String whatsappFrom = "";
     /** Optional MG SID. Used for SMS when TWILIO_SMS_FROM is blank. */
     private String messagingServiceSid = "";
+    /** API key SID (SK...) used to sign Voice SDK access tokens for in-app calls. */
+    private String apiKeySid = "";
+    /** API key secret. Signs the access token. Never sent to the app. */
+    private String apiKeySecret = "";
+    /** TwiML App SID (AP...) whose Voice URL is /api/v1/voice/twilio/app-dial. */
+    private String twimlAppSid = "";
+    /** Optional push credential SID (CR...) for incoming in-app calls (FCM on Android, APNs on iOS). */
+    private String pushCredentialSid = "";
+
+    /** In-app calling needs the account, an API key pair, a TwiML App and a public webhook address. */
+    public boolean appCallingConfigured() {
+        return configured() && !apiKeySid.isBlank() && !apiKeySecret.isBlank() && !twimlAppSid.isBlank() && hasPublicBaseUrl();
+    }
+
+    public String getApiKeySid() { return apiKeySid; }
+    public void setApiKeySid(String v) { this.apiKeySid = v == null ? "" : v.trim(); }
+    public String getApiKeySecret() { return apiKeySecret; }
+    public void setApiKeySecret(String v) { this.apiKeySecret = v == null ? "" : v.trim(); }
+    public String getTwimlAppSid() { return twimlAppSid; }
+    public void setTwimlAppSid(String v) { this.twimlAppSid = v == null ? "" : v.trim(); }
+    public String getPushCredentialSid() { return pushCredentialSid; }
+    public void setPushCredentialSid(String v) { this.pushCredentialSid = v == null ? "" : v.trim(); }
 
     public boolean configured() {
         return !accountSid.isBlank() && !authToken.isBlank();

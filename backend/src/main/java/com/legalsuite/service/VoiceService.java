@@ -32,6 +32,7 @@ import java.util.HexFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -303,6 +304,109 @@ public class VoiceService {
         }
         audit.record("voice.pstn.dial", "call", rec.getId().toString(), line.getKind());
         return view(rec);
+    }
+
+    /** Twilio client identity for a staff user. Only letters, digits and underscores. */
+    public static String appIdentity(UUID userId) {
+        return "owlaw_" + userId.toString().replace('-', '_');
+    }
+
+    /**
+     * Voice SDK access token for in-app calls from the attorney app. Incoming calls also need
+     * TWILIO_PUSH_CREDENTIAL_SID; without it the token still places outbound calls.
+     */
+    public Map<String, Object> appToken() {
+        if (!twilioProps.appCallingConfigured()) {
+            throw ApiException.badRequest(
+                    "In-app calling is not set up on this server. Use the callback call, or ask the operator to set TWILIO_API_KEY_SID, TWILIO_API_KEY_SECRET and TWILIO_TWIML_APP_SID.");
+        }
+        UUID user = TenantContext.requireUser();
+        String identity = appIdentity(user);
+        long ttl = 3600;
+        String token = com.legalsuite.voice.TwilioAccessToken.voice(
+                twilioProps.getAccountSid(), twilioProps.getApiKeySid(), twilioProps.getApiKeySecret(), identity,
+                twilioProps.getTwimlAppSid(), twilioProps.getPushCredentialSid(), ttl, Instant.now());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("token", token);
+        out.put("identity", identity);
+        out.put("ttlSeconds", ttl);
+        out.put("incomingReady", !twilioProps.getPushCredentialSid().isBlank());
+        return out;
+    }
+
+    /**
+     * In-app outbound call. Same rules as the callback bridge (matter or explicit non-matter,
+     * no emergency numbers, recording only with consent), but the attorney's leg is the app itself.
+     * The app then connects with the returned bridge token; Twilio fetches /voice/twilio/app-dial.
+     */
+    public Map<String, Object> placeAppCall(Map<String, Object> body) {
+        if (body == null) body = Map.of();
+        Map<String, Object> tokenView = appToken();
+        String toRaw = String.valueOf(body.getOrDefault("to", ""));
+        EmergencyNumbers.rejectIfEmergency(toRaw);
+        boolean nonMatter = truthy(body.get("nonMatter"));
+        UUID caseId = uuidOrNull(body.get("caseId"));
+        if (caseId == null && !nonMatter) {
+            throw ApiException.badRequest("Choose a matter, or mark the call as not on a matter, before you dial.");
+        }
+        if (caseId != null && nonMatter) {
+            throw ApiException.badRequest("A call is either on a matter or explicitly not on a matter.");
+        }
+        boolean record = truthy(body.get("recordingEnabled"));
+        boolean consent = truthy(body.get("recordingConsentGiven"));
+        if (record && !consent) {
+            throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
+        }
+        FirmPhoneNumber line = firmNumbers.requireForDial(uuidOrNull(body.get("firmPhoneNumberId")));
+        Tenant tenant = tenants.findById(tid()).orElseThrow(() -> ApiException.notFound("Firm not found"));
+        String to = E164.normalize(toRaw, tenant.getCountry());
+        EmergencyNumbers.rejectIfEmergency(to);
+        if (to.equals(line.getE164())) {
+            throw ApiException.badRequest("You cannot call the firm number from itself.");
+        }
+        CallRecord rec = new CallRecord();
+        rec.setTenantId(tid());
+        rec.setCallerUserId(TenantContext.requireUser());
+        rec.setCallType("app_outbound");
+        rec.setDirection("outbound");
+        rec.setStatus("ringing");
+        rec.setFromNumber(line.getE164());
+        rec.setToNumber(to);
+        rec.setStaffCallbackNumber("client:" + tokenView.get("identity"));
+        rec.setCallerIdKind(line.getKind());
+        rec.setFirmPhoneNumberId(line.getId());
+        rec.setRecordingEnabled(record);
+        rec.setRecordingConsentGiven(record && consent);
+        rec.setCostPerMinute(outboundCostFor(line.getKind()));
+        rec.setBridgeToken(newToken());
+        rec.setNonMatter(nonMatter);
+        rec.setBillable(!nonMatter);
+        rec.setNotes("In-app call. Caller ID " + line.getE164() + ".");
+        if (caseId != null) {
+            LegalCase matter = cases.findByIdAndTenantId(caseId, tid())
+                    .orElseThrow(() -> ApiException.badRequest("That matter is not on this firm."));
+            rec.setCaseId(matter.getId());
+            rec.setClientId(matter.getClientId());
+        }
+        calls.save(rec);
+        audit.record("voice.app.dial", "call", rec.getId().toString(), line.getKind());
+        Map<String, Object> out = new LinkedHashMap<>(view(rec));
+        out.put("bridgeToken", rec.getBridgeToken());
+        out.put("accessToken", tokenView.get("token"));
+        out.put("identity", tokenView.get("identity"));
+        return out;
+    }
+
+    /** TwiML for an in-app call. Only the attorney who created the call can use its bridge token. */
+    @Transactional
+    public String appDialTwiml(String token, String from, String callSid) {
+        CallRecord rec = requireBridge(token);
+        if (!"app_outbound".equals(rec.getCallType())) throw ApiException.forbidden("That call is not an in-app call.");
+        if (from == null || !from.equals(rec.getStaffCallbackNumber())) {
+            throw ApiException.forbidden("That call belongs to a different user.");
+        }
+        if (rec.getEndedAt() != null) throw ApiException.badRequest("That call has already ended.");
+        return bridgeTwiml(token, callSid);
     }
 
     public void assertTwilioSignature(String path, Map<String, String[]> params, String signature) {

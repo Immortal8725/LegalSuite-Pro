@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/theme.dart';
+import 'matter_form.dart';
 import 'matter_detail.dart';
 
 /// Deadlines from the docket and diary events, soonest first.
@@ -22,6 +23,15 @@ class DiaryScreen extends StatelessWidget {
             unselectedLabelColor: Colors.white70,
             indicatorColor: gold,
             tabs: [Tab(text: 'Deadlines'), Tab(text: 'Events')],
+          ),
+        ),
+        floatingActionButton: Builder(
+          builder: (context) => FloatingActionButton(
+            tooltip: 'Add deadline or event',
+            onPressed: () async {
+              if (await showEventSheet(context, api) && context.mounted) snack(context, 'Saved to the diary. Pull down to refresh.');
+            },
+            child: const Icon(Icons.add),
           ),
         ),
         body: TabBarView(children: [

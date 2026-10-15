@@ -29,6 +29,7 @@ Copy `.env.example` to `.env` on the host. Never commit `.env`. Every secret is 
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_STARTTLS` | for email | Without SMTP, invites fall back to a one-time password shown to the admin. |
 | `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`, `PAYFAST_ENV`, `PAYFAST_RETURN_URL`, `PAYFAST_CANCEL_URL`, `PAYFAST_NOTIFY_URL` | for product billing | See section 5. Keep `PAYFAST_SANDBOX_LOCAL=false`. |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PUBLIC_BASE_URL`, `TWILIO_VOICE_FROM`, `TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM` | for phone | See section 6. |
+| `TWILIO_API_KEY_SID`, `TWILIO_API_KEY_SECRET`, `TWILIO_TWIML_APP_SID`, `TWILIO_PUSH_CREDENTIAL_SID` | for in-app calls in the attorney app | API key pair signs the Voice token. TwiML App Voice URL is `/api/v1/voice/twilio/app-dial`. Push credential only for incoming calls. See mobile/README.md. |
 | `LEGALSUITE_PSTN_OUTBOUND_PER_MIN`, `LEGALSUITE_PSTN_INBOUND_PER_MIN` | for phone billing | Rand per minute, default 1.49. Blank records duration at zero cost. |
 | `LEGALSUITE_PSTN_LANDLINE_PER_MIN` | optional | Rand per minute when the firm's own landline is the caller ID, default 8.90. |
 | `NEXT_PUBLIC_API_URL` | web build | Where the web server proxies `/api`. Compose uses `http://api:18081`. Baked in at build time. |
