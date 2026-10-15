@@ -10,6 +10,8 @@ const sem=async()=>{const s=p.locator('flt-semantics-placeholder');if(await s.co
 await p.goto(W);await p.waitForTimeout(5000);await sem();
 await shot('01-login');
 const box=n=>p.getByRole('textbox',{name:n});
+// Newer Flutter web exposes ActionChip as a checkbox, so chips match either role.
+const chip=n=>p.getByRole('button',{name:n,exact:true}).or(p.getByRole('checkbox',{name:n,exact:true}));
 await box('Firm ID').click();await p.waitForTimeout(400);await p.keyboard.type('smith-associates');
 await box('Email').click();await p.waitForTimeout(400);await p.keyboard.type('john@smithlaw.com');
 await box('Password').click();await p.waitForTimeout(400);await p.keyboard.type('password');
@@ -24,7 +26,7 @@ await p.getByText(/Taylor Contract Dispute/).first().click();
 await p.getByText('Parties').first().waitFor({timeout:15000});console.log('DETAIL OK');
 await shot('05-matter-detail');
 await p.mouse.wheel(0,700);await shot('06-matter-detail-docs');
-await p.getByRole('button',{name:'Log time'}).first().click();
+await chip('Log time').first().click();
 await p.getByText('Save time entry').waitFor();
 const desc='Mobile E2E '+Date.now();
 await box('Time').click();await p.keyboard.press('Control+A');await p.keyboard.type('1:15');
@@ -36,21 +38,36 @@ await p.goBack().catch(()=>{});
 await p.getByRole('button',{name:'Back'}).click().catch(()=>{});
 await p.waitForTimeout(1000);
 await p.getByRole('tab',{name:/Time/}).click();
+await p.waitForTimeout(2000);for(let i=0;i<12&&!(await p.getByText(desc).count());i++){await p.mouse.move(200,500);await p.mouse.wheel(0,600);await p.waitForTimeout(400)}
 await p.getByText(desc).first().waitFor({timeout:15000});console.log('TIME LISTED');
 await shot('08-time');
 
 // ---------- Attorney work on mobile (v2) ----------
 const back=async()=>{await p.getByRole('button',{name:'Back'}).first().click();await p.waitForTimeout(800)};
-const btn=(n)=>p.getByRole('button',{name:n});
+const btn=(n)=>chip(n);
 const toast=async(t)=>{await p.getByText(t).first().waitFor({timeout:20000})};
 const openMatter=async(q,title)=>{
   await p.getByRole('tab',{name:/Matters/}).click();await p.waitForTimeout(1200);
   await box('Search matters, clients, parties').click();await p.keyboard.press('Control+A');await p.keyboard.type(q);await p.waitForTimeout(600);
   await p.getByText(title).first().click();await p.getByText('Parties').first().waitFor({timeout:15000});
 };
+// 0. Trust deposit for the client so trust-to-fee has money on every run
+await p.getByRole('tab',{name:/More/}).click();await p.waitForTimeout(1200);
+await p.getByText(/Client ledgers, deposits/).first().click();await p.getByText('Client ledgers').first().waitFor({timeout:15000});
+await btn('Record trust deposit').first().click();await p.getByText(/never mixed/).waitFor({timeout:10000});
+await p.getByRole('button',{name:/^Client/}).first().click();await p.waitForTimeout(1000);await p.getByRole('menuitem',{name:'Sarah Williams'}).click();await p.waitForTimeout(600);
+await box('Amount').click();await p.waitForTimeout(400);await p.keyboard.type('500');
+await box('Memo').click();await p.waitForTimeout(400);await p.keyboard.type('Mobile E2E deposit');await shot('18a-trust-deposit');
+await btn('Record deposit').click();await toast('Trust deposit recorded');ok('trust deposit');
+await back();
 // 1. Generate invoice from unbilled time and expenses, record a payment, trust to fees
 await openMatter('johnson',/Johnson v\. Corp Inc\./);
 await shot('18-matter-actions');
+// fresh unbilled work so the run repeats cleanly
+await chip('Log time').first().click();await p.getByText('Save time entry').waitFor();
+await box('Time').click();await p.keyboard.press('Control+A');await p.keyboard.type('0:30');
+await box('Work done').click();await p.waitForTimeout(400);await p.keyboard.type('Mobile E2E consultation '+Date.now());
+await p.getByRole('button',{name:'Save time entry'}).click();await p.getByText('Time entry saved').first().waitFor({timeout:15000});await p.waitForTimeout(1500);
 await btn('Invoices').first().click();await p.getByText('Client invoices').first().waitFor({timeout:15000});await shot('19-invoices');
 await btn('Generate invoice').first().click();await p.getByText(/Picks up unbilled/).waitFor({timeout:15000});
 await p.getByText(/Unbilled: /).waitFor({timeout:15000});await shot('20-generate-invoice');
@@ -60,7 +77,7 @@ await p.getByText('Line items').waitFor({timeout:15000});await shot('21-invoice-
 await btn('Mark as sent').click();await toast('Invoice marked as sent');
 await btn('Record payment').first().click();await p.getByText(/has .* owing/).waitFor();
 await box('Amount').click();await p.keyboard.press('Control+A');await p.keyboard.type('100');
-await box('Reference (optional)').click();await p.keyboard.type('E2E EFT');await shot('22-record-payment');
+await box('Reference (optional)').click();await p.waitForTimeout(400);await p.keyboard.type('E2E EFT');await shot('22-record-payment');
 await btn('Record payment').last().click();await toast('Payment recorded');ok('record payment');
 await p.waitForTimeout(1200);
 await btn('Pay from trust').click();await p.getByText(/Only this client/).waitFor();await shot('23-trust-to-fee');
@@ -74,24 +91,24 @@ const [fc]=await Promise.all([p.waitForEvent('filechooser',{timeout:15000}),p.ge
 await fc.setFiles({name:fname,mimeType:'text/plain',buffer:Buffer.from('Uploaded from the Owlaw mobile E2E')});
 await p.getByText('Upload document').last().waitFor({timeout:15000});await shot('25-upload-document');
 await btn('Upload').last().click();await toast('Document uploaded');
-await p.mouse.wheel(0,2000);await p.getByText(fname).first().waitFor({timeout:15000});ok('upload document to matter');await shot('26-matter-documents');
+await p.mouse.move(200,500);for(let i=0;i<6;i++){await p.mouse.wheel(0,1500);await p.waitForTimeout(300)}await p.getByText(fname).first().waitFor({timeout:15000});ok('upload document to matter');await shot('26-matter-documents');
 await back();
 // 3. New matter with a conflict check first
 await p.getByRole('tab',{name:/Matters/}).click();await p.waitForTimeout(1200);
 await btn('New matter').click();await p.getByText('Run conflict check').waitFor({timeout:15000});
-await btn('Client').first().click();await p.waitForTimeout(800);await p.getByText('ABC Corp',{exact:true}).last().click();await p.waitForTimeout(600);
-await box('Opposing party').click();await p.keyboard.type('Metro Transit Authority');
+await p.getByRole('button',{name:'Client',exact:true}).click();await p.waitForTimeout(1000);await p.getByRole('menuitem',{name:'ABC Corp'}).click();await p.waitForTimeout(600);
+await box('Opposing party').click();await p.waitForTimeout(400);await p.keyboard.type('Metro Transit Authority');
 const mtitle='ABC Corp v Metro E2E '+Date.now();
-await box('Matter title').click();await p.keyboard.type(mtitle);
+await box('Matter title').click();await p.waitForTimeout(400);await p.keyboard.type(mtitle);
 await btn('Open matter').click();await p.getByText(/Run the conflict check for this client/).waitFor({timeout:10000});
-await btn('Run conflict check').click();await p.getByText(/possible conflict|No conflicts found/).first().waitFor({timeout:15000});await shot('27-conflict-check');
-if(await p.getByText(/possible conflict/).count()){await p.getByRole('checkbox',{name:/I have reviewed/}).click();}
+await btn('Run conflict check').click();await p.getByText(/possible conflict|No conflicts found/).or(p.getByLabel(/possible conflict|No conflicts found/)).first().waitFor({timeout:15000});await shot('27-conflict-check');
+if(await p.getByLabel(/possible conflict/).or(p.getByText(/possible conflict/)).count()){await p.getByRole('checkbox',{name:/I have reviewed/}).click();}
 await btn('Open matter').click();await p.getByText(/^Matter C-\d+ opened$/).first().waitFor({timeout:20000});
 await p.getByText(mtitle).first().waitFor({timeout:15000});ok('create matter with conflict check');await shot('28-new-matter');
 await back();
 // More screen and the extra pages
 await p.getByRole('tab',{name:/More/}).click();await p.waitForTimeout(1200);
-await p.getByText('Trust',{exact:true}).click();await p.getByText('Client ledgers').first().waitFor({timeout:15000});await shot('29-trust');await back();
+await p.getByText(/Client ledgers, deposits/).first().click();await p.getByText('Client ledgers').first().waitFor({timeout:15000});await shot('29-trust');await back();
 await p.getByText('Draft help').click();await p.getByText(/Ask about deadlines/).waitFor({timeout:15000});await shot('30-draft-help');await back();
 await p.getByText('E-sign').click();await p.waitForTimeout(2500);await shot('31-esign');await back();
 await p.getByRole('tab',{name:/Time/}).click();await p.waitForTimeout(800);
@@ -107,4 +124,4 @@ await p.getByText('Notifications').first().click();await p.waitForTimeout(2500);
 await p.getByRole('button',{name:'Back'}).click();
 await p.getByText('Profile').first().click();await p.waitForTimeout(2500);await shot('16-profile');
 await p.getByRole('button',{name:'Sign out'}).click();await p.getByRole('button',{name:'Sign in'}).waitFor({timeout:15000});console.log('LOGOUT OK');await shot('17-signed-out');
-console.log('DESC',desc);writeFileSync(O+'results.json',JSON.stringify({pass:results},null,1));console.log('ATTORNEY FLOWS',results.length+'/5');await b.close();
+console.log('DESC',desc);writeFileSync(O+'results.json',JSON.stringify({pass:results},null,1));console.log('ATTORNEY FLOWS',results.length+'/6');await b.close();

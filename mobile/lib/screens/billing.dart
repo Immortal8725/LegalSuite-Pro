@@ -11,6 +11,8 @@ import 'trust.dart';
 
 String currencyOf(ApiClient api) => '${api.tenant?['currency'] ?? 'ZAR'}';
 
+bool _looksLikeId(dynamic v) => RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-').hasMatch('${v ?? ''}');
+
 num _n(dynamic v) => v is num ? v : num.tryParse('$v') ?? 0;
 
 String statusLabel(dynamic s) {
@@ -450,7 +452,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                   dense: true,
                   leading: const Icon(Icons.check_circle_outline, color: Colors.green),
                   title: Text('${money(p['amount'], cur)} · ${'${p['method'] ?? ''}'.toUpperCase()}'),
-                  subtitle: Text([niceDate(p['paidAt'] ?? p['createdAt']), p['reference'], p['note']].where((x) => x != null && '$x'.isNotEmpty).join(' · ')),
+                  subtitle: Text([niceDate(p['paidAt'] ?? p['createdAt']), if (!_looksLikeId(p['reference'])) p['reference'], p['note']].where((x) => x != null && '$x'.isNotEmpty).join(' · ')),
                 )),
             if (writeOffs.isNotEmpty) const SectionTitle('Write-offs'),
             ...writeOffs.map((w) => ListTile(dense: true, title: Text(money(w['amount'], cur)), subtitle: Text('${w['reason'] ?? w['note'] ?? ''}'))),
