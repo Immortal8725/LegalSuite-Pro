@@ -170,6 +170,7 @@ export default function CaseDetailPage() {
                 </Button>
               )}
               <Select
+                aria-label="Matter status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 aria-describedby={trialBlocked ? "trial-hold-reason" : undefined}
