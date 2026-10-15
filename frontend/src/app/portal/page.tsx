@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import type { Invoice, Matter } from "@/lib/types";
 import { Input, Label } from "@/components/ui/input";
 import { money, moneyExact } from "@/lib/utils";
+import { MyPrivacyCard } from "@/components/privacy-panel";
 
 export default function PortalHome() {
   const { user, tenant, logout } = useAuth();
@@ -216,6 +217,7 @@ export default function PortalHome() {
             </TableWrap>
           </CardBody>
         </Card>
+        <MyPrivacyCard mode="portal" />
       </main>
     </div>
   );

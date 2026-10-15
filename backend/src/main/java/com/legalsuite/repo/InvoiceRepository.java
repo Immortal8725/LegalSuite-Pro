@@ -10,4 +10,5 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findByTenantIdOrderByDateIssuedDesc(UUID tenantId);
     Optional<Invoice> findByIdAndTenantId(UUID id, UUID tenantId);
     long countByTenantId(UUID tenantId);
+    List<Invoice> findByTenantIdAndClientId(UUID tenantId, UUID clientId);
 }

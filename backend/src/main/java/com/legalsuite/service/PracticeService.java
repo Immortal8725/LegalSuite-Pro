@@ -1,5 +1,7 @@
 package com.legalsuite.service;
 
+import com.legalsuite.common.UploadPolicy;
+
 import com.legalsuite.common.Ids;
 import com.legalsuite.common.ApiException;
 import com.legalsuite.common.JsonLists;
@@ -43,6 +45,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PracticeService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.legalsuite.common.VirusScanner virusScanner;
     private final ClientRepository clients;
     private final LegalCaseRepository cases;
     private final ContactRepository contacts;
@@ -295,17 +299,19 @@ public class PracticeService {
     @Transactional
     public Map<String, Object> upload(MultipartFile file, UUID caseId, UUID clientId, String category) throws IOException {
         UUID tenantId = tid();
-        String stored = UUID.randomUUID() + "-" + String.valueOf(file.getOriginalFilename()).replaceAll("[^A-Za-z0-9._ -]", "_");
-        String ref = storage.put(tenantId + "/" + stored, file.getBytes(), file.getContentType());
+        String display = UploadPolicy.safeName(file == null ? null : file.getOriginalFilename(), "document");
+        String mime = com.legalsuite.common.DocumentTypePolicy.check(file, display);
+        if (virusScanner != null) virusScanner.scan(file);
+        String ref = storage.put(tenantId + "/" + UploadPolicy.storageName(display), file.getBytes(), mime);
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tenantId);
         doc.setCaseId(caseId);
         doc.setClientId(clientId);
         doc.setUploadedBy(TenantContext.requireUser());
-        doc.setName(file.getOriginalFilename());
-        doc.setOriginalName(file.getOriginalFilename());
+        doc.setName(display);
+        doc.setOriginalName(display);
         doc.setCategory(category == null ? "other" : category);
-        doc.setMimeType(file.getContentType());
+        doc.setMimeType(mime);
         doc.setSizeBytes(file.getSize());
         doc.setStoragePath(ref);
         documents.save(doc);

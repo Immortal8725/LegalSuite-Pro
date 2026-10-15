@@ -163,6 +163,8 @@ public class PayFastItnService {
         }
         int seats = checkout.map(ProductCheckout::getSeatCount).orElseGet(() -> parseSeats(PayFastSignature.value(posted, "custom_int1"), 1));
         account.setSeatCount(seats);
+        Integer staff = checkout.map(ProductCheckout::getStaffSeatCount).orElse(null);
+        account.setStaffSeatCount(staff != null ? staff : parseSeats(PayFastSignature.value(posted, "custom_int2"), 0));
         account.setSeatStatus("active");
         account.setSeatActiveUntil(extend(account.getSeatActiveUntil()));
         accounts.save(account);

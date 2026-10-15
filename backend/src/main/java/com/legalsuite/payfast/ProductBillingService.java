@@ -61,6 +61,7 @@ public class ProductBillingService {
         m.put("staffSeatPriceCents", PayFastMoney.STAFF_SEAT_CENTS);
         m.put("staffSeatPrice", PayFastMoney.formatRands(PayFastMoney.STAFF_SEAT_CENTS));
         m.put("seatCount", account == null ? 0 : account.getSeatCount());
+        m.put("staffSeatCount", account == null || account.getStaffSeatCount() == null ? 0 : account.getStaffSeatCount());
         m.put("seatStatus", account == null ? "inactive" : account.getSeatStatus());
         m.put("seatActiveUntil", account == null ? null : account.getSeatActiveUntil());
         m.put("lastPaymentAt", account == null ? null : account.getLastPaymentAt());

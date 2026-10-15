@@ -55,6 +55,7 @@ type Status = {
   staffSeatsAllowed?: boolean;
   staffSeatPrice?: string;
   seatCount: number;
+  staffSeatCount?: number;
   seatStatus: string;
   seatActiveUntil?: string | null;
   lastPaymentAt?: string | null;
@@ -143,8 +144,13 @@ export default function ProductBillingPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600">Seats on the account</p>
+                  <p className="text-xs text-slate-600">Attorney seats on the account</p>
                   <p className="text-xl font-extrabold text-navy">{status.seatCount}</p>
+                  {status.staffSeatsAllowed && (
+                    <p className="text-xs text-slate-600">
+                      Staff seats: <span className="font-semibold text-navy">{status.staffSeatCount ?? 0}</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-slate-600">Last payment</p>

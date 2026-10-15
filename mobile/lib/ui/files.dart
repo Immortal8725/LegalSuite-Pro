@@ -35,7 +35,7 @@ Future<PickedFile?> pickAnyFile(BuildContext context) async {
   if (source == null) return null;
   try {
     if (source == 'file') {
-      final r = await FilePicker.pickFiles(withData: true);
+      final r = await FilePicker.pickFiles(withData: true, type: FileType.custom, allowedExtensions: const ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'odt', 'ods', 'rtf', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'heic', 'heif', 'eml', 'msg', 'zip']);
       final f = r?.files.singleOrNull;
       if (f == null) return null;
       final bytes = f.bytes ?? (f.path != null ? await File(f.path!).readAsBytes() : null);

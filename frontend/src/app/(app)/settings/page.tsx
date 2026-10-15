@@ -1,5 +1,6 @@
 "use client";
 
+import { MyPrivacyCard, PrivacyRequestsAdmin } from "@/components/privacy-panel";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiPost, apiPut } from "@/lib/api";
@@ -345,6 +346,8 @@ export default function SettingsPage() {
             </Link>
           </CardBody>
         </Card>
+        <MyPrivacyCard mode="staff" />
+        {user && ["owner", "admin", "partner", "director"].includes(user.role) ? <PrivacyRequestsAdmin /> : null}
       </div>
     </div>
   );

@@ -25,6 +25,8 @@ public class BillingAccount {
     @Column(nullable = false, unique = true)
     private UUID tenantId;
     private int seatCount;
+    /** Paid staff seats (R349 each). Null on rows from before V9. */
+    private Integer staffSeatCount;
     /** inactive, pending, active, past_due, cancelled */
     private String seatStatus = "inactive";
     private Instant seatActiveUntil;

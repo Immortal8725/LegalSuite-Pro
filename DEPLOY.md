@@ -35,6 +35,15 @@ Copy `.env.example` to `.env` on the host. Never commit `.env`. Every secret is 
 | `NEXT_PUBLIC_API_URL` | web build | Where the web server proxies `/api`. Compose uses `http://api:18081`. Baked in at build time. |
 | `NEXT_PUBLIC_PUBLIC_SITE_ROOT` | optional | Root domain for firm public-site subdomains. |
 | `LEGALSUITE_UPLOAD_DIR` | yes on a VM | Folder for uploaded documents and payment proofs. Compose mounts a volume at `/app/uploads`. |
+| `LEGALSUITE_REFRESH_TOKEN_MS` | optional | Refresh token lifetime in milliseconds, default 604800000 (7 days). |
+| `JPA_DDL_AUTO` | optional | Hibernate schema mode on the postgres profile, default `validate`. Flyway owns the schema; do not change this on a live system. |
+| `OPENAI_MODEL`, `OPENAI_BASE_URL` | optional | Model and endpoint when `LEGALSUITE_AI_PROVIDER=openai`. Defaults `gpt-4o-mini` and `https://api.openai.com/v1` (any OpenAI-compatible endpoint works). |
+| `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL` | optional | Model and endpoint when `LEGALSUITE_AI_PROVIDER=anthropic`. Defaults `claude-3-5-haiku-latest` and `https://api.anthropic.com/v1`. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY` | not used for billing | Left from an earlier billing design; only the operator credentials check reads them. Product billing is PayFast. Leave blank. |
+| `NEXT_OUTPUT` | web build | `standalone` in the Docker image (set by `frontend/Dockerfile`). Leave unset for `next start`. |
+| `NODE_ENV` | web | Set by Next.js (`production` for `next build` and `next start`). Production adds HSTS and drops `unsafe-eval` from the CSP. Do not set it by hand. |
+| `LEGALSUITE_CLAMAV_HOST`, `LEGALSUITE_CLAMAV_PORT`, `LEGALSUITE_CLAMAV_TIMEOUT_MS` | optional | ClamAV (clamd) virus scan of every document upload. Off when the host is blank; port 3310, timeout 15000 ms. When on, uploads are refused while clamd is unreachable. |
+| `LEGALSUITE_HSTS_ALWAYS`, `LEGALSUITE_HSTS_MAX_AGE` | optional | Send HSTS from the API on every response (when the proxy does not forward `X-Forwarded-Proto`), and its max age in seconds (default 31536000). See section 4. |
 | `LEGALSUITE_STORAGE_TYPE` | no | `local` (default, files in `LEGALSUITE_UPLOAD_DIR`) or `s3`. Use `s3` on hosts without a persistent disk (Render free). Old local files stay readable after switching. |
 | `LEGALSUITE_STORAGE_S3_ENDPOINT`, `_REGION`, `_BUCKET`, `_ACCESS_KEY`, `_SECRET_KEY` | with `s3` | Any S3-compatible store. Supabase Storage: endpoint `https://<ref>.storage.supabase.co/storage/v1/s3`, region as shown under Storage > S3, keys from Storage > S3 access keys. Keep the bucket private. |
 | `DB_HOST`, `DB_PORT`, `DB_NAME` | instead of `DATABASE_URL` | Used to build the JDBC URL when `DATABASE_URL` is not set (Render blueprint). |
@@ -59,6 +68,17 @@ Flyway creates the schema on an empty database and upgrades an older one (see [d
 - [ ] The proxy must pass `X-Forwarded-For` and `X-Forwarded-Proto`, and must allow WebSocket upgrades on `/ws/` (in-app calls).
 - [ ] In-app call signalling (`/ws/signal`) only accepts browsers whose origin is `APP_URL` or in `CORS_ALLOWED_ORIGINS`, and only with a signed-in staff token. If calls do not connect, check those two values first.
 - [ ] Only the proxy is public. Postgres and the API port stay private.
+- [ ] Set HSTS at the proxy as well, so every response (including proxy error pages) carries it. Caddy sends nothing by default; add it:
+
+  ```
+  app.example.co.za {
+      header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+      reverse_proxy 127.0.0.1:3000
+  }
+  ```
+
+  nginx: `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;` inside the `server { listen 443 ssl; ... }` block, plus a port 80 server that only returns `301 https://$host$request_uri`. Add `preload` only once every subdomain is on HTTPS for good.
+- [ ] The web app sends HSTS on production builds. The API sends it on HTTPS requests; with `FORWARD_HEADERS_STRATEGY=native` it sees the proxy's `X-Forwarded-Proto`. If your proxy cannot forward that header, set `LEGALSUITE_HSTS_ALWAYS=true` (`LEGALSUITE_HSTS_MAX_AGE` changes the age, default one year).
 - [ ] Check the headers: `curl -sI https://app.example.co.za/login` shows `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`.
 
 ## 5. PayFast (product billing)
@@ -99,6 +119,7 @@ Owlaw holds personal information of clients, opposing parties and staff, some of
 - [ ] The platform operator signs an operator agreement (POPIA s 21) with each firm. Firms acknowledge it in onboarding.
 - [ ] Host in South Africa where possible (for example AWS `af-south-1`). If data leaves South Africa, confirm the s 72 cross-border conditions are met.
 - [ ] Access is role based and every change is in the audit log. Review the audit log monthly.
+- [ ] Data subject requests (POPIA s 23-25) are self-service. Clients use "Your personal information" in the portal, firm users the same card in Settings: download as JSON (portal also ZIP with their files) and ask for deletion. A firm admin approves or refuses (refusal needs a reason) under Settings, Privacy requests. Approval anonymises the person; matters, invoices, payments, trust ledger and the audit log are kept for the legal retention periods with the identifying details removed. Admins can also export a client (`GET /api/v1/privacy/clients/{id}/export?format=zip`) or log a request taken by phone (`POST /api/v1/privacy/clients/{id}/erasure`). Every export, request and decision is in the audit log. Access tokens already issued to an anonymised user expire within `LEGALSUITE_ACCESS_TOKEN_MS` (default 1 hour); refresh tokens are revoked at once.
 - [ ] Security compromise: notify the Information Regulator and affected data subjects as soon as reasonably possible (s 22). Keep the incident steps with the backup steps.
 - [ ] Retention: closed matters are kept for the period the firm's rules require, then deleted. Backups age out on the same schedule.
 

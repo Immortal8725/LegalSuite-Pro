@@ -108,7 +108,7 @@ export default function UsagePage() {
               </div>
               <div>
                 <p className="text-xs text-slate-600">Due</p>
-                <p className="text-xl font-extrabold text-gold">{moneyExact(preview.total)}</p>
+                <p className="text-xl font-extrabold text-gold-dark">{moneyExact(preview.total)}</p>
               </div>
             </div>
             <TableWrap>

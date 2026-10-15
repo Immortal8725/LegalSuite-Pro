@@ -46,6 +46,8 @@ public class AppUser {
     private boolean emailVerified;
     private String totpSecret;
     private boolean totpEnabled;
+    /** Last TOTP time step accepted, so a code cannot be used twice. */
+    private Long totpLastStep;
     /** Set for invited users with a temporary password; cleared when they choose their own. */
     private Boolean passwordChangeRequired;
     /** Listed on the firm's public People page. Null (older rows) counts as listed; new invites start hidden. */

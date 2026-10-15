@@ -165,7 +165,7 @@ class PaymentsAndPayFastFlowTest {
 
         // Only a firm admin can start checkout.
         call(post("/api/v1/product-billing/seats/checkout"), sipho, "{\"seats\":1}").andExpect(status().isForbidden());
-        JsonNode form = data(call(post("/api/v1/product-billing/seats/checkout"), thabo, "{\"seats\":2}")
+        JsonNode form = data(call(post("/api/v1/product-billing/seats/checkout"), thabo, "{\"seats\":2,\"staffSeats\":1}")
                 .andExpect(status().isOk()).andReturn());
         assertEquals("https://sandbox.payfast.co.za/eng/process", form.get("action").asText());
         String mPaymentId = form.get("mPaymentId").asText();
@@ -192,6 +192,7 @@ class PaymentsAndPayFastFlowTest {
         JsonNode active = billingStatus(thabo);
         assertEquals("active", active.get("seatStatus").asText());
         assertEquals(2, active.get("seatCount").asInt());
+        assertEquals(1, active.get("staffSeatCount").asInt(), "staff seats bought at checkout are shown");
         // Replaying the same ITN is harmless.
         itn(List.of(f("m_payment_id", mPaymentId), f("pf_payment_id", "900003"), f("payment_status", "COMPLETE"),
                 f("amount_gross", amount), f("merchant_id", MERCHANT_ID), f("token", "tok-aaaaaaaa-2222")))

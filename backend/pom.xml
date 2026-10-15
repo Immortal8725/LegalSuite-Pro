@@ -145,6 +145,11 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+					<!-- Integration tests sign in as the seeded demo firms, so the seed is on for every test run,
+					     including the postgres profile (where it is off by default for live systems). -->
+					<systemPropertyVariables>
+						<legalsuite.demo-data>true</legalsuite.demo-data>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 		</plugins>

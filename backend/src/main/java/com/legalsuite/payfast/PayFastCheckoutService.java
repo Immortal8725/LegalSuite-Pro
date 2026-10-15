@@ -69,6 +69,10 @@ public class PayFastCheckoutService {
         PayFastCheckoutForm.Built built = PayFastCheckoutForm.seat(
                 props, tenantId, buyer.first(), buyer.last(), buyer.email(), mPaymentId, plan.slug(), seats, staffSeats, billingDate);
         saveCheckout(tenantId, mPaymentId, "seat", seats, built.amountCents(), null);
+        checkouts.findByMerchantPaymentId(mPaymentId).ifPresent(r -> {
+            r.setStaffSeatCount(staffSeats);
+            checkouts.save(r);
+        });
         markPending(tenantId, seats);
         audit.record("billing.checkout", "billing", mPaymentId,
                 plan.slug() + " seat " + seats + " staff " + staffSeats + " " + built.amountCents());

@@ -12,7 +12,7 @@ export function LegalFooter({ className }: { className?: string }) {
             <Link
               key={d.slug}
               href={`/legal/${d.slug}`}
-              className="w-fit font-semibold text-sky-600 hover:text-navy hover:underline"
+              className="w-fit font-semibold text-sky-700 hover:text-navy hover:underline"
             >
               {d.title}
             </Link>

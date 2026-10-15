@@ -96,7 +96,7 @@ public class AuthService {
                 challenge.put("email", user.getEmail());
                 return challenge;
             }
-            if (!Totp.verify(user.getTotpSecret(), code)) {
+            if (!useTotp(user, code)) {
                 throw ApiException.unauthorized("Invalid authenticator code");
             }
         }
@@ -123,6 +123,16 @@ public class AuthService {
         return m;
     }
 
+    /** Accepts a code once: its time step must be newer than the last one used. The caller saves the user. */
+    private boolean useTotp(AppUser user, String code) {
+        long step = Totp.matchStep(user.getTotpSecret(), code);
+        if (step < 0) return false;
+        if (user.getTotpLastStep() != null && step <= user.getTotpLastStep()) return false;
+        user.setTotpLastStep(step);
+        users.save(user);
+        return true;
+    }
+
     @Transactional
     public Map<String, Object> totpConfirm(Map<String, Object> body) {
         AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
@@ -131,7 +141,7 @@ public class AuthService {
             throw ApiException.badRequest("Start authenticator enrolment first");
         }
         String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
-        if (!Totp.verify(user.getTotpSecret(), code)) {
+        if (!useTotp(user, code)) {
             throw ApiException.badRequest("Invalid authenticator code");
         }
         user.setTotpEnabled(true);
@@ -150,7 +160,7 @@ public class AuthService {
         }
         String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
         String password = body == null || body.get("password") == null ? "" : String.valueOf(body.get("password"));
-        boolean okCode = Totp.verify(user.getTotpSecret(), code);
+        boolean okCode = useTotp(user, code);
         boolean okPassword = !password.isBlank() && encoder.matches(password, user.getPasswordHash());
         if (!okCode && !okPassword) {
             throw ApiException.unauthorized("Enter the current authenticator code or your password");
