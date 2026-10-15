@@ -128,4 +128,37 @@ void main() {
       expect(calls.last.json, {'accountId': 'a1', 'type': 'deposit', 'amount': '500.00', 'clientId': 'cl1'});
     });
   });
+
+  group('documents and e-sign', () {
+    test('upload sends the file with the matter and category', () async {
+      final (api, calls) = recordingApi();
+      await api.uploadDocument(utf8.encode('hello'), 'note.txt', caseId: 'c1', category: 'evidence');
+      expect(calls.last.path, '/api/v1/documents/upload');
+      expect(calls.last.body, contains('filename="note.txt"'));
+      expect(calls.last.body, contains('name="caseId"'));
+      expect(calls.last.body, isNot(contains('name="clientId"')));
+    });
+
+    test('download returns the raw bytes', () async {
+      final api = ApiClient(
+        baseUrl: 'http://api.test',
+        store: MemoryTokenStore()..values[ApiClient.accessKey] = 'A',
+        client: MockClient((req) async {
+          expect(req.url.path, '/api/v1/documents/d1/download');
+          expect(req.headers['Authorization'], 'Bearer A');
+          return http.Response.bytes([1, 2, 3], 200);
+        }),
+      );
+      expect(await api.downloadDocument('d1'), [1, 2, 3]);
+    });
+
+    test('signature request and void', () async {
+      final (api, calls) = recordingApi((_) => {'id': 's1', 'signUrl': '/sign/s1'});
+      final s = await api.sendForSignature({'title': 'Engagement', 'signerName': 'A', 'signerEmail': 'a@b.co.za', 'documentBody': 'x', 'caseId': null});
+      expect(s['signUrl'], '/sign/s1');
+      expect(calls.last.json.containsKey('caseId'), isFalse);
+      await api.voidSignature('s1');
+      expect(calls.last.path, '/api/v1/signatures/s1/void');
+    });
+  });
 }

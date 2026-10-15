@@ -7,6 +7,7 @@ import '../ui/launch.dart';
 import '../ui/theme.dart';
 import 'billing.dart';
 import 'calls.dart';
+import 'documents.dart';
 import 'trust_ledger.dart';
 import 'time.dart';
 
@@ -110,6 +111,21 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     label: const Text('Client trust'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrustScreen(api: widget.api, access: Access.current, clientId: '${m['clientId']}'))),
                   ),
+                if (Access.current.documents)
+                  ActionChip(
+                    key: const Key('matterUpload'),
+                    avatar: const Icon(Icons.upload_file, size: 18),
+                    label: const Text('Upload document'),
+                    onPressed: () async {
+                      if (await uploadDocumentFlow(context, widget.api, caseId: widget.caseId, clientId: m['clientId']?.toString())) _loader.currentState?.reload();
+                    },
+                  ),
+                if (Access.current.esign)
+                  ActionChip(
+                    avatar: const Icon(Icons.draw_outlined, size: 18),
+                    label: const Text('E-sign'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SignaturesScreen(api: widget.api, caseId: widget.caseId))),
+                  ),
                 if (Access.current.expenses)
                   ActionChip(
                     avatar: const Icon(Icons.receipt_long_outlined, size: 18),
@@ -159,6 +175,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     leading: Icon(d['privileged'] == true ? Icons.lock_outline : Icons.description_outlined, color: navy),
                     title: Text('${d['name']}'),
                     subtitle: Text([d['category'], niceDate(d['createdAt'])].where((x) => x != null && '$x'.isNotEmpty).join(' · ')),
+                    trailing: const Icon(Icons.open_in_new, size: 18),
+                    onTap: () => openDocument(context, widget.api, d.cast<String, dynamic>()),
                   ),
                 )),
           ]);
