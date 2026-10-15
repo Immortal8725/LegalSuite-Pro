@@ -7,6 +7,7 @@ import 'package:owlaw_mobile/api/api_client.dart';
 import 'package:owlaw_mobile/api/owlaw_api.dart';
 import 'package:owlaw_mobile/api/token_store.dart';
 import 'package:owlaw_mobile/screens/billing.dart';
+import 'package:owlaw_mobile/screens/matter_form.dart';
 import 'package:owlaw_mobile/ui/forms.dart';
 
 class Call {
@@ -159,6 +160,42 @@ void main() {
       expect(calls.last.json.containsKey('caseId'), isFalse);
       await api.voidSignature('s1');
       expect(calls.last.path, '/api/v1/signatures/s1/void');
+    });
+  });
+
+  group('matters, clients, tasks and diary', () {
+    test('new matter posts, edit puts', () async {
+      final (api, calls) = recordingApi((_) => {'id': 'c9'});
+      await api.saveCase({'clientId': 'cl1', 'title': 'Dlamini v RAF', 'courtName': ''});
+      expect(calls.last.method, 'POST');
+      expect(calls.last.json, {'clientId': 'cl1', 'title': 'Dlamini v RAF'});
+      await api.saveCase({'title': 'Renamed'}, id: 'c9');
+      expect(calls.last.method, 'PUT');
+      expect(calls.last.path, '/api/v1/cases/c9');
+      await api.saveClient({'firstName': 'Thandi', 'lastName': 'Dlamini'});
+      expect(calls.last.path, '/api/v1/clients');
+    });
+
+    test('conflict check sends name and opposing party, and clear means no matches', () async {
+      final (api, calls) = recordingApi((_) => {'matchCount': 1, 'matches': [{'name': 'ABC Corp'}]});
+      final r = await api.conflictCheck('ABC Corp', opposingParty: 'City');
+      expect(calls.last.json, {'name': 'ABC Corp', 'opposingParty': 'City'});
+      expect(conflictClear(r), isFalse);
+      expect(conflictClear({'matchCount': 0}), isTrue);
+      expect(conflictClear(null), isFalse);
+    });
+
+    test('event times go to the API in UTC and tasks use an instant due date', () async {
+      final start = DateTime(2026, 11, 2, 9, 30);
+      final b = eventBody(title: 'Hearing', type: 'hearing', start: start, minutes: 60, caseId: 'c1');
+      expect(b['startTime'], start.toUtc().toIso8601String());
+      expect(DateTime.parse(b['endTime'] as String).difference(DateTime.parse(b['startTime'] as String)).inMinutes, 60);
+      expect(eventBody(title: 'x', type: 'deadline', start: start, minutes: 0).containsKey('endTime'), isFalse);
+      expect(taskDue('2026-11-02'), '2026-11-02T00:00:00Z');
+      final (api, calls) = recordingApi();
+      await api.setTaskStatus('t1', 'completed');
+      expect(calls.last.method, 'PATCH');
+      expect(calls.last.json, {'status': 'completed'});
     });
   });
 }

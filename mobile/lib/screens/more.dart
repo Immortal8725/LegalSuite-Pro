@@ -8,6 +8,7 @@ import '../ui/theme.dart';
 import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
+import 'matter_form.dart';
 import 'trust_ledger.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -46,11 +47,26 @@ class MoreScreen extends StatelessWidget {
       );
 }
 
-class PeopleScreen extends StatelessWidget {
+class PeopleScreen extends StatefulWidget {
   const PeopleScreen({super.key, required this.api});
   final ApiClient api;
+  @override
+  State<PeopleScreen> createState() => _PeopleScreenState();
+}
 
-  Widget _person(BuildContext context, String name, String sub, String? phone, String? email) {
+class _PeopleScreenState extends State<PeopleScreen> {
+  ApiClient get api => widget.api;
+  int _version = 0;
+
+  Future<void> _editClient(Map? c) async {
+    final saved = await showClientForm(context, api, client: c?.cast<String, dynamic>());
+    if (saved != null && mounted) {
+      snack(context, 'Client saved');
+      setState(() => _version++);
+    }
+  }
+
+  Widget _person(BuildContext context, String name, String sub, String? phone, String? email, {VoidCallback? onTap}) {
     final hasPhone = phone != null && phone.isNotEmpty && phone != 'null';
     final hasEmail = email != null && email.isNotEmpty && email != 'null';
     return Card(
@@ -59,6 +75,7 @@ class PeopleScreen extends StatelessWidget {
         title: Text(name),
         subtitle: Text([sub, if (hasEmail) email, if (hasPhone) phone].where((x) => x.isNotEmpty).join('\n')),
         isThreeLine: hasEmail && hasPhone,
+        onTap: onTap,
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           if (hasPhone) IconButton(tooltip: 'Call $name', icon: const Icon(Icons.phone, color: navy), onPressed: () => openUri(context, telUri(phone))),
           if (hasEmail) IconButton(tooltip: 'Email $name', icon: const Icon(Icons.email_outlined, color: navy), onPressed: () => openUri(context, mailUri(email))),
@@ -76,15 +93,17 @@ class PeopleScreen extends StatelessWidget {
           title: const Text('Clients and contacts'),
           bottom: const TabBar(labelColor: Colors.white, unselectedLabelColor: Colors.white70, indicatorColor: gold, tabs: [Tab(text: 'Clients'), Tab(text: 'Contacts')]),
         ),
+        floatingActionButton: FloatingActionButton.extended(onPressed: () => _editClient(null), icon: const Icon(Icons.person_add_alt_1), label: const Text('New client')),
         body: TabBarView(children: [
           Loader<List>(
+            key: ValueKey('clients$_version'),
             load: () async => await api.get('/api/v1/clients') as List,
             isEmpty: (d) => d.isEmpty,
             emptyText: 'No clients yet.',
             builder: (context, list, reload) => ListView(
               children: list.map((c) {
                 final m = c as Map;
-                return _person(context, '${m['displayName'] ?? m['companyName'] ?? ''}', '${m['type'] ?? ''} · ${m['status'] ?? ''}', m['phone']?.toString(), m['email']?.toString());
+                return _person(context, '${m['displayName'] ?? m['companyName'] ?? ''}', '${m['type'] ?? ''} · ${m['status'] ?? ''}', m['phone']?.toString(), m['email']?.toString(), onTap: () => _editClient(m));
               }).toList(),
             ),
           ),

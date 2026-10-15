@@ -8,6 +8,7 @@ import '../ui/theme.dart';
 import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
+import 'matter_form.dart';
 import 'trust_ledger.dart';
 import 'time.dart';
 
@@ -59,7 +60,22 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Matter')),
+      appBar: AppBar(title: const Text('Matter'), actions: [
+        IconButton(
+          key: const Key('editMatter'),
+          tooltip: 'Edit matter',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () async {
+            final m = _loader.currentState?.data;
+            if (m == null) return;
+            final saved = await Navigator.push(context, MaterialPageRoute(builder: (_) => MatterFormScreen(api: widget.api, matter: m)));
+            if (saved != null && context.mounted) {
+              snack(context, 'Matter saved');
+              _loader.currentState?.reload();
+            }
+          },
+        ),
+      ]),
       body: Loader<Map<String, dynamic>>(
         key: _loader,
         load: _load,
@@ -111,6 +127,19 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     label: const Text('Client trust'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrustScreen(api: widget.api, access: Access.current, clientId: '${m['clientId']}'))),
                   ),
+                if (Access.current.tasks)
+                  ActionChip(
+                    avatar: const Icon(Icons.checklist, size: 18),
+                    label: const Text('Tasks'),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TasksScreen(api: widget.api, caseId: widget.caseId))),
+                  ),
+                ActionChip(
+                  avatar: const Icon(Icons.event_available_outlined, size: 18),
+                  label: const Text('Add deadline'),
+                  onPressed: () async {
+                    if (await showEventSheet(context, widget.api, caseId: widget.caseId) && context.mounted) snack(context, 'Saved to the diary');
+                  },
+                ),
                 if (Access.current.documents)
                   ActionChip(
                     key: const Key('matterUpload'),
