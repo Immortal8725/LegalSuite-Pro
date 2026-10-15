@@ -5,6 +5,7 @@ import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
 import 'calls.dart';
+import 'generate_document.dart';
 import 'time.dart';
 
 class MatterDetailScreen extends StatefulWidget {
@@ -94,6 +95,15 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                   onPressed: () => showTimeEntrySheet(context, widget.api, presetCaseId: widget.caseId),
                 ),
                 ActionChip(avatar: const Icon(Icons.note_add_outlined, size: 18), label: const Text('Add note'), onPressed: _addNote),
+                ActionChip(
+                  key: const Key('generateDocumentOnMatter'),
+                  avatar: const Icon(Icons.description_outlined, size: 18),
+                  label: const Text('Generate document'),
+                  onPressed: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => GenerateDocumentScreen(api: widget.api, caseId: widget.caseId, clientEmail: email)));
+                    reload();
+                  },
+                ),
                 if (phone != null && phone.isNotEmpty && phone != 'null') ...[
                   ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
                   ActionChip(
