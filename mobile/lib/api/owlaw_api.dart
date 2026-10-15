@@ -83,6 +83,9 @@ extension OwlawApi on ApiClient {
   Future<List<Json>> outbound({String? caseId}) async => _list(await get(caseId == null ? '/api/v1/outbound' : '/api/v1/outbound?caseId=$caseId'));
   Future<Json> sendMessage(String channel, Json body) async => _map(await post('/api/v1/outbound/$channel', clean(body)));
 
+  // In-app calling
+  Future<Json> voiceAppToken() async => _map(await get('/api/v1/voice/app/token'));
+
   // Access
   Future<List<Json>> tenantModules(String tenantId) async => _list(await get('/api/v1/tenants/$tenantId/modules'));
 }

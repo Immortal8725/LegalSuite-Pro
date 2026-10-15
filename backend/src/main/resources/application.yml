@@ -82,6 +82,10 @@ legalsuite:
     sms-from: ${TWILIO_SMS_FROM:}
     whatsapp-from: ${TWILIO_WHATSAPP_FROM:}
     messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
+    api-key-sid: ${TWILIO_API_KEY_SID:}
+    api-key-secret: ${TWILIO_API_KEY_SECRET:}
+    twiml-app-sid: ${TWILIO_TWIML_APP_SID:}
+    push-credential-sid: ${TWILIO_PUSH_CREDENTIAL_SID:}
   ai:
     # local (default) never sends a prompt off the tenant.
     # openai or anthropic run only when the matching key is set.

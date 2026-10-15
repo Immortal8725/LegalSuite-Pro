@@ -9,6 +9,7 @@ import 'assist.dart';
 import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
+import 'in_app_call.dart';
 import 'matter_form.dart';
 import 'trust_ledger.dart';
 import 'time.dart';
@@ -116,10 +117,17 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                 ),
                 ActionChip(avatar: const Icon(Icons.note_add_outlined, size: 18), label: const Text('Add note'), onPressed: _addNote),
                 if (phone != null && phone.isNotEmpty && phone != 'null') ...[
-                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call client'), onPressed: () => openUri(context, telUri(phone))),
+                  ActionChip(
+                    key: const Key('callInApp'),
+                    avatar: const Icon(Icons.wifi_calling_3, size: 18),
+                    label: const Text('Call in app'),
+                    onPressed: () => Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => InAppCallScreen(api: widget.api, to: phone, name: m['clientName']?.toString(), caseId: widget.caseId))),
+                  ),
+                  ActionChip(avatar: const Icon(Icons.phone, size: 18), label: const Text('Call from my phone'), onPressed: () => openUri(context, telUri(phone))),
                   ActionChip(
                     avatar: const Icon(Icons.support_agent, size: 18),
-                    label: const Text('Call via firm'),
+                    label: const Text('Callback via firm'),
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallsScreen(api: widget.api, initialTo: phone))),
                   ),
                 ],

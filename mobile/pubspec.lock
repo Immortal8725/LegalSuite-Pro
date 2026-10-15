@@ -416,6 +416,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
+  js_notifications:
+    dependency: transitive
+    description:
+      name: js_notifications
+      sha256: e1d5a1eb420f54e5908f1028b253d0b6604a13350f1180d46e13d4ab781362c1
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   json_annotation:
     dependency: transitive
     description:
@@ -664,6 +672,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
+  simple_print:
+    dependency: transitive
+    description:
+      name: simple_print
+      sha256: "49b6796fb93b557bbba4eca687b8521d3d20ffee47d74d8a0857f6ee0727042b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1+2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -717,6 +733,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.12"
+  twilio_voice:
+    dependency: "direct main"
+    description:
+      name: twilio_voice
+      sha256: "6ea022ff9968b0963b31aa738a23571d9518c7a3f81248e45b760451496a1b15"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
   typed_data:
     dependency: transitive
     description:
@@ -829,6 +853,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  web_callkit:
+    dependency: transitive
+    description:
+      name: web_callkit
+      sha256: "2aa638f24d6e2b562451d1c310380f31bb5cd260734496bc5926b3ea5fa20bb9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   win32:
     dependency: transitive
     description:
