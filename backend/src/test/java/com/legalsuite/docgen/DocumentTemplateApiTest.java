@@ -42,14 +42,16 @@ class DocumentTemplateApiTest {
 
     @Test
     void brandedGenerationFromAMatterSavesPdfAndDocxAndRemembersFields() throws Exception {
-        String thabo = login("ndlovu-partners", "thabo@ndlovulaw.co.za");
+        // A fresh firm, so generated files never mix with the seeded demo firms (Postgres keeps data between contexts).
+        String firmName = "Mokoena Inc " + UUID.randomUUID().toString().substring(0, 5);
+        String thabo = register(firmName, "Kagiso", "Mokoena");
         ok(mvc.perform(put("/api/v1/firm/branding").header("Authorization", bearer(thabo)).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refPrefix\":\"TN\",\"footerText\":\"\",\"letterheadColour\":\"#7a4b1e\",\"trustAccountNumber\":\"62845510293\"}")));
         byte[] png = DocGenFixtures.logo("NP", new Color(0x7a, 0x4b, 0x1e), true);
         JsonNode brand = ok(mvc.perform(multipart("/api/v1/firm/branding/logo")
                 .file(new MockMultipartFile("file", "logo.png", "image/png", png)).header("Authorization", bearer(thabo))));
         assertTrue(brand.get("hasLogo").asBoolean());
-        assertEquals("Thabo Ndlovu, Director", brand.get("defaultFooterText").asText());
+        assertEquals("Kagiso Mokoena, Managing Partner", brand.get("defaultFooterText").asText());
         byte[] served = mvc.perform(get("/api/v1/firm/branding/logo").header("Authorization", bearer(thabo)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         assertEquals(png.length, served.length);
@@ -82,9 +84,9 @@ class DocumentTemplateApiTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         try (PDDocument d = Loader.loadPDF(pdf)) {
             String text = new PDFTextStripper().getText(d);
-            assertTrue(text.contains("Ndlovu & Partners"));
+            assertTrue(text.contains(firmName));
             assertTrue(text.contains("ESTATE LATE: Johannes Molefe"));
-            assertTrue(text.contains("Thabo Ndlovu, Director"));
+            assertTrue(text.contains("Kagiso Mokoena"));
             assertTrue(text.contains("/ES/01/TN"));
             assertFalse(d.getPage(0).getResources().getXObjectNames().iterator().next().getName().isEmpty());
         }
@@ -112,8 +114,13 @@ class DocumentTemplateApiTest {
 
     @Test
     void firmTemplatesAndLogosAreIsolatedBetweenFirms() throws Exception {
-        String thabo = login("ndlovu-partners", "thabo@ndlovulaw.co.za");
-        String john = login("smith-associates", "john@smithlaw.com");
+        String firmA = "Dlamini Attorneys " + UUID.randomUUID().toString().substring(0, 5);
+        String firmB = "Van Wyk Inc " + UUID.randomUUID().toString().substring(0, 5);
+        String thabo = register(firmA, "Nomsa", "Dlamini");
+        String john = register(firmB, "Pieter", "van Wyk");
+        ok(mvc.perform(multipart("/api/v1/firm/branding/logo")
+                .file(new MockMultipartFile("file", "logo.png", "image/png", DocGenFixtures.logo("ND", new Color(0x1b, 0x6b, 0x3a), false)))
+                .header("Authorization", bearer(thabo))));
         JsonNode up = ok(mvc.perform(multipart("/api/v1/doc-templates/upload")
                 .file(new MockMultipartFile("file", "Letter of demand.docx",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document", sampleDocx()))
@@ -128,7 +135,7 @@ class DocumentTemplateApiTest {
                 .header("Authorization", bearer(thabo))).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         try (XWPFDocument d = new XWPFDocument(new ByteArrayInputStream(docx)); XWPFWordExtractor x = new XWPFWordExtractor(d)) {
             String text = x.getText();
-            assertTrue(text.contains("Ndlovu & Partners demands payment from Acme (Pty) Ltd"));
+            assertTrue(text.contains(firmA + " demands payment from Acme (Pty) Ltd"));
             assertTrue(text.contains("Amount: [AMOUNT]"), "unfilled bracket prompt stays");
         }
 
@@ -147,8 +154,8 @@ class DocumentTemplateApiTest {
                 .header("Authorization", bearer(john))).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         try (PDDocument d = Loader.loadPDF(pdf)) {
             String text = new PDFTextStripper().getText(d);
-            assertTrue(text.contains("Smith & Associates"));
-            assertFalse(text.contains("Ndlovu"));
+            assertTrue(text.contains(firmB));
+            assertFalse(text.contains(firmA));
         }
         mvc.perform(get("/api/v1/documents/" + gen.get("documents").get(0).get("id").asText() + "/download")
                 .header("Authorization", bearer(john))).andExpect(status().isNotFound());
@@ -199,6 +206,15 @@ class DocumentTemplateApiTest {
     private JsonNode ok(org.springframework.test.web.servlet.ResultActions r) throws Exception {
         MvcResult res = r.andExpect(status().isOk()).andReturn();
         return json.readTree(res.getResponse().getContentAsString()).get("data");
+    }
+
+    private String register(String firm, String first, String last) throws Exception {
+        String email = first.toLowerCase() + "." + UUID.randomUUID().toString().substring(0, 8) + "@example.co.za";
+        MvcResult r = mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firmName\":\"" + firm + "\",\"email\":\"" + email + "\",\"password\":\"Password-2026!\","
+                                + "\"firstName\":\"" + first + "\",\"lastName\":\"" + last + "\",\"country\":\"ZA\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        return json.readTree(r.getResponse().getContentAsString()).get("data").get("accessToken").asText();
     }
 
     private String login(String firm, String email) throws Exception {
