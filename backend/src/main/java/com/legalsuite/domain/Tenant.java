@@ -54,6 +54,20 @@ public class Tenant {
     @Column(length = 8000)
     private String paiaManualBody;
     private boolean popiaOperatorAcknowledged;
+    /** Document branding: reference prefix for "Our Ref", e.g. "NDL". */
+    private String refPrefix;
+    /** Footer line on generated documents. Blank means attorney name plus title. */
+    private String footerText;
+    /** Letterhead accent colour as #rrggbb. */
+    private String letterheadColour;
+    private String trustAccountName;
+    private String trustAccountNumber;
+    private String bankName;
+    private String branchName;
+    private String branchCode;
+    /** Uploaded letterhead logo on disk, served only to this firm's signed-in staff. */
+    private String logoPath;
+    private String logoMime;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }

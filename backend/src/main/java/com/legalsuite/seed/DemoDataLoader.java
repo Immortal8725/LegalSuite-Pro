@@ -626,6 +626,13 @@ public class DemoDataLoader implements CommandLineRunner {
         firm.setPopiaOperatorAcknowledged(true);
         firm.setBankFeedImportedAt(Instant.now());
         firm.setLastBankFeedSource("csv:FNB");
+        firm.setRefPrefix("TN");
+        firm.setLetterheadColour("#7a4b1e");
+        firm.setTrustAccountName("Ndlovu & Partners Trust Account");
+        firm.setTrustAccountNumber("62845510293");
+        firm.setBankName("First National Bank");
+        firm.setBranchName("Sandton City");
+        firm.setBranchCode("250655");
         firm = tenants.save(firm);
         firm.setPaiaManualBody(com.legalsuite.service.PaiaManual.generate(firm));
         firm = tenants.save(firm);

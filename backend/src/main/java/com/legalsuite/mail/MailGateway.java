@@ -8,4 +8,12 @@ public interface MailGateway {
     String unconfiguredReason();
 
     void send(String from, String to, String subject, String body);
+
+    /** A file attached to an outbound email. */
+    record Attachment(String filename, String mimeType, byte[] bytes) {}
+
+    /** Sends with attachments. Gateways that cannot attach send the body only. */
+    default void send(String from, String to, String subject, String body, java.util.List<Attachment> attachments) {
+        send(from, to, subject, body);
+    }
 }
