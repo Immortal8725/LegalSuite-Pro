@@ -30,7 +30,7 @@ final class PdfFonts {
         switch (kind == null ? "sans" : kind) {
             case "serif" -> file = "Tinos-" + style;
             case "carlito" -> file = "Carlito-" + style;
-            default -> file = bold ? "DejaVuSans-Bold" : "DejaVuSans";
+            default -> file = "LiberationSans-" + style;
         }
         return load(file);
     }

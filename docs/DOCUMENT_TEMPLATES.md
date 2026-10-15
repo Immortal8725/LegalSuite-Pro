@@ -24,7 +24,7 @@ These are the firm-supplied originals. The wording is unchanged, and only the pl
 | Notice of termination of mandate (deceased estate) | DOCX | |
 | General power of attorney (estate of the late) | DOCX | |
 
-PDF originals are stored as positioned layouts (text, lines, boxes and images where they were), so the output matches the original page for page. DOCX originals stay as Word files. `scripts/templates/convert.py` rebuilds them from the source files.
+PDF originals are stored as layouts (text, lines, boxes and images where they were). At generation the body text is reflowed as real paragraphs: wrapped lines are joined, fields are merged inline in the paragraph's own font and size, and text is wrapped (and justified where the original was) at the original margins or table column. Nothing is condensed; a long value wraps and the content below it, including table borders, moves down. "Page N of M" counts the generated document's own pages. DOCX originals stay as Word files. `scripts/templates/convert.py` rebuilds them from the source files.
 
 ## Fields
 
@@ -85,3 +85,7 @@ Word output keeps your formatting exactly. The PDF version of an uploaded Word t
 | `DELETE /api/v1/doc-templates/{id}` | Remove a firm template (admins only) |
 
 Each firm sees only its own templates, logo and generated files.
+
+## Sample renders
+
+`OWLAW_SAMPLES=/path/to/dir mvn test -Dtest=SystemTemplateRenderTest` writes every system template as PDF and DOCX for two demo firms.

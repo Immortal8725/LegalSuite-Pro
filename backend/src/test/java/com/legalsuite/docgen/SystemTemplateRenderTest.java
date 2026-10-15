@@ -37,7 +37,7 @@ class SystemTemplateRenderTest {
     void everyTemplateRendersInBothFirmsBranding() throws Exception {
         Branding a = new Branding(firmAValues(), DocGenFixtures.logo("KM", new Color(0x1f, 0x2a, 0x44), true), "#1f2a44");
         Branding b = new Branding(DocGenFixtures.firmB(), DocGenFixtures.logo("VD", new Color(0x1b, 0x6b, 0x3a), false), "#1b6b3a");
-        String samples = System.getProperty("owlaw.samples");
+        String samples = System.getProperty("owlaw.samples", System.getenv("OWLAW_SAMPLES"));
         for (TemplateLibrary.SystemTemplate t : library.all()) {
             for (Branding brand : List.of(a, b)) {
                 DocumentGenerationService.Source src = new DocumentGenerationService.Source(t.id(), t.name(), t.category(),
@@ -96,6 +96,55 @@ class SystemTemplateRenderTest {
     }
 
     @Test
+    void paragraphsReflowInOneFontWithoutSqueezing() throws Exception {
+        TemplateLibrary.SystemTemplate raf = library.find("sys-raf-special-power-of-attorney").orElseThrow();
+        Map<String, String> v = DocGenFixtures.firmA();
+        DocGenFixtures.clientA(v);
+        Branding a = new Branding(v, null, "#1f2a44");
+        byte[] pdf = LayoutPdfRenderer.render(raf.layout(), v, a);
+        java.util.Set<Float> sizes = new java.util.TreeSet<>();
+        java.util.Set<Float> scales = new java.util.TreeSet<>();
+        String text;
+        try (PDDocument d = Loader.loadPDF(pdf)) {
+            PDFTextStripper st = new PDFTextStripper() {
+                @Override
+                protected void writeString(String s, List<org.apache.pdfbox.text.TextPosition> tps) throws java.io.IOException {
+                    for (org.apache.pdfbox.text.TextPosition tp : tps) {
+                        if (tp.getY() < 230 || tp.getY() > 800) continue;
+                        sizes.add(tp.getFontSizeInPt());
+                        scales.add(Math.round(tp.getTextMatrix().getScalingFactorX() / tp.getFontSizeInPt() * 100) / 100f);
+                    }
+                    super.writeString(s, tps);
+                }
+            };
+            st.setStartPage(1);
+            st.setEndPage(1);
+            text = st.getText(d);
+        }
+        // the filled names flow on in the same paragraph; no line starts with the comma that followed a field
+        String flat = text.replaceAll("\\s+", " ");
+        assertTrue(flat.contains("do hereby nominate, constitute and appoint Kagiso Mokoena of Mokoena Inc. Attorneys, or any associate"), flat);
+        assertFalse(text.contains("\n,"), "a line starts with a comma");
+        assertFalse(flat.contains("do  hereby"));
+        assertTrue(flat.contains("occurred on 3 March 2026."));
+        assertEquals(java.util.Set.of(11f), sizes, "one body size on page 1");
+        assertEquals(java.util.Set.of(1f), scales, "no condensed text");
+    }
+
+    @Test
+    void longValuesWrapInsteadOfOverflowing() throws Exception {
+        TemplateLibrary.SystemTemplate raf = library.find("sys-raf-special-power-of-attorney").orElseThrow();
+        Map<String, String> v = new HashMap<>(DocGenFixtures.firmA());
+        v.put("firm_name", "Mokoena, Mahlangu, Venter, Pretorius and Associates Incorporated Attorneys, Notaries and Conveyancers");
+        Branding a = new Branding(v, null, "#1f2a44");
+        try (PDDocument d = Loader.loadPDF(LayoutPdfRenderer.render(raf.layout(), v, a))) {
+            assertEquals(raf.layout().get("pages").size(), d.getNumberOfPages());
+            String flat = new PDFTextStripper().getText(d).replaceAll("\\s+", " ");
+            assertTrue(flat.contains("Notaries and Conveyancers, or any associate"), flat.substring(0, 900));
+        }
+    }
+
+    @Test
     void docxTemplatesPrintBracketPromptsUntilFilled() throws Exception {
         TemplateLibrary.SystemTemplate t = library.find("sys-termination-of-mandate-deceased-estate").orElseThrow();
         assertTrue(t.fields().contains("deceased_name"));
@@ -119,6 +168,7 @@ class SystemTemplateRenderTest {
         assertEquals("", TokenMerge.merge("{{bank_name}}", v));
         assertEquals("{{firm_logo}}", TokenMerge.merge("{{firm_logo}}", v));
         assertEquals("{{firm_name}} ____", TokenMerge.original("{{firm_name}} {{client_name:____}}"));
+        assertEquals("SIGNED AT Rustenburg ON", TokenMerge.merge("SIGNED AT{{signed_at:____}} ON", Map.of("signed_at", "Rustenburg")));
         assertEquals("Thabo Ndlovu, Director", BrandingService.defaultFooter("Thabo Ndlovu", "Director"));
         assertEquals("Thabo Ndlovu", BrandingService.defaultFooter("Thabo Ndlovu", " "));
     }
