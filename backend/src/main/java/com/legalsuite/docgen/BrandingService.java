@@ -105,10 +105,13 @@ public class BrandingService {
         return new Branding(values, logoBytes(t), t.getLetterheadColour());
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
+
     private byte[] logoBytes(Tenant t) {
         if (t.getLogoPath() == null) return null;
         try {
-            return Files.readAllBytes(Path.of(t.getLogoPath()));
+            return storage.read(t.getLogoPath());
         } catch (IOException e) {
             return null;
         }
@@ -200,17 +203,15 @@ public class BrandingService {
         }
         Tenant t = firm();
         try {
-            Path dir = uploadRoot.resolve(t.getId().toString()).resolve("branding");
-            Files.createDirectories(dir);
-            Path dest = dir.resolve("logo-" + System.currentTimeMillis() + (mime.equals("image/png") ? ".png" : ".jpg"));
-            Files.write(dest, bytes);
+            String ref = storage.put(t.getId() + "/branding/logo-" + System.currentTimeMillis()
+                    + (mime.equals("image/png") ? ".png" : ".jpg"), bytes, mime);
             String old = t.getLogoPath();
-            t.setLogoPath(dest.toString());
+            t.setLogoPath(ref);
             t.setLogoMime(mime);
             if (t.getLogoUrl() == null || t.getLogoUrl().isBlank() || LOGO_URL.equals(t.getLogoUrl())) t.setLogoUrl(LOGO_URL);
             t.setUpdatedAt(Instant.now());
             tenants.save(t);
-            if (old != null && !old.equals(dest.toString())) Files.deleteIfExists(Path.of(old));
+            if (old != null && !old.equals(ref)) storage.delete(old);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -85,6 +85,9 @@ public class PracticeService {
         Files.createDirectories(this.uploadRoot);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
+
     public List<Map<String, Object>> listClients() {
         return clients.findByTenantIdOrderByLastNameAsc(tid()).stream().map(this::clientView).toList();
     }
@@ -296,14 +299,10 @@ public class PracticeService {
     @Transactional
     public Map<String, Object> upload(MultipartFile file, UUID caseId, UUID clientId, String category) throws IOException {
         UUID tenantId = tid();
-        Path dir = uploadRoot.resolve(tenantId.toString());
-        Files.createDirectories(dir);
         String display = UploadPolicy.safeName(file == null ? null : file.getOriginalFilename(), "document");
         String mime = com.legalsuite.common.DocumentTypePolicy.check(file, display);
         if (virusScanner != null) virusScanner.scan(file);
-        Path dest = dir.resolve(UploadPolicy.storageName(display)).normalize();
-        if (!dest.startsWith(dir)) throw ApiException.badRequest("Invalid file name.");
-        file.transferTo(dest.toFile());
+        String ref = storage.put(tenantId + "/" + UploadPolicy.storageName(display), file.getBytes(), mime);
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tenantId);
         doc.setCaseId(caseId);
@@ -314,7 +313,7 @@ public class PracticeService {
         doc.setCategory(category == null ? "other" : category);
         doc.setMimeType(mime);
         doc.setSizeBytes(file.getSize());
-        doc.setStoragePath(dest.toString());
+        doc.setStoragePath(ref);
         documents.save(doc);
         audit.record("document.upload", "document", doc.getId().toString(), doc.getName());
         return docView(doc);
@@ -326,7 +325,11 @@ public class PracticeService {
         if (doc.getStoragePath() == null || doc.getStoragePath().startsWith("seed://")) {
             throw ApiException.notFound("This demo file has metadata only. Upload a real document to download it.");
         }
-        return new FileSystemResource(doc.getStoragePath());
+        try {
+            return new org.springframework.core.io.ByteArrayResource(storage.read(doc.getStoragePath()));
+        } catch (IOException e) {
+            throw ApiException.notFound("The file is missing from storage.");
+        }
     }
 
     public DocumentFile documentMeta(UUID id) {
@@ -350,11 +353,9 @@ public class PracticeService {
         TexasDocketRules.Result docket = DocketEngine.compute(tenant, TexasDocketRules.factsFromCase(c));
         String body = Raf1Pack.render(tenant, client, c, docket);
         try {
-            Path dir = uploadRoot.resolve(tid().toString());
-            Files.createDirectories(dir);
             String filename = "RAF1-" + c.getCaseNumber() + ".txt";
-            Path dest = dir.resolve(UUID.randomUUID() + "-" + filename);
-            Files.writeString(dest, body);
+            String ref = storage.put(tid() + "/" + UUID.randomUUID() + "-" + filename.replaceAll("[^A-Za-z0-9._ -]", "_"),
+                    body.getBytes(java.nio.charset.StandardCharsets.UTF_8), "text/plain");
             DocumentFile doc = new DocumentFile();
             doc.setTenantId(tid());
             doc.setCaseId(c.getId());
@@ -365,7 +366,7 @@ public class PracticeService {
             doc.setCategory("raf1");
             doc.setMimeType("text/plain");
             doc.setSizeBytes(body.getBytes().length);
-            doc.setStoragePath(dest.toString());
+            doc.setStoragePath(ref);
             documents.save(doc);
             Note n = new Note();
             n.setTenantId(tid());

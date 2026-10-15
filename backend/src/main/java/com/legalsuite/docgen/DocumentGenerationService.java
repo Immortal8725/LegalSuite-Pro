@@ -308,11 +308,8 @@ public class DocumentGenerationService {
         t.setSourceFormat("docx");
         t.setBody("");
         try {
-            Path dir = uploadRoot.resolve(tid().toString()).resolve("templates");
-            Files.createDirectories(dir);
-            Path dest = dir.resolve(UUID.randomUUID() + ".docx");
-            Files.write(dest, bytes);
-            t.setStoragePath(dest.toString());
+            t.setStoragePath(storage.put(tid() + "/templates/" + UUID.randomUUID() + ".docx", bytes,
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -356,9 +353,12 @@ public class DocumentGenerationService {
                 DocxTemplateEngine.fieldKeys(bytes));
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
+
     private byte[] read(DocumentTemplate t) {
         try {
-            return Files.readAllBytes(Path.of(t.getStoragePath()));
+            return storage.read(t.getStoragePath());
         } catch (IOException e) {
             throw ApiException.notFound("The template file is missing. Upload it again.");
         }
@@ -430,10 +430,7 @@ public class DocumentGenerationService {
 
     private DocumentFile store(String name, String mime, byte[] bytes, UUID caseId, UUID clientId) {
         try {
-            Path dir = uploadRoot.resolve(tid().toString());
-            Files.createDirectories(dir);
-            Path dest = dir.resolve(UUID.randomUUID() + "-" + name.replaceAll("[^A-Za-z0-9._ -]", "_"));
-            Files.write(dest, bytes);
+            String ref = storage.put(tid() + "/" + UUID.randomUUID() + "-" + name.replaceAll("[^A-Za-z0-9._ -]", "_"), bytes, mime);
             DocumentFile doc = new DocumentFile();
             doc.setTenantId(tid());
             doc.setCaseId(caseId);
@@ -444,7 +441,7 @@ public class DocumentGenerationService {
             doc.setCategory("generated");
             doc.setMimeType(mime);
             doc.setSizeBytes(bytes.length);
-            doc.setStoragePath(dest.toString());
+            doc.setStoragePath(ref);
             documents.save(doc);
             return doc;
         } catch (IOException e) {

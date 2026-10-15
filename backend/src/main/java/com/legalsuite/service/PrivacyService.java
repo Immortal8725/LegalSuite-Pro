@@ -58,6 +58,8 @@ public class PrivacyService {
     private final DataSubjectRequestRepository requests;
     private final RefreshTokenRepository refreshTokens;
     private final AuditService audit;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
     private final ObjectMapper json = new ObjectMapper().registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -213,11 +215,11 @@ public class PrivacyService {
             int n = 0;
             for (DocumentFile d : clientDocuments(tid(), clientId)) {
                 if (d.getStoragePath() == null || d.getStoragePath().startsWith("seed://")) continue;
-                Path p = Path.of(d.getStoragePath());
-                if (!Files.isRegularFile(p)) continue;
+                byte[] content;
+                try { content = storage.read(d.getStoragePath()); } catch (IOException | RuntimeException missing) { continue; }
                 String name = "documents/" + (++n) + "-" + com.legalsuite.common.UploadPolicy.safeName(d.getName(), "document");
                 zip.putNextEntry(new ZipEntry(name));
-                Files.copy(p, zip);
+                zip.write(content);
                 zip.closeEntry();
             }
         }
