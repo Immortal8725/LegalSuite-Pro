@@ -34,7 +34,14 @@ public final class TokenMerge {
                 rep = m.group(0);
             } else {
                 String v = values.get(key);
-                if (v != null && !v.isBlank()) rep = v;
+                if (v != null && !v.isBlank()) {
+                    rep = v;
+                    // "SIGNED AT______" filled in reads "SIGNED AT Rustenburg"
+                    if (m.group(2) != null && m.group(2).startsWith("_")) {
+                        if (m.start() > 0 && Character.isLetterOrDigit(text.charAt(m.start() - 1))) rep = " " + rep;
+                        if (m.end() < text.length() && Character.isLetterOrDigit(text.charAt(m.end()))) rep = rep + " ";
+                    }
+                }
                 else if (m.group(2) != null) rep = m.group(2);
                 else rep = FieldCatalog.SYSTEM.contains(key) ? "" : EMPTY_BLANK;
             }
