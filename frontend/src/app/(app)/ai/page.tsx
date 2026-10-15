@@ -91,7 +91,7 @@ export default function AiPage() {
               <CardTitle>Draft an email</CardTitle>
             </CardHeader>
             <CardBody className="space-y-3">
-              <Select value={kind} onChange={(e) => setKind(e.target.value)}>
+              <Select aria-label="Email type" value={kind} onChange={(e) => setKind(e.target.value)}>
                 <option value="status">Status update</option>
                 <option value="retainer">Engagement letter cover</option>
                 <option value="demand">Demand letter</option>
@@ -123,7 +123,7 @@ export default function AiPage() {
                 <p className="text-sm text-slate-600">No website leads yet. Submit one from the public firm page.</p>
               ) : (
                 <>
-                  <Select value={leadId} onChange={(e) => setLeadId(e.target.value)}>
+                  <Select aria-label="Lead" value={leadId} onChange={(e) => setLeadId(e.target.value)}>
                     {leads.map((l) => (
                       <option key={l.id} value={l.id}>
                         {l.name}: {l.caseType || "unspecified"}
