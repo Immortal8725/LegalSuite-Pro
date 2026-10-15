@@ -18,6 +18,11 @@ public class DocumentTemplate {
     @Column(columnDefinition = "TEXT")
     private String body;
     private Instant createdAt;
+    /** "text" for the older merge templates, "docx" for an uploaded firm template. */
+    private String sourceFormat;
+    private String storagePath;
+    @Column(length = 1000)
+    private String description;
 
     @PrePersist
     void persist() {
@@ -35,6 +40,12 @@ public class DocumentTemplate {
     public void setCategory(String category) { this.category = category; }
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
+    public String getSourceFormat() { return sourceFormat; }
+    public void setSourceFormat(String sourceFormat) { this.sourceFormat = sourceFormat; }
+    public String getStoragePath() { return storagePath; }
+    public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

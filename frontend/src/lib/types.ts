@@ -623,3 +623,51 @@ export type Landing = {
   attorneys: TeamMember[];
   practiceAreas: string[];
 };
+
+/** A branded document template: system library ("sys-…") or the firm's own uploaded Word file. */
+export type LibraryTemplate = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  system: boolean;
+  format: "layout" | "docx";
+  fieldCount: number;
+  fillInCount: number;
+};
+
+export type TemplateField = {
+  key: string;
+  label: string;
+  group: "firm" | "attorney" | "date" | "matter" | "fill";
+  system: boolean;
+  value: string;
+};
+
+export type TemplateForm = { id: string; name: string; category: string; system: boolean; fields: TemplateField[] };
+
+export type FieldReference = { key: string; label: string; group: string; description: string };
+
+export type FirmBranding = {
+  firmName: string;
+  addressLine1?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  refPrefix?: string;
+  footerText?: string;
+  defaultFooterText: string;
+  letterheadColour: string;
+  informationOfficer?: string;
+  trustAccountName?: string;
+  trustAccountNumber?: string;
+  bankName?: string;
+  branchName?: string;
+  branchCode?: string;
+  hasLogo: boolean;
+  logoUrl?: string | null;
+  attorneyName: string;
+  attorneyTitle: string;
+};

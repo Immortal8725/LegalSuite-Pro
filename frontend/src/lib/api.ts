@@ -196,6 +196,22 @@ export async function apiBlob(path: string): Promise<Blob> {
   return res.blob();
 }
 
+/** POST JSON and receive a file (document previews). */
+export async function apiPostBlob(path: string, body: unknown): Promise<Blob> {
+  const res = await authedFetch(path, { method: "POST", body: JSON.stringify(body ?? {}) });
+  if (!res.ok) {
+    let detail = "Could not build the preview.";
+    try {
+      const j = (await res.json()) as { message?: string };
+      if (j.message) detail = j.message;
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(detail);
+  }
+  return res.blob();
+}
+
 /** Save a blob under a file name, then release the object URL. */
 export function saveBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);

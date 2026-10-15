@@ -9,6 +9,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { Tenant } from "@/lib/api";
+import { LetterheadSettings } from "@/components/letterhead-settings";
 
 export default function SettingsPage() {
   const { tenant, user, refreshTenant, reloadMe } = useAuth();
@@ -247,6 +248,8 @@ export default function SettingsPage() {
             )}
           </CardBody>
         </Card>
+
+        <LetterheadSettings canEdit={!!user && ["owner", "admin", "partner", "director"].includes(user.role)} />
 
         <Card>
           <CardHeader>
