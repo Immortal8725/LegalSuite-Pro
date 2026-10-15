@@ -45,6 +45,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class PracticeService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.legalsuite.common.VirusScanner virusScanner;
     private final ClientRepository clients;
     private final LegalCaseRepository cases;
     private final ContactRepository contacts;
@@ -296,7 +298,9 @@ public class PracticeService {
         UUID tenantId = tid();
         Path dir = uploadRoot.resolve(tenantId.toString());
         Files.createDirectories(dir);
-        String display = UploadPolicy.safeName(file.getOriginalFilename(), "document");
+        String display = UploadPolicy.safeName(file == null ? null : file.getOriginalFilename(), "document");
+        String mime = com.legalsuite.common.DocumentTypePolicy.check(file, display);
+        if (virusScanner != null) virusScanner.scan(file);
         Path dest = dir.resolve(UploadPolicy.storageName(display)).normalize();
         if (!dest.startsWith(dir)) throw ApiException.badRequest("Invalid file name.");
         file.transferTo(dest.toFile());
@@ -308,7 +312,7 @@ public class PracticeService {
         doc.setName(display);
         doc.setOriginalName(display);
         doc.setCategory(category == null ? "other" : category);
-        doc.setMimeType(file.getContentType());
+        doc.setMimeType(mime);
         doc.setSizeBytes(file.getSize());
         doc.setStoragePath(dest.toString());
         documents.save(doc);

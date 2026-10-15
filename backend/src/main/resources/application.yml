@@ -48,6 +48,11 @@ legalsuite:
     access-ms: ${LEGALSUITE_ACCESS_TOKEN_MS:3600000}
     refresh-ms: ${LEGALSUITE_REFRESH_TOKEN_MS:604800000}
   upload-dir: ${LEGALSUITE_UPLOAD_DIR:${user.dir}/uploads}
+  # Optional ClamAV (clamd) scan of every document upload. Off when the host is blank. Fails closed when on.
+  clamav:
+    host: ${LEGALSUITE_CLAMAV_HOST:}
+    port: ${LEGALSUITE_CLAMAV_PORT:3310}
+    timeout-ms: ${LEGALSUITE_CLAMAV_TIMEOUT_MS:15000}
   cors:
     # Comma-separated list of exact origins allowed to call the API from a browser.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
