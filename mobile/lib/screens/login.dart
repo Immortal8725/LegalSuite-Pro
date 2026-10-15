@@ -42,6 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       final url = AppConfig.normalise(server.text);
+      final problem = AppConfig.checkBaseUrl(url);
+      if (problem != null) {
+        setState(() => error = problem);
+        return;
+      }
       if (url != widget.api.baseUrl) {
         widget.api.baseUrl = url;
         await AppConfig.saveBaseUrl(url);

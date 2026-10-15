@@ -43,7 +43,7 @@ Build-time default:
 flutter run --dart-define=API_BASE_URL=https://api.owlaw.co.za
 ```
 
-Without it the default is `http://10.0.2.2:18081` (the host machine from an Android emulator). The attorney can change it on the sign-in screen; it is remembered on the device.
+Debug and profile builds default to `http://10.0.2.2:18081` (the host machine from an Android emulator). Release builds have no usable default: the Gradle build stops unless `--dart-define=API_BASE_URL=https://...` is given, and `https://app.owlaw.co.za` in the code is only a placeholder. The attorney can change the address on the sign-in screen; it is remembered on the device. A release build refuses any address that is not `https://`.
 
 For Flutter web, add the web origin to `CORS_ALLOWED_ORIGINS` on the API.
 
@@ -70,9 +70,34 @@ flutter build web --release --dart-define=API_BASE_URL=https://api.owlaw.co.za
 flutter build ipa --dart-define=API_BASE_URL=https://api.owlaw.co.za                  # needs a Mac with Xcode
 ```
 
-The release APK is signed with the debug key for now. Before the Play Store, create an upload keystore and set `signingConfigs` in `android/app/build.gradle.kts`.
+### Release signing
 
-`android:usesCleartextTraffic="true"` is on so a local `http://` API works during testing. Turn it off for the store build once the API is on HTTPS.
+A release build will not run without a signing key, so a store build can never go out with the debug key.
+
+1. Create the upload keystore once and keep it (and its passwords) in your password manager, never in git:
+
+   ```bash
+   keytool -genkeypair -v -keystore ~/owlaw-upload.jks -storetype JKS -keyalg RSA -keysize 4096 \
+     -validity 10000 -alias owlaw-upload
+   ```
+
+2. Either create `mobile/android/key.properties` (already in `.gitignore`):
+
+   ```properties
+   storeFile=/home/you/owlaw-upload.jks
+   storePassword=...
+   keyAlias=owlaw-upload
+   keyPassword=...
+   ```
+
+   or set `OWLAW_KEYSTORE_PATH`, `OWLAW_KEYSTORE_PASSWORD`, `OWLAW_KEY_ALIAS` and `OWLAW_KEY_PASSWORD` in the build environment (CI secrets).
+3. Enrol in Play App Signing and upload the `.aab`. Google keeps the app signing key; this file is only the upload key.
+
+Check a built APK: `apksigner verify --print-certs app-release.apk` must not show `CN=Android Debug`.
+
+### HTTPS only in release
+
+The release manifest uses `res/xml/network_security_config.xml`, which refuses plain HTTP. Debug and profile builds replace that file with one that allows HTTP to `10.0.2.2`, `localhost` and `127.0.0.1` only, for a local API.
 
 Icons and splash come from `assets/` (`dart run flutter_launcher_icons`, `dart run flutter_native_splash:create`).
 
