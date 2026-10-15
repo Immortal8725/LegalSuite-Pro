@@ -14,7 +14,7 @@ export default function LegalPage() {
     return (
       <div className="p-8">
         <p className="text-sm text-slate-600">That policy is not in the pack.</p>
-        <Link href="/legal/privacy" className="mt-3 inline-block font-semibold text-sky-600">
+        <Link href="/legal/privacy" className="mt-3 inline-block font-semibold text-sky-700">
           Privacy & Cookie Policy
         </Link>
       </div>
@@ -28,9 +28,9 @@ export default function LegalPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">
             <Scale className="h-4 w-4" />
           </span>
-          <span>Ow<span className="text-gold">Law</span></span>
+          <span>Ow<span className="text-gold-dark">Law</span></span>
         </Link>
-        <Link href="/legal/privacy" className="text-sm font-semibold text-sky-600">
+        <Link href="/legal/privacy" className="text-sm font-semibold text-sky-700">
           Legal pack
         </Link>
       </nav>
@@ -47,7 +47,7 @@ export default function LegalPage() {
               <li key={d.slug} className="break-inside-avoid py-0.5">
                 <Link
                   href={`/legal/${d.slug}`}
-                  className={d.slug === doc.slug ? "font-bold text-sky-600" : "text-sky-600 hover:underline"}
+                  className={d.slug === doc.slug ? "font-bold text-sky-700" : "text-sky-700 hover:underline"}
                 >
                   {d.title}
                 </Link>
