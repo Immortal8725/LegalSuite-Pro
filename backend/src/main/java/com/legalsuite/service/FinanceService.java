@@ -518,6 +518,9 @@ public class FinanceService {
         return proofView(proof, loadInvoice(proof.getInvoiceId()));
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
+
     public DocumentFile proofDocument(UUID id) {
         PaymentProof proof = loadProofForRead(id);
         return documents.findByIdAndTenantId(proof.getDocumentId(), tid())
@@ -529,7 +532,11 @@ public class FinanceService {
         if (doc.getStoragePath() == null || doc.getStoragePath().startsWith("seed://")) {
             throw ApiException.notFound("Proof file not found");
         }
-        return new FileSystemResource(doc.getStoragePath());
+        try {
+            return new org.springframework.core.io.ByteArrayResource(storage.read(doc.getStoragePath()));
+        } catch (IOException e) {
+            throw ApiException.notFound("Proof file not found");
+        }
     }
 
     public List<Map<String, Object>> expenses() {
@@ -1029,14 +1036,11 @@ public class FinanceService {
     }
 
     private DocumentFile storeProof(Invoice inv, MultipartFile file) throws IOException {
-        Path dir = uploadRoot.resolve(tid().toString());
-        Files.createDirectories(dir);
         String stored = UUID.randomUUID() + "-" + safeName(file.getOriginalFilename());
-        Path dest = dir.resolve(stored).normalize();
-        if (!dest.startsWith(uploadRoot)) {
+        if (stored.contains("/") || stored.contains("\\") || stored.contains("..")) {
             throw ApiException.badRequest("Invalid file name.");
         }
-        file.transferTo(dest.toFile());
+        String ref = storage.put(tid() + "/" + stored, file.getBytes(), file.getContentType());
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tid());
         doc.setCaseId(inv.getCaseId());
@@ -1048,7 +1052,7 @@ public class FinanceService {
         String mime = file.getContentType() == null ? "application/octet-stream" : file.getContentType();
         doc.setMimeType(mime);
         doc.setSizeBytes(file.getSize());
-        doc.setStoragePath(dest.toString());
+        doc.setStoragePath(ref);
         return documents.save(doc);
     }
 

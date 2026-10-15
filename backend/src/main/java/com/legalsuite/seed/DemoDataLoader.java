@@ -83,6 +83,9 @@ public class DemoDataLoader implements CommandLineRunner {
     private final LegalCaseRepository cases;
     private final ContactRepository contacts;
     private final DocumentFileRepository documents;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.storage.FileStorage storage;
+
     @org.springframework.beans.factory.annotation.Value("${legalsuite.upload-dir:./uploads}")
     private String uploadDir = "./uploads";
     /** Demo firms with known passwords. On by default for H2, off for the postgres profile. */
@@ -1201,11 +1204,7 @@ public class DemoDataLoader implements CommandLineRunner {
         String title = name.replaceAll("\\.pdf$", "").replace('_', ' ');
         byte[] pdf = SeedPdf.render(title, lines);
         try {
-            java.nio.file.Path dir = java.nio.file.Paths.get(uploadDir).toAbsolutePath().normalize().resolve(tenant.toString());
-            java.nio.file.Files.createDirectories(dir);
-            java.nio.file.Path file = dir.resolve("seed-" + java.util.UUID.randomUUID() + ".pdf");
-            java.nio.file.Files.write(file, pdf);
-            d.setStoragePath(file.toString());
+            d.setStoragePath(storage.put(tenant + "/seed-" + java.util.UUID.randomUUID() + ".pdf", pdf, "application/pdf"));
             d.setSizeBytes(pdf.length);
         } catch (java.io.IOException e) {
             d.setStoragePath("seed://" + name);
