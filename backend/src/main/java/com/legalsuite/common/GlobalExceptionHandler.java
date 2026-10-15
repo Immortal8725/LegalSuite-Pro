@@ -69,6 +69,22 @@ public class GlobalExceptionHandler {
     }
 
     /** Covers NumberFormatException too: a bad amount or number in a form is the caller's mistake, not a crash. */
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTooLarge(Exception ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiResponse.error("The file is too large. Files can be up to 25 MB."));
+    }
+
+    @ExceptionHandler({org.springframework.web.multipart.MultipartException.class,
+            org.springframework.web.multipart.support.MissingServletRequestPartException.class})
+    public ResponseEntity<ApiResponse<Void>> handleBadMultipart(Exception ex) {
+        if (ex.getCause() instanceof IllegalStateException ise && ise.getMessage() != null && ise.getMessage().contains("SizeLimitExceeded")) {
+            return handleTooLarge(ex);
+        }
+        log.debug("Bad multipart request: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(ApiResponse.error("The upload was not sent as a valid file form. Choose the file and try again."));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
         log.debug("Rejected request: {}", ex.getMessage());

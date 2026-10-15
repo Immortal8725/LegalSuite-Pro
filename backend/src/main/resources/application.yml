@@ -3,6 +3,9 @@ server:
   # Set to "native" or "framework" only behind a proxy that overwrites X-Forwarded-For,
   # so the login rate limit sees the real client address.
   forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+  # Read past an oversized upload (up to 64 MB) so the client gets a 413 JSON answer instead of a reset connection.
+  tomcat:
+    max-swallow-size: 64MB
   error:
     include-stacktrace: never
     include-message: never
