@@ -12,6 +12,7 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import { Select, Textarea } from "@/components/ui/input";
 import type { DocketClock, Matter } from "@/lib/types";
 import { MatterAssistant } from "@/components/matter-assistant";
+import { GenerateDocument } from "@/components/generate-document";
 import Link from "next/link";
 
 const STATUSES = ["limited", "intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"];
@@ -37,6 +38,7 @@ export default function CaseDetailPage() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   const load = useCallback(() =>
     apiGet<Matter>(`/api/v1/cases/${params.id}`).then((row) => {
@@ -395,6 +397,16 @@ export default function CaseDetailPage() {
               <CardTitle>Files</CardTitle>
             </CardHeader>
             <CardBody className="space-y-2 text-sm">
+              <Button size="sm" variant="outline" onClick={() => setGenerating(true)}>
+                Generate document
+              </Button>
+              <GenerateDocument
+                caseId={c.id}
+                open={generating}
+                onClose={() => setGenerating(false)}
+                onDone={load}
+                clientEmail={c.clientEmail || ""}
+              />
               {(c.documents || []).length === 0 && <p className="text-slate-600">No files on this matter yet.</p>}
               {(c.documents || []).map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
