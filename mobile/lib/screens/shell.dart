@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
+import '../api/owlaw_api.dart';
+import '../voice/voice_engine.dart';
 import 'dashboard.dart';
 import 'diary.dart';
 import 'matters.dart';
@@ -17,6 +20,20 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Access.current = Access.everything;
+    _registerIncoming();
+    Access.load(widget.api).then((a) {
+      if (!mounted) return;
+      setState(() {
+        Access.current = a;
+        _visits[4]++;
+      });
+    });
+  }
   final _visits = List<int>.filled(5, 0);
 
   void _go(int i) => setState(() {
@@ -24,6 +41,18 @@ class _HomeShellState extends State<HomeShell> {
         if (i != tab) _visits[i]++;
         tab = i;
       });
+
+  /// Incoming in-app calls stay off unless the build opts in and the server has a push credential.
+  Future<void> _registerIncoming() async {
+    final engine = VoiceEngine.instance;
+    if (!VoiceEngine.incomingByBuild || !engine.supported) return;
+    try {
+      final t = await widget.api.voiceAppToken();
+      if (t['incomingReady'] == true) await engine.registerForIncoming(accessToken: '${t['token']}');
+    } catch (_) {
+      // In-app calling is optional. The callback call still works.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

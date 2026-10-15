@@ -86,6 +86,59 @@ class ApiClient {
   Future<dynamic> get(String path) => _authed('GET', path, null);
   Future<dynamic> post(String path, [Map<String, dynamic>? body]) => _authed('POST', path, body ?? {});
   Future<dynamic> patch(String path, [Map<String, dynamic>? body]) => _authed('PATCH', path, body ?? {});
+  Future<dynamic> put(String path, [Map<String, dynamic>? body]) => _authed('PUT', path, body ?? {});
+
+  /// Sends a file as multipart form data, the way the web app uploads documents and proofs.
+  Future<dynamic> upload(String path, {required List<int> bytes, required String filename, Map<String, String> fields = const {}}) async {
+    Future<dynamic> once() async {
+      final req = http.MultipartRequest('POST', Uri.parse('$baseUrl$path'));
+      final t = await store.read(accessKey);
+      if (t != null) req.headers['Authorization'] = 'Bearer $t';
+      req.headers['Accept'] = 'application/json';
+      fields.forEach((k, v) {
+        if (v.trim().isNotEmpty) req.fields[k] = v.trim();
+      });
+      req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      return _send(req);
+    }
+
+    try {
+      return await once();
+    } on ApiException catch (e) {
+      if (e.status != 401) rethrow;
+      if (await _refresh()) return once();
+      await clearSession();
+      onSessionExpired?.call();
+      throw SessionExpired();
+    }
+  }
+
+  /// Downloads a file (a document or a proof of payment) as raw bytes.
+  Future<List<int>> download(String path) async {
+    Future<List<int>> once() async {
+      final req = http.Request('GET', Uri.parse('$baseUrl$path'));
+      final t = await store.read(accessKey);
+      if (t != null) req.headers['Authorization'] = 'Bearer $t';
+      http.Response res;
+      try {
+        res = await http.Response.fromStream(await _http.send(req).timeout(timeout));
+      } catch (_) {
+        throw ApiException('Cannot reach the Owlaw server at $baseUrl. Check the server address and your connection.');
+      }
+      if (res.statusCode >= 400) throw ApiException('Download failed (${res.statusCode}).', status: res.statusCode);
+      return res.bodyBytes;
+    }
+
+    try {
+      return await once();
+    } on ApiException catch (e) {
+      if (e.status != 401) rethrow;
+      if (await _refresh()) return once();
+      await clearSession();
+      onSessionExpired?.call();
+      throw SessionExpired();
+    }
+  }
 
   Future<dynamic> _authed(String method, String path, Map<String, dynamic>? body) async {
     try {
@@ -121,10 +174,14 @@ class ApiClient {
       final t = await store.read(accessKey);
       if (t != null) headers['Authorization'] = 'Bearer $t';
     }
+    final req = http.Request(method, uri)..headers.addAll(headers);
+    if (body != null) req.body = jsonEncode(body);
+    return _send(req);
+  }
+
+  Future<dynamic> _send(http.BaseRequest req) async {
     http.Response res;
     try {
-      final req = http.Request(method, uri)..headers.addAll(headers);
-      if (body != null) req.body = jsonEncode(body);
       res = await http.Response.fromStream(await _http.send(req).timeout(timeout));
     } on TimeoutException {
       throw ApiException('The server took too long to answer. Check your connection and try again.');

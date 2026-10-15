@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../api/access.dart';
 import '../api/api_client.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
+import 'assist.dart';
+import 'billing.dart';
 import 'calls.dart';
+import 'documents.dart';
+import 'matter_form.dart';
+import 'trust_ledger.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key, required this.api, required this.onLogout});
@@ -15,14 +21,25 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = Access.current;
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(children: [
         const SizedBox(height: 8),
+        if (a.billing) _item(context, Icons.receipt_outlined, 'Client invoices', 'Generate, record payments, proofs and write-offs', () => _open(context, InvoicesScreen(api: api, access: a))),
+        if (a.trust) _item(context, Icons.account_balance_outlined, 'Trust', 'Client ledgers, deposits and trust to fees', () => _open(context, TrustScreen(api: api, access: a))),
+        if (a.documents) _item(context, Icons.folder_copy_outlined, 'Documents', 'Open, upload from camera or files', () => _open(context, DocumentsScreen(api: api))),
+        if (a.esign) _item(context, Icons.draw_outlined, 'E-sign', 'Send for signature and track status', () => _open(context, SignaturesScreen(api: api))),
+        if (a.ai) _item(context, Icons.edit_note, 'Draft help', 'Ask about a matter, draft client emails', () => _open(context, DraftHelpScreen(api: api))),
         _item(context, Icons.people_outline, 'Clients and contacts', 'Tap to call or email', () => _open(context, PeopleScreen(api: api))),
         _item(context, Icons.phone_in_talk_outlined, 'Calls', 'Call through the firm number', () => _open(context, CallsScreen(api: api))),
         _item(context, Icons.notifications_outlined, 'Notifications', 'Intakes, payments and reminders', () => _open(context, NotificationsScreen(api: api))),
         _item(context, Icons.person_outline, 'Profile', 'Your details and sign out', () => _open(context, ProfileScreen(api: api, onLogout: onLogout))),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Text('Team, the public website, the Owlaw subscription and firm settings are managed in the Owlaw web app.',
+              style: TextStyle(color: Colors.black54, fontSize: 12)),
+        ),
       ]),
     );
   }
@@ -32,11 +49,26 @@ class MoreScreen extends StatelessWidget {
       );
 }
 
-class PeopleScreen extends StatelessWidget {
+class PeopleScreen extends StatefulWidget {
   const PeopleScreen({super.key, required this.api});
   final ApiClient api;
+  @override
+  State<PeopleScreen> createState() => _PeopleScreenState();
+}
 
-  Widget _person(BuildContext context, String name, String sub, String? phone, String? email) {
+class _PeopleScreenState extends State<PeopleScreen> {
+  ApiClient get api => widget.api;
+  int _version = 0;
+
+  Future<void> _editClient(Map? c) async {
+    final saved = await showClientForm(context, api, client: c?.cast<String, dynamic>());
+    if (saved != null && mounted) {
+      snack(context, 'Client saved');
+      setState(() => _version++);
+    }
+  }
+
+  Widget _person(BuildContext context, String name, String sub, String? phone, String? email, {VoidCallback? onTap}) {
     final hasPhone = phone != null && phone.isNotEmpty && phone != 'null';
     final hasEmail = email != null && email.isNotEmpty && email != 'null';
     return Card(
@@ -45,6 +77,7 @@ class PeopleScreen extends StatelessWidget {
         title: Text(name),
         subtitle: Text([sub, if (hasEmail) email, if (hasPhone) phone].where((x) => x.isNotEmpty).join('\n')),
         isThreeLine: hasEmail && hasPhone,
+        onTap: onTap,
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           if (hasPhone) IconButton(tooltip: 'Call $name', icon: const Icon(Icons.phone, color: navy), onPressed: () => openUri(context, telUri(phone))),
           if (hasEmail) IconButton(tooltip: 'Email $name', icon: const Icon(Icons.email_outlined, color: navy), onPressed: () => openUri(context, mailUri(email))),
@@ -62,15 +95,17 @@ class PeopleScreen extends StatelessWidget {
           title: const Text('Clients and contacts'),
           bottom: const TabBar(labelColor: Colors.white, unselectedLabelColor: Colors.white70, indicatorColor: gold, tabs: [Tab(text: 'Clients'), Tab(text: 'Contacts')]),
         ),
+        floatingActionButton: FloatingActionButton.extended(onPressed: () => _editClient(null), icon: const Icon(Icons.person_add_alt_1), label: const Text('New client')),
         body: TabBarView(children: [
           Loader<List>(
+            key: ValueKey('clients$_version'),
             load: () async => await api.get('/api/v1/clients') as List,
             isEmpty: (d) => d.isEmpty,
             emptyText: 'No clients yet.',
             builder: (context, list, reload) => ListView(
               children: list.map((c) {
                 final m = c as Map;
-                return _person(context, '${m['displayName'] ?? m['companyName'] ?? ''}', '${m['type'] ?? ''} · ${m['status'] ?? ''}', m['phone']?.toString(), m['email']?.toString());
+                return _person(context, '${m['displayName'] ?? m['companyName'] ?? ''}', '${m['type'] ?? ''} · ${m['status'] ?? ''}', m['phone']?.toString(), m['email']?.toString(), onTap: () => _editClient(m));
               }).toList(),
             ),
           ),
