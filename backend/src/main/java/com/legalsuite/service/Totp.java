@@ -25,6 +25,18 @@ public final class Totp {
                 + "&issuer=Owlaw&digits=6&period=30";
     }
 
+    /** Time step the code matches (window of one step either side), or -1. */
+    public static long matchStep(String secret, String code) {
+        if (secret == null || secret.isBlank() || code == null) return -1;
+        String digits = code.replaceAll("\\s+", "");
+        if (!digits.matches("\\d{6}")) return -1;
+        long step = Instant.now().getEpochSecond() / 30;
+        for (int i = -1; i <= 1; i++) {
+            if (codeAt(secret, step + i).equals(digits)) return step + i;
+        }
+        return -1;
+    }
+
     public static boolean verify(String secret, String code) {
         if (secret == null || secret.isBlank() || code == null) return false;
         String digits = code.replaceAll("\\s+", "");
