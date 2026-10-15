@@ -16,3 +16,7 @@ coverage/
 .vercel
 mobile/.dart_tool/
 mobile/build/
+
+# local E2E settings and output
+scripts/e2e/e2e-api.env
+e2e-out/
