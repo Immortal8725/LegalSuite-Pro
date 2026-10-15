@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { DocTemplate, Matter, Party } from "@/lib/types";
+import { BrandedLibrary } from "@/components/branded-library";
 
 export default function TemplatesPage() {
   const [rows, setRows] = useState<DocTemplate[]>([]);
@@ -35,6 +36,8 @@ export default function TemplatesPage() {
         actions={<Button onClick={() => setOpen(true)}>New template</Button>}
       />
       <ErrorBanner error={error} />
+      <BrandedLibrary />
+      <h2 className="mb-3 text-lg font-semibold text-navy">Quick text templates</h2>
       {rows.length === 0 ? (
         <EmptyState title="No templates" body="Add an engagement letter or status update the firm sends every week." />
       ) : (
