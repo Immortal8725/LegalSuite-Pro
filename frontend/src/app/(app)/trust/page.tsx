@@ -11,8 +11,31 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Invoice, Matter, TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
 import { useLatest } from "@/lib/use-latest";
 
+const TENANT_ADMINS = new Set(["owner", "admin", "partner", "director"]);
+
 export default function TrustPage() {
-  const { tenant } = useAuth();
+  const { tenant, user } = useAuth();
+  const canOpenAccount = TENANT_ADMINS.has((user?.role || "").toLowerCase());
+  const [newOpen, setNewOpen] = useState(false);
+  const [newAcct, setNewAcct] = useState({ accountName: "Firm Trust Account", bankName: "", accountType: "trust" });
+  const [newError, setNewError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const createAccount = async () => {
+    setNewError(null);
+    setCreating(true);
+    try {
+      const made = await apiPost<TrustAcct>("/api/v1/trust/accounts", newAcct);
+      setNewOpen(false);
+      setSelected(made.id);
+      setAccounts((prev) => [...prev, made]);
+      setLedger([]);
+      setRecon(await apiGet<TrustRecon>("/api/v1/trust/recon"));
+    } catch (e) {
+      setNewError(e instanceof Error ? e.message : "Could not open the trust account");
+    } finally {
+      setCreating(false);
+    }
+  };
   const za = tenant?.country === "ZA" || tenant?.jurisdiction === "ZA";
   const [accounts, setAccounts] = useState<TrustAcct[]>([]);
   const [selected, setSelected] = useState<string>("");
@@ -38,7 +61,7 @@ export default function TrustPage() {
   };
   const [bank, setBank] = useState({ bankBalance: "", notes: "" });
   const [csv, setCsv] = useState(
-    "Date,Description,Amount,Balance\n2026-09-01,Balance brought forward,0,438250.00\n2026-09-02,Unidentified transfer,-11750.00,438250.00"
+    "Date,Description,Amount,Balance\n"
   );
   const [error, setError] = useState<string | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
@@ -99,6 +122,13 @@ export default function TrustPage() {
         }
         actions={
           <div className="flex flex-wrap gap-2">
+            {canOpenAccount && (
+              <Button variant="outline" onClick={() => { setNewError(null); setNewOpen(true); }}>
+                Open trust account
+              </Button>
+            )}
+            {accounts.length > 0 && (
+              <>
             <Button variant="outline" onClick={() => setCsvOpen(true)}>
               Import bank CSV
             </Button>
@@ -109,6 +139,8 @@ export default function TrustPage() {
               Apply trust to fee
             </Button>
             <Button onClick={openMove}>Record movement</Button>
+              </>
+            )}
           </div>
         }
       />
@@ -137,6 +169,25 @@ export default function TrustPage() {
                 Difference {moneyExact(live.difference)}. Find the missing deposit or the unrecorded transfer before an
                 inspector does.
               </p>
+            )}
+          </CardBody>
+        </Card>
+      )}
+      {accounts.length === 0 && !error && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>No trust account yet</CardTitle>
+          </CardHeader>
+          <CardBody className="space-y-3 text-sm text-slate-700">
+            <p>
+              {za
+                ? "Open your firm's section 86 trust account here before you take any client money. The cashbook starts at R0.00 and grows only through recorded deposits."
+                : "Open the firm's trust (IOLTA) account here before you take any client money."}
+            </p>
+            {canOpenAccount ? (
+              <Button onClick={() => { setNewError(null); setNewOpen(true); }}>Open trust account</Button>
+            ) : (
+              <p className="text-slate-600">Ask a firm owner, director or partner to open it.</p>
             )}
           </CardBody>
         </Card>
@@ -207,6 +258,36 @@ export default function TrustPage() {
           ))}
         </tbody>
       </TableWrap>
+      <Dialog
+        error={newError}
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        title="Open trust account"
+        footer={
+          <Button disabled={creating || !newAcct.accountName.trim() || !newAcct.bankName.trim()} onClick={createAccount}>
+            {creating ? "Opening..." : "Open account"}
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="trust-name">Account name</Label>
+            <Input id="trust-name" value={newAcct.accountName} onChange={(e) => setNewAcct({ ...newAcct, accountName: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="trust-bank">Bank</Label>
+            <Input id="trust-bank" placeholder="FNB, Standard Bank, ABSA, Nedbank..." value={newAcct.bankName} onChange={(e) => setNewAcct({ ...newAcct, bankName: e.target.value })} />
+          </div>
+          <div>
+            <Label htmlFor="trust-type">Account type</Label>
+            <Select id="trust-type" value={newAcct.accountType} onChange={(e) => setNewAcct({ ...newAcct, accountType: e.target.value })}>
+              <option value="trust">{za ? "Trust account (s 86(2))" : "Trust account"}</option>
+              <option value="trust_investment">{za ? "Trust investment account (s 86(3) or (4))" : "Trust investment account"}</option>
+            </Select>
+          </div>
+          <p className="text-xs text-slate-600">The balance starts at zero. Record deposits against a matter once money arrives.</p>
+        </div>
+      </Dialog>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

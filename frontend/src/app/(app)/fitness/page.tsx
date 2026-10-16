@@ -56,6 +56,11 @@ export default function FitnessPage() {
               Open the three-way recon →
             </Link>
           )}
+          {data.trustRecon?.worstStatus === "empty" && (
+            <Link href="/trust" className="mt-3 inline-block text-sm font-semibold text-slate-900 underline">
+              Create a trust account →
+            </Link>
+          )}
         </CardBody>
       </Card>
       <div className="grid gap-4">

@@ -566,6 +566,36 @@ public class FinanceService {
         return trusts.findByTenantId(tid()).stream().map(this::trustView).toList();
     }
 
+    /**
+     * Opens a trust (or trust investment) account for the signed-in firm. Only firm admins may do this.
+     * The cashbook starts at zero: money only enters through a recorded deposit against a client.
+     */
+    @Transactional
+    public Map<String, Object> createTrustAccount(Map<String, Object> body) {
+        com.legalsuite.common.Roles.requireTenantAdmin("Only a firm owner, director or partner can open a trust account.");
+        String name = String.valueOf(body.getOrDefault("accountName", "")).trim();
+        String bank = String.valueOf(body.getOrDefault("bankName", "")).trim();
+        if (name.isEmpty() || "null".equals(name)) throw ApiException.badRequest("Enter the account name, for example \"Firm Trust Account\".");
+        if (bank.isEmpty() || "null".equals(bank)) throw ApiException.badRequest("Enter the bank, for example FNB or Standard Bank.");
+        if (name.length() > 120 || bank.length() > 120) throw ApiException.badRequest("Keep the account and bank names under 120 characters.");
+        String type = String.valueOf(body.getOrDefault("accountType", "trust")).trim().toLowerCase();
+        if (!List.of("trust", "trust_investment").contains(type)) {
+            throw ApiException.badRequest("Account type must be trust or trust_investment.");
+        }
+        boolean duplicate = trusts.findByTenantId(tid()).stream()
+                .anyMatch(a -> name.equalsIgnoreCase(a.getAccountName()) && bank.equalsIgnoreCase(a.getBankName()));
+        if (duplicate) throw ApiException.badRequest("This firm already has a trust account with that name at that bank.");
+        TrustAccount a = new TrustAccount();
+        a.setTenantId(tid());
+        a.setAccountName(name);
+        a.setBankName(bank);
+        a.setAccountType(type);
+        a.setBalance(BigDecimal.ZERO);
+        a.setBankBalance(BigDecimal.ZERO);
+        a.setStatus("active");
+        return trustView(trusts.save(a));
+    }
+
     @Transactional
     public Map<String, Object> trustMove(Map<String, Object> body) {
         return trustMove(body, false);

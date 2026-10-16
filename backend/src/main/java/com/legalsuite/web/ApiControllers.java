@@ -306,6 +306,9 @@ public class ApiControllers {
     @GetMapping("/api/v1/trust/accounts")
     public ApiResponse<?> trust() { return ApiResponse.ok(finance.trustAccounts()); }
 
+    @PostMapping("/api/v1/trust/accounts")
+    public ApiResponse<?> createTrust(@RequestBody Map<String, Object> body) { return ApiResponse.ok(finance.createTrustAccount(body)); }
+
     @GetMapping("/api/v1/trust/accounts/{id}/ledger")
     public ApiResponse<?> ledger(@PathVariable UUID id) { return ApiResponse.ok(finance.trustLedger(id)); }
 
