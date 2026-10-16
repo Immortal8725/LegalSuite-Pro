@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
 import { ADD_ONS, PLANS, PRICE_NOTE } from "@/lib/pricing";
+import { DEMO_MODE } from "@/lib/demo";
 
 const FEATURES = [
   ["Hire in one motion", "Website consult, conflict check, mandate, and e-sign stay on the same tenant."],
@@ -49,7 +50,7 @@ export default function MarketingPage() {
             Register your firm
           </Link>
           <Link href="/login" className="rounded-xl border px-6 py-3 font-bold text-navy">
-            Demo: ndlovu-partners
+            {DEMO_MODE ? "Demo: ndlovu-partners" : "Sign in"}
           </Link>
         </div>
       </section>

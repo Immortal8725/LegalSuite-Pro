@@ -93,3 +93,5 @@ services:
         value: "1"
       - key: NEXT_PUBLIC_API_URL
         sync: false            # public API URL, e.g. https://owlaw-api.onrender.com (baked in at build)
+      - key: NEXT_PUBLIC_DEMO_DATA
+        value: "false"         # demo sign-in shortcuts; unset or false in production

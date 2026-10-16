@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
+import { DEMO_MODE } from "@/lib/demo";
 
 const DEMOS = [
   {
@@ -30,9 +31,9 @@ const DEMOS = [
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [firmSlug, setFirmSlug] = useState("ndlovu-partners");
-  const [email, setEmail] = useState("thabo@ndlovulaw.co.za");
-  const [password, setPassword] = useState("password");
+  const [firmSlug, setFirmSlug] = useState(DEMO_MODE ? "ndlovu-partners" : "");
+  const [email, setEmail] = useState(DEMO_MODE ? "thabo@ndlovulaw.co.za" : "");
+  const [password, setPassword] = useState(DEMO_MODE ? "password" : "");
   const [totpCode, setTotpCode] = useState("");
   const [needTotp, setNeedTotp] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function LoginPage() {
         <h1 className="text-5xl font-extrabold">
           <span>Ow<span className="text-gold">Law</span></span>
         </h1>
-        <p className="mt-3 text-xl text-white/80">Built for South African firms. Texas still runs on the other tenant.</p>
+        <p className="mt-3 text-xl text-white/80">Eyes on every matter. Built for South African firms.</p>
         <ul className="mt-10 list-disc space-y-3 pl-5 text-white/85">
           {[
             "RAF, Act 40, CCMA, and Prescription Act clocks on the home screen",
@@ -76,7 +77,12 @@ export default function LoginPage() {
           }}
         >
           <h2 className="text-2xl font-bold text-navy">Staff sign in</h2>
-          <p className="text-sm text-slate-600">Sign in with your firm slug. Demo password is password.</p>
+          <p className="text-sm text-slate-600">
+            {DEMO_MODE
+              ? "Sign in with your firm ID. Demo password is password."
+              : "Sign in with your firm ID, email address and password."}
+          </p>
+          {DEMO_MODE && (
           <div className="flex flex-col gap-2">
             {DEMOS.map((d) => (
               <button
@@ -97,6 +103,7 @@ export default function LoginPage() {
               </button>
             ))}
           </div>
+          )}
           <ErrorBanner error={error} />
           <div>
             <Label>Firm ID</Label>

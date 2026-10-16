@@ -7,8 +7,11 @@ COPY . .
 # The API address is baked into the Next.js rewrites at build time.
 ARG NEXT_PUBLIC_API_URL=http://api:18081
 ARG NEXT_PUBLIC_PUBLIC_SITE_ROOT=
+# Demo shortcuts on the sign-in page. Leave false in production.
+ARG NEXT_PUBLIC_DEMO_DATA=false
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_PUBLIC_SITE_ROOT=$NEXT_PUBLIC_PUBLIC_SITE_ROOT \
+    NEXT_PUBLIC_DEMO_DATA=$NEXT_PUBLIC_DEMO_DATA \
     NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_OUTPUT=standalone
 RUN npm run build

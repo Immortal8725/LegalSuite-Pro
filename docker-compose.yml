@@ -68,6 +68,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://api:18081
         NEXT_PUBLIC_PUBLIC_SITE_ROOT: ${NEXT_PUBLIC_PUBLIC_SITE_ROOT:-}
+        NEXT_PUBLIC_DEMO_DATA: ${NEXT_PUBLIC_DEMO_DATA:-false}
     restart: unless-stopped
     environment:
       PORT: "3000"

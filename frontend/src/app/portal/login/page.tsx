@@ -6,12 +6,13 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
+import { DEMO_MODE } from "@/lib/demo";
 
 export default function PortalLoginPage() {
   const { portalLogin } = useAuth();
-  const [firmSlug, setFirmSlug] = useState("ndlovu-partners");
-  const [email, setEmail] = useState("nomsa@example.com");
-  const [password, setPassword] = useState("portal123");
+  const [firmSlug, setFirmSlug] = useState(DEMO_MODE ? "ndlovu-partners" : "");
+  const [email, setEmail] = useState(DEMO_MODE ? "nomsa@example.com" : "");
+  const [password, setPassword] = useState(DEMO_MODE ? "portal123" : "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,7 @@ export default function PortalLoginPage() {
         }}
       >
         <h1 className="text-2xl font-bold text-navy">Client portal</h1>
-        <p className="text-sm text-slate-600">View your matters, invoices, and message the firm. Demo: ndlovu-partners / nomsa@example.com / portal123</p>
+        <p className="text-sm text-slate-600">View your matters, invoices, and message the firm.{DEMO_MODE && " Demo: ndlovu-partners / nomsa@example.com / portal123"}</p>
         <ErrorBanner error={error} />
         <div>
           <Label>Firm ID</Label>
