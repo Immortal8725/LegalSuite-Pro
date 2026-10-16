@@ -1,7 +1,12 @@
 package com.legalsuite.service;
 
 import com.legalsuite.common.TenantContext;
+import com.legalsuite.domain.LegalCase;
 import com.legalsuite.domain.Tenant;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import com.legalsuite.repo.LegalCaseRepository;
 import com.legalsuite.repo.TenantRepository;
 import java.util.ArrayList;
@@ -40,9 +45,11 @@ public class FitnessService {
         boolean za = "ZA".equals(j);
         Map<String, Object> recon = finance.firmRecon();
         boolean trustBalanced = "balanced".equals(recon.get("worstStatus")) || "empty".equals(recon.get("worstStatus"));
-        boolean hasHold = cases.findByTenantIdOrderByUpdatedAtDesc(tid).stream()
+        LegalCase holdCase = cases.findByTenantIdOrderByUpdatedAtDesc(tid).stream()
                 .filter(c -> !List.of("closed", "settled", "archived").contains(c.getStatus()))
-                .anyMatch(PracticeService::docketHold);
+                .filter(PracticeService::docketHold)
+                .findFirst().orElse(null);
+        boolean hasHold = holdCase != null;
         List<Map<String, Object>> items = new ArrayList<>();
         items.add(item("hire-gate", true, "product",
                 "Hire is a gate",
@@ -124,10 +131,43 @@ public class FitnessService {
         m.put("trustRecon", recon);
         m.put("docket", dashboard.docket(tid));
         m.put("items", items);
-        m.put("next", za
-                ? "Find the R11,750 bank short, then certify the three-way. C-2002 still has an overdue Act 40 notice. Hosted Postgres is in the README. TLS, the domain, PayFast merchant signup, and Twilio KYC remain operator work."
-                : "Certify this month's three-way recon, then put the ledger on Postgres. That is what turns the demo into a practice.");
+        m.put("next", nextSteps(za, recon, holdCase, onPostgres));
         return m;
+    }
+
+    static String nextSteps(boolean za, Map<String, Object> recon, LegalCase holdCase, boolean onPostgres) {
+        List<String> parts = new ArrayList<>();
+        Object accounts = recon.get("accounts");
+        if ("empty".equals(recon.get("worstStatus"))) {
+            parts.add("Create your firm's trust account on the Trust page before you receive client money.");
+        } else if (accounts instanceof List<?> rows) {
+            for (Object o : rows) {
+                if (!(o instanceof Map<?, ?> r) || !"unbalanced".equals(r.get("status"))) continue;
+                BigDecimal diff;
+                try {
+                    diff = new BigDecimal(String.valueOf(r.get("difference")));
+                } catch (NumberFormatException e) {
+                    diff = BigDecimal.ZERO;
+                }
+                parts.add("Find the " + money(za, diff) + " difference on " + r.get("accountName")
+                        + ", then certify the three-way reconciliation.");
+            }
+            if (parts.isEmpty()) parts.add("Certify this month's three-way reconciliation.");
+        }
+        if (holdCase != null) {
+            String ref = holdCase.getCaseNumber() == null || holdCase.getCaseNumber().isBlank()
+                    ? holdCase.getTitle() : holdCase.getCaseNumber();
+            parts.add(ref + " has an overdue statutory clock: " + PracticeService.docketHoldReason(holdCase) + ".");
+        }
+        if (!onPostgres) parts.add("Move the practice database to PostgreSQL before going live.");
+        if (parts.isEmpty()) parts.add("Nothing urgent. Keep importing bank statements and certify each month.");
+        return String.join(" ", parts);
+    }
+
+    private static String money(boolean za, BigDecimal v) {
+        DecimalFormat f = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.US));
+        String n = f.format(v.abs());
+        return za ? "R" + n.replace(",", " ") : "$" + n;
     }
 
     private static Map<String, Object> item(String id, boolean done, String owner, String title, String why) {
