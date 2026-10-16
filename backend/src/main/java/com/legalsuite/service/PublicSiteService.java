@@ -288,6 +288,10 @@ public class PublicSiteService {
         Tenant tenant = currentTenant();
         TenantPublicSite site = ensureDraft(tenant);
         for (PublicSiteFeature row : features.findByTenantIdOrderByFeatureKeyAsc(tenant.getId())) {
+            if ("directory".equals(row.getFeatureKey())) {
+                // The directory switch is the firm's own; LPC verification is its gate.
+                continue;
+            }
             if (row.isRequested() && !"approved".equals(row.getApprovalStatus())) {
                 row.setApprovalStatus("pending");
                 row.setUpdatedAt(Instant.now());
@@ -321,7 +325,7 @@ public class PublicSiteService {
                 items.add(queueItem(site, tenant, "branding", null));
             }
             for (PublicSiteFeature row : features.findByTenantIdOrderByFeatureKeyAsc(site.getTenantId())) {
-                if ("pending".equals(row.getApprovalStatus())) {
+                if ("pending".equals(row.getApprovalStatus()) && !"directory".equals(row.getFeatureKey())) {
                     items.add(queueItem(site, tenant, "feature", row));
                 }
             }

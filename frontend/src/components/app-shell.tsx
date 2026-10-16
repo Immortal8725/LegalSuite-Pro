@@ -115,6 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     if (superadmin) {
       items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
+      items.push({ href: "/platform/directory", label: "LPC verification", icon: ShieldAlert });
     }
     return { ...section, items };
   });
