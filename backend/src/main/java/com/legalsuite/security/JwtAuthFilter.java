@@ -71,6 +71,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             return;
                         }
                     }
+                    if (superadmin && path.startsWith("/api/v1/platform/") && !Boolean.TRUE.equals(claims.get("mfa", Boolean.class))) {
+                        deny(response, "mfa_required", "Set up your authenticator app before you use the platform screens.");
+                        return;
+                    }
                     if (Boolean.TRUE.equals(claims.get("pwc", Boolean.class)) && !passwordChangeAllowed(request)) {
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         response.setContentType("application/json");

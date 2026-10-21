@@ -81,6 +81,11 @@ public class AuthController {
         return ApiResponse.ok(auth.totpConfirm(body), "Authenticator enabled");
     }
 
+    @PostMapping("/totp/recovery-codes")
+    public ApiResponse<Map<String, Object>> recoveryCodes(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(auth.regenerateRecoveryCodes(body), "New recovery codes created");
+    }
+
     @PostMapping("/password")
     public ApiResponse<Map<String, Object>> changePassword(@RequestBody Map<String, Object> body) {
         return ApiResponse.ok(auth.changePassword(body), "Password changed");

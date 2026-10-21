@@ -126,7 +126,7 @@ class PublicSiteAccessTest {
         assertFalse(textSet(stillOff.get("features")).contains("newsletter"));
         assertFalse(textSet(stillOff.get("features")).contains("situations"));
 
-        String ops = token("legalsuite", "ops@legalsuite.pro");
+        String ops = com.legalsuite.OperatorTokens.ops(mvc);
         JsonNode queue = data(mvc.perform(get("/api/v1/platform/public-sites/queue").header("Authorization", "Bearer " + ops))
                 .andExpect(status().isOk())
                 .andReturn());
@@ -188,7 +188,7 @@ class PublicSiteAccessTest {
         JsonNode stillDark = data(mvc.perform(get("/api/v1/public/sites/ndlovu-partners")).andExpect(status().isOk()).andReturn());
         assertEquals("dark", stillDark.get("theme").asText());
 
-        String ops = token("legalsuite", "ops@legalsuite.pro");
+        String ops = com.legalsuite.OperatorTokens.ops(mvc);
         mvc.perform(post("/api/v1/platform/public-sites/" + draft.get("tenantId").asText() + "/branding")
                         .header("Authorization", "Bearer " + ops)
                         .contentType(MediaType.APPLICATION_JSON)

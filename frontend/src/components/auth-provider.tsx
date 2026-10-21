@@ -83,6 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const dest = data.user.mustChangePassword
         ? "/change-password"
+        : data.user.mfaRequired && !data.user.totpEnabled
+          ? "/two-factor"
         : data.user.role === "superadmin"
           ? "/platform/firms"
           : data.tenant.onboardingCompleted === false

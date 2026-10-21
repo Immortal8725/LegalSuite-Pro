@@ -16,6 +16,8 @@ export type User = {
   hourlyRate?: number;
   onlineStatus?: string;
   totpEnabled?: boolean;
+  mfaRequired?: boolean;
+  recoveryCodesLeft?: number;
   mustChangePassword?: boolean;
 };
 

@@ -13,6 +13,15 @@ public final class Totp {
 
     private Totp() {}
 
+    /** The code for the current 30-second step. Used by tests and by nothing that holds a user's secret in production. */
+    public static String currentCode(String secret) {
+        return codeAt(secret, System.currentTimeMillis() / 1000 / 30);
+    }
+
+    public static String codeForStep(String secret, long step) {
+        return codeAt(secret, step);
+    }
+
     public static String newSecret() {
         byte[] raw = new byte[20];
         RNG.nextBytes(raw);

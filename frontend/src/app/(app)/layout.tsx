@@ -23,7 +23,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ? "/portal"
         : user?.mustChangePassword
           ? "/change-password"
-          : null;
+          : user?.mfaRequired && !user?.totpEnabled
+            ? "/two-factor"
+            : null;
 
   useEffect(() => {
     if (target) router.replace(target);

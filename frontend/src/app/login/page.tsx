@@ -128,14 +128,13 @@ export default function LoginPage() {
             <div>
               <Label>Authenticator code</Label>
               <Input aria-label="Authenticator code"
-                inputMode="numeric"
                 autoComplete="one-time-code"
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
-                placeholder="6-digit code"
+                placeholder="6-digit code or recovery code"
                 required
               />
-              <p className="mt-1 text-xs text-slate-600">This account has 2FA on. Demo users do not. Enrol from Settings if you want to try it.</p>
+              <p className="mt-1 text-xs text-slate-600">Enter the 6-digit code from your authenticator app. Lost your phone? Use one of your recovery codes instead.</p>
             </div>
           )}
           <Button className="w-full" disabled={loading}>
