@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: server,
                             keyboardType: TextInputType.url,
                             autocorrect: false,
-                            decoration: const InputDecoration(labelText: 'Owlaw server address', hintText: 'https://api.owlaw.co.za'),
+                            decoration: const InputDecoration(labelText: 'Owlaw server address', hintText: 'https://owlaw-api.onrender.com'),
                           ),
                       ]),
                     ),

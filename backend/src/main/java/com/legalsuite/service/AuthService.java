@@ -79,10 +79,15 @@ public class AuthService {
         this.publicSites = publicSites;
     }
 
+    /** Owlaw operators naturally type the brand name as their Firm ID; the platform account's slug is legalsuite. */
+    static final java.util.Set<String> OPERATOR_SLUG_ALIASES = java.util.Set.of("owlaw", "owlaw.co.za", "platform");
+
     @Transactional
     public Map<String, Object> login(LoginRequest req) {
-        Tenant tenant = tenants.findBySlug(req.firmSlug().toLowerCase(Locale.ROOT).trim())
-                .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        String slug = req.firmSlug().toLowerCase(Locale.ROOT).trim();
+        Tenant tenant = tenants.findBySlug(slug)
+                .or(() -> OPERATOR_SLUG_ALIASES.contains(slug) ? tenants.findBySlug(com.legalsuite.platform.PlatformGuard.PLATFORM_SLUG) : java.util.Optional.empty())
+                .orElseThrow(() -> ApiException.notFound("Firm not found. Check the Firm ID you were given."));
         requireOpen(tenant);
         AppUser user = users.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid email or password"));

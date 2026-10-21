@@ -43,7 +43,12 @@ class AppConfig {
 
   static Future<String> loadBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_key);
+    var saved = prefs.getString(_key);
+    // api.owlaw.co.za was shown as an example but was never set up; fall back to the live API.
+    if (saved != null && Uri.tryParse(saved)?.host == 'api.owlaw.co.za') {
+      saved = null;
+      await prefs.remove(_key);
+    }
     final url = normalise(saved == null || saved.isEmpty ? defaultBaseUrl : saved);
     return checkBaseUrl(url) == null ? url : normalise(defaultBaseUrl);
   }
