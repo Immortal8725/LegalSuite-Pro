@@ -113,11 +113,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (tenantAdmin) {
       items.splice(items.length - 1, 0, { href: "/website", label: "Public site", icon: Globe });
       items.splice(items.length - 1, 0, { href: "/directory-listing", label: "Find a Lawyer listing", icon: Globe });
+      items.splice(items.length - 1, 0, { href: "/staff-activity", label: "Owlaw staff activity", icon: ShieldAlert });
+      items.splice(items.length - 1, 0, { href: "/support-access", label: "Owlaw support access", icon: ShieldAlert });
     }
     if (superadmin) {
+      items.push({ href: "/platform/firms", label: "Firms", icon: ShieldAlert });
       items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
       items.push({ href: "/platform/directory", label: "LPC verification", icon: ShieldAlert });
       items.push({ href: "/platform/directory/listings", label: "Directory listings", icon: ShieldAlert });
+      items.push({ href: "/platform/billing", label: "Billing overview", icon: ShieldAlert });
+      items.push({ href: "/platform/support", label: "Support access", icon: ShieldAlert });
+      items.push({ href: "/platform/audit", label: "Platform audit log", icon: ShieldAlert });
     }
     return { ...section, items };
   });

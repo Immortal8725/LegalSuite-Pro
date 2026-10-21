@@ -36,6 +36,7 @@ public class JwtService {
                 .claim("role", user.getRole())
                 .claim("name", user.getFullName())
                 .claim("pwc", user.mustChangePassword())
+                .claim("mfa", user.isTotpEnabled())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessMs))
                 .signWith(key)

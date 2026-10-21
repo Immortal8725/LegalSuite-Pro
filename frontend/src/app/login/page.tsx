@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -37,6 +37,13 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState("");
   const [needTotp, setNeedTotp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const notice = sessionStorage.getItem("ls_notice");
+    if (notice) {
+      setError(notice);
+      sessionStorage.removeItem("ls_notice");
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
 
   return (
@@ -121,14 +128,13 @@ export default function LoginPage() {
             <div>
               <Label>Authenticator code</Label>
               <Input aria-label="Authenticator code"
-                inputMode="numeric"
                 autoComplete="one-time-code"
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
-                placeholder="6-digit code"
+                placeholder="6-digit code or recovery code"
                 required
               />
-              <p className="mt-1 text-xs text-slate-600">This account has 2FA on. Demo users do not. Enrol from Settings if you want to try it.</p>
+              <p className="mt-1 text-xs text-slate-600">Enter the 6-digit code from your authenticator app. Lost your phone? Use one of your recovery codes instead.</p>
             </div>
           )}
           <Button className="w-full" disabled={loading}>

@@ -137,7 +137,11 @@ class DirectoryPublicFlowTest extends DirectoryTestSupport {
         mvc.perform(get("/api/v1/platform/directory/listings").header("Authorization", "Bearer " + thabo())).andExpect(status().isForbidden());
         JsonNode list = data(mvc.perform(get("/api/v1/platform/directory/listings").header("Authorization", "Bearer " + ops)).andExpect(status().isOk()).andReturn());
         String tenantId = null;
-        for (JsonNode l : list) if ("ndlovu-partners".equals(l.get("slug").asText())) tenantId = l.get("tenantId").asText();
+        for (JsonNode l : list) if ("ndlovu-partners".equals(l.get("slug").asText())) {
+            tenantId = l.get("tenantId").asText();
+            for (JsonNode c : l.get("cityLabels")) org.junit.jupiter.api.Assertions.assertTrue(Character.isUpperCase(c.asText().charAt(0)), "city shown as code: " + c);
+            for (JsonNode a : l.get("practiceAreaLabels")) org.junit.jupiter.api.Assertions.assertFalse(a.asText().contains("-"), "practice area shown as code: " + a);
+        }
         assertNotNull(tenantId);
         String vis = "/api/v1/platform/directory/listings/" + tenantId + "/visibility";
         mvc.perform(post(vis).header("Authorization", "Bearer " + ops).contentType(MediaType.APPLICATION_JSON).content("{\"hidden\":true}"))

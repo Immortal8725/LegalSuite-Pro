@@ -14,9 +14,30 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuditService {
     private final AuditLogRepository logs;
+    private final com.legalsuite.platform.PlatformActionRepository platformActions;
 
-    public AuditService(AuditLogRepository logs) {
+    public AuditService(AuditLogRepository logs, com.legalsuite.platform.PlatformActionRepository platformActions) {
         this.logs = logs;
+        this.platformActions = platformActions;
+    }
+
+    /**
+     * A platform (superadmin) action. Always lands in the platform log; when it concerns a firm it is also written to that
+     * firm's own audit log so the firm can see what Owlaw staff did.
+     */
+    @Transactional
+    public void platform(UUID tenantId, String action, String entityType, String entityId, String detail) {
+        com.legalsuite.platform.PlatformAction a = new com.legalsuite.platform.PlatformAction();
+        a.setTenantId(tenantId);
+        a.setActorId(TenantContext.getUserId());
+        a.setActorEmail(TenantContext.getEmail());
+        a.setAction(action);
+        a.setEntityType(entityType);
+        a.setEntityId(entityId);
+        a.setDetail(detail == null ? null : (detail.length() > 1000 ? detail.substring(0, 1000) : detail));
+        a.setCreatedAt(java.time.Instant.now());
+        platformActions.save(a);
+        if (tenantId != null) firmLog(tenantId, action, entityType, entityId, detail);
     }
 
     @Transactional
@@ -27,6 +48,15 @@ public class AuditService {
     /** Write to a named firm's log, for example when the platform operator approves that firm's site. */
     public void recordFor(UUID tenantId, String action, String entityType, String entityId, String detail) {
         if (tenantId == null) return;
+        if ("superadmin".equalsIgnoreCase(TenantContext.getRole()) && !tenantId.equals(TenantContext.getTenantId())) {
+            // An operator acting on a firm: keep it in the platform log as well as the firm's.
+            platform(tenantId, action, entityType, entityId, detail);
+            return;
+        }
+        firmLog(tenantId, action, entityType, entityId, detail);
+    }
+
+    private void firmLog(UUID tenantId, String action, String entityType, String entityId, String detail) {
         AuditLog log = new AuditLog();
         log.setTenantId(tenantId);
         log.setActorId(TenantContext.getUserId());

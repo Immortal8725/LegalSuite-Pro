@@ -16,6 +16,8 @@ export type User = {
   hourlyRate?: number;
   onlineStatus?: string;
   totpEnabled?: boolean;
+  mfaRequired?: boolean;
+  recoveryCodesLeft?: number;
   mustChangePassword?: boolean;
 };
 
@@ -101,6 +103,15 @@ async function parse<T>(res: Response): Promise<T> {
     );
   }
   if (!res.ok || json.success === false) {
+    const code = (json as { code?: string }).code;
+    if (typeof window !== "undefined" && code === "firm_suspended") {
+      clearSession();
+      sessionStorage.setItem("ls_notice", json.message || "This firm's Owlaw account is suspended.");
+      if (!window.location.pathname.startsWith("/login")) window.location.assign("/login");
+    }
+    if (typeof window !== "undefined" && code === "mfa_required" && !window.location.pathname.startsWith("/two-factor")) {
+      window.location.assign("/two-factor");
+    }
     throw new Error(json.message || `Request failed (${res.status})`);
   }
   return json.data;

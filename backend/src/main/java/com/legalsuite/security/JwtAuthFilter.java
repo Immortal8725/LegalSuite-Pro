@@ -19,9 +19,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final com.legalsuite.repo.TenantRepository tenants;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, com.legalsuite.repo.TenantRepository tenants) {
         this.jwtService = jwtService;
+        this.tenants = tenants;
+    }
+
+    private static void deny(HttpServletResponse response, String code, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"success\":false,\"code\":\"" + code + "\",\"message\":\"" + message + "\"}");
     }
 
     @Override
@@ -54,6 +62,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + (role == null ? "STAFF" : role.toUpperCase()))));
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                    String path = request.getRequestURI();
+                    boolean superadmin = "superadmin".equalsIgnoreCase(role);
+                    if (!superadmin && !path.equals("/api/v1/auth/logout")) {
+                        String status = tenants.findById(tenantId).map(com.legalsuite.domain.Tenant::getStatus).orElse("missing");
+                        if ("suspended".equals(status) || "cancelled".equals(status) || "missing".equals(status)) {
+                            deny(response, "firm_suspended", SUSPENDED_MESSAGE);
+                            return;
+                        }
+                    }
+                    if (superadmin && path.startsWith("/api/v1/platform/") && !Boolean.TRUE.equals(claims.get("mfa", Boolean.class))) {
+                        deny(response, "mfa_required", "Set up your authenticator app before you use the platform screens.");
+                        return;
+                    }
                     if (Boolean.TRUE.equals(claims.get("pwc", Boolean.class)) && !passwordChangeAllowed(request)) {
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         response.setContentType("application/json");
@@ -71,6 +92,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
     }
+
+    public static final String SUSPENDED_MESSAGE =
+            "This firm's Owlaw account is suspended. The firm's owner can contact Owlaw at support@owlaw.co.za to restore it.";
 
     private static boolean passwordChangeAllowed(HttpServletRequest request) {
         String path = request.getRequestURI();

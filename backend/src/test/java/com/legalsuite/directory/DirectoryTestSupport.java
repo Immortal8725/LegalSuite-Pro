@@ -38,7 +38,7 @@ abstract class DirectoryTestSupport {
     }
 
     protected String ops() throws Exception {
-        return token("legalsuite", "ops@legalsuite.pro");
+        return com.legalsuite.OperatorTokens.ops(mvc);
     }
 
     protected JsonNode putProfile(String token, String body) throws Exception {

@@ -47,6 +47,12 @@ public class AuthService {
     private final JwtService jwt;
     private final PasswordEncoder encoder;
     private final PublicSiteService publicSites;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.legalsuite.platform.RecoveryCodeRepository recoveryCodes;
+    @org.springframework.beans.factory.annotation.Autowired
+    private AuditService audit;
+    private static final java.security.SecureRandom RNG = new java.security.SecureRandom();
+    private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     public AuthService(
             TenantRepository tenants,
@@ -77,9 +83,7 @@ public class AuthService {
     public Map<String, Object> login(LoginRequest req) {
         Tenant tenant = tenants.findBySlug(req.firmSlug().toLowerCase(Locale.ROOT).trim())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
-        if (!List.of("active", "trial").contains(tenant.getStatus())) {
-            throw ApiException.forbidden("Firm account is " + tenant.getStatus());
-        }
+        requireOpen(tenant);
         AppUser user = users.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid email or password"));
         if (!encoder.matches(req.password(), user.getPasswordHash())) {
@@ -96,8 +100,8 @@ public class AuthService {
                 challenge.put("email", user.getEmail());
                 return challenge;
             }
-            if (!useTotp(user, code)) {
-                throw ApiException.unauthorized("Invalid authenticator code");
+            if (!useTotp(user, code) && !useRecoveryCode(user, code)) {
+                throw ApiException.unauthorized("Invalid authenticator or recovery code");
             }
         }
         user.setLastLoginAt(Instant.now());
@@ -146,13 +150,82 @@ public class AuthService {
         }
         user.setTotpEnabled(true);
         users.save(user);
-        return Map.of("totpEnabled", true);
+        List<String> codes = newRecoveryCodes(user);
+        if ("superadmin".equalsIgnoreCase(user.getRole())) {
+            audit.platform(null, "platform.mfa.enrolled", "user", user.getId().toString(), user.getEmail());
+        }
+        Tenant tenant = tenants.findById(user.getTenantId()).orElseThrow();
+        // Fresh tokens carry the 2FA claim, so platform screens open without signing in again.
+        Map<String, Object> out = new HashMap<>(tokens(user, tenant));
+        out.put("totpEnabled", true);
+        out.put("recoveryCodes", codes);
+        return out;
+    }
+
+    /** Ten single-use recovery codes. Only hashes are stored; the plain codes are shown once. */
+    List<String> newRecoveryCodes(AppUser user) {
+        recoveryCodes.deleteByUserId(user.getId());
+        List<String> plain = new java.util.ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            StringBuilder b = new StringBuilder();
+            for (int j = 0; j < 8; j++) {
+                if (j == 4) b.append('-');
+                b.append(CODE_ALPHABET.charAt(RNG.nextInt(CODE_ALPHABET.length())));
+            }
+            String code = b.toString();
+            plain.add(code);
+            com.legalsuite.platform.RecoveryCode rc = new com.legalsuite.platform.RecoveryCode();
+            rc.setUserId(user.getId());
+            rc.setCodeHash(encoder.encode(code));
+            rc.setCreatedAt(Instant.now());
+            recoveryCodes.save(rc);
+        }
+        return plain;
+    }
+
+    private boolean useRecoveryCode(AppUser user, String raw) {
+        if (raw == null) return false;
+        String code = raw.trim().toUpperCase(Locale.ROOT).replace(" ", "");
+        if (!code.matches("[A-Z0-9]{4}-?[A-Z0-9]{4}")) return false;
+        if (code.length() == 8) code = code.substring(0, 4) + "-" + code.substring(4);
+        for (com.legalsuite.platform.RecoveryCode rc : recoveryCodes.findByUserId(user.getId())) {
+            if (rc.getUsedAt() == null && encoder.matches(code, rc.getCodeHash())) {
+                rc.setUsedAt(Instant.now());
+                recoveryCodes.save(rc);
+                if ("superadmin".equalsIgnoreCase(user.getRole())) {
+                    audit.platform(null, "platform.mfa.recovery_code_used", "user", user.getId().toString(), user.getEmail());
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int recoveryCodesLeft(AppUser user) {
+        return (int) recoveryCodes.findByUserId(user.getId()).stream().filter(r -> r.getUsedAt() == null).count();
+    }
+
+    @Transactional
+    public Map<String, Object> regenerateRecoveryCodes(Map<String, Object> body) {
+        AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
+                .orElseThrow(() -> ApiException.notFound("User not found"));
+        if (!user.isTotpEnabled()) throw ApiException.badRequest("Turn on the authenticator first");
+        String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
+        if (!useTotp(user, code)) throw ApiException.badRequest("Invalid authenticator code");
+        List<String> codes = newRecoveryCodes(user);
+        if ("superadmin".equalsIgnoreCase(user.getRole())) {
+            audit.platform(null, "platform.mfa.recovery_codes_replaced", "user", user.getId().toString(), user.getEmail());
+        }
+        return Map.of("recoveryCodes", codes);
     }
 
     @Transactional
     public Map<String, Object> totpDisable(Map<String, Object> body) {
         AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
+        if ("superadmin".equalsIgnoreCase(user.getRole()) && user.isTotpEnabled()) {
+            throw ApiException.forbidden("Two-factor sign-in is compulsory for Owlaw operator accounts.");
+        }
         if (!user.isTotpEnabled()) {
             user.setTotpSecret(null);
             users.save(user);
@@ -168,6 +241,7 @@ public class AuthService {
         user.setTotpEnabled(false);
         user.setTotpSecret(null);
         users.save(user);
+        recoveryCodes.deleteByUserId(user.getId());
         return Map.of("totpEnabled", false);
     }
 
@@ -260,7 +334,19 @@ public class AuthService {
         }
         Tenant tenant = tenants.findById(user.getTenantId())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if (!"superadmin".equalsIgnoreCase(user.getRole())) requireOpen(tenant);
         return tokens(user, tenant);
+    }
+
+    /** Suspended or closed firms cannot sign in, staff or clients. */
+    static void requireOpen(Tenant tenant) {
+        String status = tenant.getStatus() == null ? "" : tenant.getStatus();
+        if ("suspended".equals(status)) {
+            throw ApiException.forbidden(com.legalsuite.security.JwtAuthFilter.SUSPENDED_MESSAGE);
+        }
+        if (!List.of("active", "trial").contains(status)) {
+            throw ApiException.forbidden("This firm's Owlaw account is " + status + ". Contact Owlaw at support@owlaw.co.za.");
+        }
     }
 
     @Transactional
@@ -318,6 +404,9 @@ public class AuthService {
     public Map<String, Object> portalLogin(PortalLoginRequest req) {
         Tenant tenant = tenants.findBySlug(slugify(req.firmSlug()))
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if ("suspended".equals(tenant.getStatus())) {
+            throw ApiException.forbidden("This firm's client portal is unavailable at the moment. Please contact the firm directly.");
+        }
         Client client = clients.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid portal credentials"));
         if (!client.isPortalEnabled() || client.getPortalPasswordHash() == null
@@ -380,6 +469,8 @@ public class AuthService {
         m.put("onlineStatus", user.getOnlineStatus());
         m.put("barNumber", user.getBarNumber());
         m.put("totpEnabled", user.isTotpEnabled());
+        m.put("mfaRequired", "superadmin".equalsIgnoreCase(user.getRole()));
+        if (user.isTotpEnabled() && recoveryCodes != null) m.put("recoveryCodesLeft", recoveryCodesLeft(user));
         m.put("mustChangePassword", user.mustChangePassword());
         m.put("publicProfile", user.listedPublicly());
         return m;
