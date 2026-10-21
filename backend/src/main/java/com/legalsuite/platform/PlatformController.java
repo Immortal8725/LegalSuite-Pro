@@ -15,8 +15,11 @@ public class PlatformController {
     private final PlatformFirmService firms;
     private final PlatformAuditService audit;
     private final SupportAccessService support;
+    private final PlatformBillingService billing;
 
-    public PlatformController(PlatformFirmService firms, PlatformAuditService audit, SupportAccessService support) {
+    public PlatformController(PlatformFirmService firms, PlatformAuditService audit, SupportAccessService support,
+            PlatformBillingService billing) {
+        this.billing = billing;
         this.firms = firms;
         this.audit = audit;
         this.support = support;
@@ -45,6 +48,12 @@ public class PlatformController {
     @GetMapping("/api/v1/platform/support/{tenantId}/{section}")
     public ApiResponse<?> supportLook(@PathVariable UUID tenantId, @PathVariable String section) {
         return ApiResponse.ok(support.look(tenantId, section));
+    }
+
+    @GetMapping("/api/v1/platform/billing")
+    public ApiResponse<?> billingOverview() {
+        PlatformGuard.requireSuperadmin();
+        return ApiResponse.ok(billing.overview());
     }
 
     @GetMapping("/api/v1/platform/audit")

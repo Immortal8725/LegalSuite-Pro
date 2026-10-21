@@ -121,6 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
       items.push({ href: "/platform/directory", label: "LPC verification", icon: ShieldAlert });
       items.push({ href: "/platform/directory/listings", label: "Directory listings", icon: ShieldAlert });
+      items.push({ href: "/platform/billing", label: "Billing overview", icon: ShieldAlert });
       items.push({ href: "/platform/support", label: "Support access", icon: ShieldAlert });
       items.push({ href: "/platform/audit", label: "Platform audit log", icon: ShieldAlert });
     }

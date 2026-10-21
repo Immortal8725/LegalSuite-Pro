@@ -324,6 +324,11 @@ public class DirectoryPublicService {
 
     // ---- Operator ------------------------------------------------------------------------------
 
+    private static List<String> labels(Object slugs, List<DirectoryCatalog.Option> options) {
+        if (!(slugs instanceof List<?> list)) return List.of();
+        return list.stream().map(x -> DirectoryCatalog.label(options, String.valueOf(x))).toList();
+    }
+
     public List<Map<String, Object>> operatorListings() {
         DirectoryService.requireSuperadmin();
         List<Map<String, Object>> out = new ArrayList<>();
@@ -336,6 +341,13 @@ public class DirectoryPublicService {
             m.put("firmName", t.getFirmName());
             m.put("slug", t.getSlug());
             m.put("plan", t.getStatus());
+            m.put("firmStatus", t.getStatus());
+            m.put("practiceAreaLabels", labels(m.get("practiceAreas"), DirectoryCatalog.PRACTICE_AREAS));
+            m.put("cityLabels", ((List<?>) m.getOrDefault("cities", List.of())).stream()
+                    .map(c -> DirectoryCatalog.city(String.valueOf(c)).map(DirectoryCatalog.City::name).orElse(String.valueOf(c))).toList());
+            m.put("provinceLabels", labels(m.get("provinces"), DirectoryCatalog.PROVINCES));
+            m.put("languageLabels", labels(m.get("languages"), DirectoryCatalog.LANGUAGES));
+            m.put("consultOptionLabels", labels(m.get("consultOptions"), DirectoryCatalog.CONSULT_OPTIONS));
             m.put("listedSwitch", directory.switchedOn(t.getId()));
             m.put("listed", listing.listed());
             m.put("reasons", listing.reasons());
