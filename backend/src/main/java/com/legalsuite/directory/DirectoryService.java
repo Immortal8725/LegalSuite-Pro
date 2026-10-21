@@ -440,8 +440,8 @@ public class DirectoryService {
 
     static void requireSuperadmin() {
         String role = TenantContext.getRole();
-        if (role == null || !"superadmin".equalsIgnoreCase(role)) {
-            throw ApiException.forbidden("LPC verification is limited to the Owlaw operator.");
+        if (!com.legalsuite.platform.PlatformGuard.isPlatformRole(role)) {
+            throw ApiException.forbidden("LPC verification is limited to Owlaw staff.");
         }
     }
 

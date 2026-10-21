@@ -257,7 +257,7 @@ public class TenantService {
     }
 
     private static void rejectPlatformRole(Object role) {
-        if (role != null && "superadmin".equalsIgnoreCase(String.valueOf(role).trim())) {
+        if (role != null && com.legalsuite.platform.PlatformGuard.isPlatformRole(String.valueOf(role).trim())) {
             throw ApiException.forbidden("That role is reserved for the platform operator.");
         }
     }
@@ -308,7 +308,7 @@ public class TenantService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
 
-    static String temporaryPassword() {
+    public static String temporaryPassword() {
         StringBuilder sb = new StringBuilder(14);
         for (int i = 0; i < 14; i++) sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
         return sb.toString();

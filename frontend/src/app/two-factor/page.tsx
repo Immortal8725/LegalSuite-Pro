@@ -25,7 +25,7 @@ export default function TwoFactorSetupPage() {
 
   useEffect(() => {
     if (ready && !user) router.replace("/login");
-    if (ready && user && user.totpEnabled && !codes) router.replace(user.role === "superadmin" ? "/platform/firms" : "/settings");
+    if (ready && user && user.totpEnabled && !codes) router.replace(user.role === "superadmin" ? "/platform/firms" : user.role === "support" ? "/platform/approvals" : "/settings");
   }, [ready, user, codes, router]);
 
   async function start() {
@@ -101,7 +101,7 @@ export default function TwoFactorSetupPage() {
               disabled={!saved}
               onClick={async () => {
                 await reloadMe();
-                router.replace(user.role === "superadmin" ? "/platform/firms" : "/settings");
+                router.replace(user.role === "superadmin" ? "/platform/firms" : user.role === "support" ? "/platform/approvals" : "/settings");
               }}
             >
               Continue

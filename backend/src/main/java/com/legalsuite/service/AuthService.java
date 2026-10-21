@@ -156,7 +156,7 @@ public class AuthService {
         user.setTotpEnabled(true);
         users.save(user);
         List<String> codes = newRecoveryCodes(user);
-        if ("superadmin".equalsIgnoreCase(user.getRole())) {
+        if (com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole())) {
             audit.platform(null, "platform.mfa.enrolled", "user", user.getId().toString(), user.getEmail());
         }
         Tenant tenant = tenants.findById(user.getTenantId()).orElseThrow();
@@ -197,7 +197,7 @@ public class AuthService {
             if (rc.getUsedAt() == null && encoder.matches(code, rc.getCodeHash())) {
                 rc.setUsedAt(Instant.now());
                 recoveryCodes.save(rc);
-                if ("superadmin".equalsIgnoreCase(user.getRole())) {
+                if (com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole())) {
                     audit.platform(null, "platform.mfa.recovery_code_used", "user", user.getId().toString(), user.getEmail());
                 }
                 return true;
@@ -218,7 +218,7 @@ public class AuthService {
         String code = body == null || body.get("code") == null ? "" : String.valueOf(body.get("code"));
         if (!useTotp(user, code)) throw ApiException.badRequest("Invalid authenticator code");
         List<String> codes = newRecoveryCodes(user);
-        if ("superadmin".equalsIgnoreCase(user.getRole())) {
+        if (com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole())) {
             audit.platform(null, "platform.mfa.recovery_codes_replaced", "user", user.getId().toString(), user.getEmail());
         }
         return Map.of("recoveryCodes", codes);
@@ -228,7 +228,7 @@ public class AuthService {
     public Map<String, Object> totpDisable(Map<String, Object> body) {
         AppUser user = users.findByIdAndTenantId(TenantContext.requireUser(), TenantContext.requireTenant())
                 .orElseThrow(() -> ApiException.notFound("User not found"));
-        if ("superadmin".equalsIgnoreCase(user.getRole()) && user.isTotpEnabled()) {
+        if (com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole()) && user.isTotpEnabled()) {
             throw ApiException.forbidden("Two-factor sign-in is compulsory for Owlaw operator accounts.");
         }
         if (!user.isTotpEnabled()) {
@@ -339,7 +339,7 @@ public class AuthService {
         }
         Tenant tenant = tenants.findById(user.getTenantId())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
-        if (!"superadmin".equalsIgnoreCase(user.getRole())) requireOpen(tenant);
+        if (!com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole())) requireOpen(tenant);
         return tokens(user, tenant);
     }
 
@@ -477,7 +477,8 @@ public class AuthService {
         m.put("onlineStatus", user.getOnlineStatus());
         m.put("barNumber", user.getBarNumber());
         m.put("totpEnabled", user.isTotpEnabled());
-        m.put("mfaRequired", "superadmin".equalsIgnoreCase(user.getRole()));
+        m.put("status", user.getStatus());
+        m.put("mfaRequired", com.legalsuite.platform.PlatformGuard.isPlatformRole(user.getRole()));
         if (user.isTotpEnabled() && recoveryCodes != null) m.put("recoveryCodesLeft", recoveryCodesLeft(user));
         m.put("mustChangePassword", user.mustChangePassword());
         m.put("publicProfile", user.listedPublicly());

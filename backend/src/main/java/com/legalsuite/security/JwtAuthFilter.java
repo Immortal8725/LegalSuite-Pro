@@ -63,7 +63,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + (role == null ? "STAFF" : role.toUpperCase()))));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                     String path = request.getRequestURI();
-                    boolean superadmin = "superadmin".equalsIgnoreCase(role);
+                    boolean superadmin = com.legalsuite.platform.PlatformGuard.isPlatformRole(role);
                     if (!superadmin && !path.equals("/api/v1/auth/logout")) {
                         String status = tenants.findById(tenantId).map(com.legalsuite.domain.Tenant::getStatus).orElse("missing");
                         if ("deleted".equals(status) || "purged".equals(status)) {
@@ -74,6 +74,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             deny(response, "firm_suspended", SUSPENDED_MESSAGE);
                             return;
                         }
+                    }
+                    if ("support".equalsIgnoreCase(role) && !(path.startsWith("/api/v1/platform/") || path.startsWith("/api/v1/auth/"))) {
+                        // Support staff work the approval queues only: no standing access to firm or client data.
+                        deny(response, "support_scope", "Owlaw support accounts can only use the approval screens.");
+                        return;
                     }
                     if (superadmin && path.startsWith("/api/v1/platform/") && !Boolean.TRUE.equals(claims.get("mfa", Boolean.class))) {
                         deny(response, "mfa_required", "Set up your authenticator app before you use the platform screens.");

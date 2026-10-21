@@ -67,7 +67,7 @@ export default function DirectoryListingsPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.role === "superadmin") load();
+    if ((user?.role === "superadmin" || user?.role === "support")) load();
     else setLoading(false);
   }, [user, load]);
 
@@ -84,7 +84,7 @@ export default function DirectoryListingsPage() {
     }
   }
 
-  if (user?.role !== "superadmin") {
+  if (!(user?.role === "superadmin" || user?.role === "support")) {
     return (
       <div>
         <PageHeader
