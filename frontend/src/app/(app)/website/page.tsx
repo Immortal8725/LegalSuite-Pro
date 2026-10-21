@@ -10,6 +10,7 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import type { PublicSiteAdmin, PublicSiteFeatureState } from "@/lib/types";
+import { publicSiteUrl, publicSiteLabel } from "@/lib/site-url";
 
 function publishLabel(status: string) {
   if (status === "published") return "Published";
@@ -88,8 +89,8 @@ export default function WebsiteSettingsPage() {
         subtitle="Choose branding and which pages to ask for. A Owlaw operator approves an enable before it appears on the public site."
         actions={
           site?.publishStatus === "published" ? (
-            <Link href={`/firm/${site.slug}`} className="text-sm font-semibold text-navy underline">
-              View public site
+            <Link href={publicSiteUrl(site.slug)} className="text-sm font-semibold text-navy underline">
+              View {publicSiteLabel(site.slug)}
             </Link>
           ) : null
         }

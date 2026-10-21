@@ -9,6 +9,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
+import { publicSiteUrl, publicSiteLabel } from "@/lib/site-url";
 
 type QueueItem = {
   tenantId: string;
@@ -109,9 +110,9 @@ export default function PlatformSitesPage() {
                 ) : null}
                 {item.kind === "publish" ? (
                   <p>
-                    Draft name {item.draftFirmName}, accent {item.draftAccent}, appearance {item.draftTheme || "light"}.
+                    Address {publicSiteLabel(item.slug)}. Draft name {item.draftFirmName}, accent {item.draftAccent}, appearance {item.draftTheme || "light"}.
                     {item.publishStatus === "published" ? (
-                      <Link href={`/firm/${item.slug}`} className="ml-2 underline">View site</Link>
+                      <Link href={publicSiteUrl(item.slug)} className="ml-2 underline">View site</Link>
                     ) : null}
                   </p>
                 ) : null}

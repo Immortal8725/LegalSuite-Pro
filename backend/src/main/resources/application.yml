@@ -40,6 +40,8 @@ spring:
 legalsuite:
   # Public address of the web app, used in invite links.
   app-url: ${APP_URL:http://localhost:3000}
+  # Firms' public sites live at https://<slug>.<root> when set (for example owlaw.co.za). Empty keeps /firm/<slug>.
+  public-site-root: ${PUBLIC_SITE_ROOT:}
   # Demo firms with known passwords. Defaults on for local H2, off for the postgres profile.
   demo-data: ${LEGALSUITE_DEMO_DATA:true}
   operator:

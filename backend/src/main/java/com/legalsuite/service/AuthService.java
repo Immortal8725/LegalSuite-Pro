@@ -253,8 +253,8 @@ public class AuthService {
     @Transactional
     public Map<String, Object> register(RegisterRequest req) {
         String slug = req.firmSlug() == null || req.firmSlug().isBlank()
-                ? slugify(req.firmName())
-                : slugify(req.firmSlug());
+                ? newFirmSlug(req.firmName())
+                : newFirmSlug(req.firmSlug());
         if (tenants.existsBySlug(slug)) {
             throw ApiException.conflict("Firm slug '" + slug + "' is already taken");
         }
@@ -533,9 +533,25 @@ public class AuthService {
                 .replaceAll("\\s+", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-|-$", "");
-        if (base.length() > 50) {
-            base = base.substring(0, 50);
+        // A slug is also the firm's subdomain (<slug>.owlaw.co.za), so it must be a valid DNS label: max 63.
+        if (base.length() > 63) {
+            base = base.substring(0, 63).replaceAll("-+$", "");
         }
         return base.isBlank() ? "firm" : base;
+    }
+
+    /** Subdomains Owlaw keeps for itself. A firm can never take one of these as its slug. */
+    public static final java.util.Set<String> RESERVED_SLUGS = java.util.Set.of(
+            "www", "api", "mail", "smtp", "pop", "imap", "ftp", "app", "admin", "platform", "owlaw", "support", "status");
+
+    public static boolean validSlug(String s) {
+        return s != null && s.matches("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$") && !RESERVED_SLUGS.contains(s);
+    }
+
+    /** Slug for a new firm: a DNS label that is not reserved. */
+    static String newFirmSlug(String input) {
+        String s = slugify(input);
+        if (RESERVED_SLUGS.contains(s)) s = s + "-law";
+        return s;
     }
 }
