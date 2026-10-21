@@ -177,6 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       PUBLIC.has(pathname) ||
       pathname.startsWith("/firm/") ||
       pathname.startsWith("/sign/") ||
+      pathname.startsWith("/pay/") ||
       pathname.startsWith("/legal") ||
       !isProtected(pathname);
     if (isPublic) return;

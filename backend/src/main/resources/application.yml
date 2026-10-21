@@ -38,6 +38,12 @@ spring:
       max-request-size: 25MB
 
 legalsuite:
+  secrets:
+    # base64 of 32 random bytes; seals firms' PayFast keys at rest.
+    encryption-key: ${SECRETS_ENCRYPTION_KEY:}
+  invoice-payments:
+    # Client invoice payment links. Firms without live PayFast details run in PayFast sandbox.
+    enabled: ${INVOICE_PAYMENTS_ENABLED:true}
   backup:
     # base64 of 32 random bytes; the nightly export is AES-256-GCM encrypted with it. Empty turns backups off.
     encryption-key: ${BACKUP_ENCRYPTION_KEY:}
