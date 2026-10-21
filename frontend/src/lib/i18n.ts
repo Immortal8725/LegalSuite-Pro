@@ -124,8 +124,8 @@ const af: Strings = {
   siteUpdating: "Hierdie firma se openbare webwerf word tans bygewerk. Kom asseblief later weer terug.",
   siteNotLive: "Hierdie openbare webwerf is nog nie aanlyn nie.",
   siteWorkHere: "Werk u by hierdie firma?",
-  siteSetUp: "Stel u webwerf op en dien dit in",
-  siteInOwlaw: "in Owlaw.",
+  siteSetUp: "Stel u webwerf op",
+  siteInOwlaw: "en dien dit in Owlaw in.",
   closed: "Hierdie faktuur kan nie meer aanlyn betaal word nie. Kontak asseblief die firma as u vrae het.",
 };
 
