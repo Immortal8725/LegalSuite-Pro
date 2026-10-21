@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
     List<AuditLog> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
+    long countByTenantIdAndActionAndCreatedAtAfter(UUID tenantId, String action, java.time.Instant after);
 }

@@ -15,6 +15,20 @@ public class AiProperties {
     private String anthropicModel = "claude-3-5-haiku-latest";
     private String openaiBaseUrl = "https://api.openai.com/v1";
     private String anthropicBaseUrl = "https://api.anthropic.com/v1";
+    private String geminiApiKey = "";
+    private String geminiModel = "gemini-2.5-flash";
+    private String geminiBaseUrl = "https://generativelanguage.googleapis.com/v1beta";
+    /** Model-backed AI actions per firm per calendar month. Past this the on-tenant assistant answers. */
+    private int monthlyModelActions = 100;
+
+    public String getGeminiApiKey() { return geminiApiKey; }
+    public void setGeminiApiKey(String v) { this.geminiApiKey = v; }
+    public String getGeminiModel() { return geminiModel; }
+    public void setGeminiModel(String v) { this.geminiModel = v; }
+    public String getGeminiBaseUrl() { return geminiBaseUrl; }
+    public void setGeminiBaseUrl(String v) { this.geminiBaseUrl = v; }
+    public int getMonthlyModelActions() { return monthlyModelActions; }
+    public void setMonthlyModelActions(int v) { this.monthlyModelActions = v; }
 
     public String getProvider() {
         return provider;
