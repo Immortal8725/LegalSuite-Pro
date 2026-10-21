@@ -43,10 +43,24 @@ class ApiClient {
   Map<String, dynamic>? user;
   Map<String, dynamic>? tenant;
 
-  Future<bool> hasSession() async => (await store.read(accessKey)) != null;
+  static const roleKey = 'owlaw_role';
 
-  static const operatorUseWebsite =
-      'This is an Owlaw operator account. Operator tools are on the website only: sign in at https://owlaw.co.za/login on a computer or your phone browser. The app is for firm staff.';
+  /// True for the Owlaw platform operator (superadmin). Known after sign-in, or from the saved session.
+  Future<bool> isOperator() async => user != null ? user!['role'] == 'superadmin' : (await store.read(roleKey)) == 'superadmin';
+
+  /// Starts authenticator enrolment: returns the setup key and otpauth link.
+  Future<Map<String, dynamic>> totpStart() async => await post('/api/v1/auth/totp/start') as Map<String, dynamic>;
+
+  /// Confirms the first code. The server answers with fresh tokens (carrying the 2FA claim) and 10 recovery codes.
+  Future<List<String>> totpConfirm(String code) async {
+    final d = await post('/api/v1/auth/totp/confirm', {'code': code.trim()}) as Map<String, dynamic>;
+    if (d['accessToken'] != null) await store.write(accessKey, d['accessToken'] as String);
+    if (d['refreshToken'] != null) await store.write(refreshKey, d['refreshToken'] as String);
+    if (d['user'] is Map<String, dynamic>) user = d['user'] as Map<String, dynamic>;
+    return [for (final c in (d['recoveryCodes'] as List? ?? const [])) '$c'];
+  }
+
+  Future<bool> hasSession() async => (await store.read(accessKey)) != null;
 
   Future<LoginResult> login({required String firmSlug, required String email, required String password, String? totpCode}) async {
     final data = await _raw('POST', '/api/v1/auth/login', {
@@ -56,15 +70,11 @@ class ApiClient {
       if (totpCode != null && totpCode.trim().isNotEmpty) 'totpCode': totpCode.trim(),
     }, auth: false) as Map<String, dynamic>;
     if (data['requiresTotp'] == true) return LoginResult(needsTotp: true);
-    final signedInUser = data['user'] as Map<String, dynamic>?;
-    if (signedInUser?['role'] == 'superadmin') {
-      // Operator tools (firms, audit, billing, two-factor enrolment) live on the website only.
-      throw ApiException(operatorUseWebsite, status: 403);
-    }
     await store.write(accessKey, data['accessToken'] as String);
     if (data['refreshToken'] != null) await store.write(refreshKey, data['refreshToken'] as String);
     user = data['user'] as Map<String, dynamic>?;
     tenant = data['tenant'] as Map<String, dynamic>?;
+    await store.write(roleKey, '${user?['role'] ?? ''}');
     return LoginResult(needsTotp: false, user: user, tenant: tenant);
   }
 
@@ -87,6 +97,7 @@ class ApiClient {
   Future<void> clearSession() async {
     await store.delete(accessKey);
     await store.delete(refreshKey);
+    await store.delete(roleKey);
     user = null;
     tenant = null;
   }
