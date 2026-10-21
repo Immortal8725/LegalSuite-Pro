@@ -544,6 +544,7 @@ export type PublicPerson = {
 
 export type PublicSite = {
   published: boolean;
+  status?: "draft" | "in_review" | "updating";
   slug: string;
   firmName: string;
   tagline?: string;

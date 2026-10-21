@@ -138,6 +138,10 @@ public class PublicSiteService {
             closed.put("published", false);
             closed.put("slug", tenant.getSlug());
             closed.put("firmName", tenant.getFirmName());
+            // Lets the holding page say whether the site is a draft, waiting for Owlaw approval or sent back.
+            // Visitor-facing words only; internal approval states stay private.
+            String state = site == null ? "draft" : site.getPublishStatus();
+            closed.put("status", "pending_approval".equals(state) ? "in_review" : "rejected".equals(state) ? "updating" : "draft");
             return closed;
         }
         Map<String, Boolean> live = liveMap(site);
