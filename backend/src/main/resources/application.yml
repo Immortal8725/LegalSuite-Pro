@@ -132,7 +132,7 @@ legalsuite:
     anthropic-base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com/v1}
     # gemini: Google Gemini API. Note: Google may use prompts on the unpaid (free) quota to improve its products.
     gemini-api-key: ${GEMINI_API_KEY:}
-    gemini-model: ${GEMINI_MODEL:gemini-2.5-flash}
+    gemini-model: ${GEMINI_MODEL:gemini-flash-lite-latest}
     gemini-base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
     monthly-model-actions: ${LEGALSUITE_AI_MONTHLY_ACTIONS:100}
   smtp:
