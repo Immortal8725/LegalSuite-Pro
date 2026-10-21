@@ -232,40 +232,213 @@ class OperatorHome extends StatefulWidget {
 
 class _OperatorHomeState extends State<OperatorHome> {
   int tab = 0;
+  bool? support;
   final _visits = List.filled(5, 0);
-  static const titles = ['Firms', 'Directory', 'Support access', 'Billing overview', 'Platform audit log'];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.api.isSupport().then((v) => mounted ? setState(() => support = v) : null);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      FirmsScreen(api: widget.api),
-      DirectoryAdminScreen(api: widget.api),
-      SupportScreen(api: widget.api),
-      BillingOverviewScreen(api: widget.api),
-      AuditScreen(api: widget.api),
+    final api = widget.api;
+    final isSupport = support;
+    if (isSupport == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final pages = <(String, IconData, String, Widget)>[
+      ('Approvals', Icons.inbox_outlined, 'Approvals', ApprovalsScreen(api: api)),
+      if (!isSupport) ('Firms', Icons.apartment_outlined, 'Firms', FirmsScreen(api: api)),
+      ('Directory', Icons.verified_user_outlined, 'Directory', DirectoryAdminScreen(api: api)),
+      if (!isSupport) ('Support access', Icons.support_agent, 'Support', SupportScreen(api: api)),
+      if (!isSupport) ('Owlaw admin', Icons.more_horiz, 'More', OperatorMoreScreen(api: api)),
     ];
+    if (tab >= pages.length) tab = 0;
     return Scaffold(
       appBar: AppBar(
-        title: Text(titles[tab]),
+        title: Text(pages[tab].$1),
         actions: [IconButton(key: const Key('operatorSignOut'), tooltip: 'Sign out', onPressed: widget.onLogout, icon: const Icon(Icons.logout))],
       ),
-      body: IndexedStack(index: tab, children: [for (var i = 0; i < pages.length; i++) KeyedSubtree(key: ValueKey('op$i-${_visits[i]}'), child: pages[i])]),
+      body: IndexedStack(index: tab, children: [for (var i = 0; i < pages.length; i++) KeyedSubtree(key: ValueKey('op$i-${_visits[i]}-$isSupport'), child: pages[i].$4)]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (i) => setState(() {
           if (i != tab) _visits[i]++;
           tab = i;
         }),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.apartment_outlined), label: 'Firms'),
-          NavigationDestination(icon: Icon(Icons.verified_user_outlined), label: 'Directory'),
-          NavigationDestination(icon: Icon(Icons.support_agent), label: 'Support'),
-          NavigationDestination(icon: Icon(Icons.payments_outlined), label: 'Billing'),
-          NavigationDestination(icon: Icon(Icons.history), label: 'Audit'),
-        ],
+        destinations: [for (final p in pages) NavigationDestination(icon: Icon(p.$2), label: p.$3)],
       ),
     );
   }
+}
+
+/// One inbox for every pending approval: public sites (publish, branding, features), LPC verification and listings.
+class ApprovalsScreen extends StatefulWidget {
+  const ApprovalsScreen({super.key, required this.api});
+  final ApiClient api;
+  @override
+  State<ApprovalsScreen> createState() => _ApprovalsScreenState();
+}
+
+class _ApprovalsScreenState extends State<ApprovalsScreen> {
+  final _loader = GlobalKey<LoaderState<Map<String, dynamic>>>();
+
+  Future<void> _decideSite(Map<String, dynamic> item, String decision) async {
+    final r = await askReason(context, title: decision == 'approved' ? 'Approve' : 'Reject', action: decision == 'approved' ? 'Approve' : 'Reject', required: decision != 'approved');
+    if (r == null) return;
+    final t = item['tenantId'];
+    final path = switch ('${item['kind']}') {
+      'publish' => '/api/v1/platform/public-sites/$t/publish',
+      'branding' => '/api/v1/platform/public-sites/$t/branding',
+      _ => '/api/v1/platform/public-sites/$t/features/${item['featureKey']}',
+    };
+    try {
+      await widget.api.post(path, {'decision': decision, 'note': r['reason']});
+      if (mounted) snack(context, decision == 'approved' ? 'Approved' : 'Rejected');
+      await _loader.currentState?.reload();
+    } catch (e) {
+      if (mounted) snack(context, cleanError(e), error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Loader<Map<String, dynamic>>(
+        key: _loader,
+        load: () async => Map<String, dynamic>.from(await widget.api.get('/api/v1/platform/approvals') as Map),
+        builder: (context, d, reload) {
+          final counts = Map<String, dynamic>.from(d['counts'] as Map? ?? const {});
+          final sites = _rows(d['publicSites']);
+          final lpc = _rows(d['practitioners']);
+          Widget count(String label, dynamic n, {Key? key}) => Expanded(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(children: [Text('${n ?? 0}', key: key, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: navy)), Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12))]),
+                  ),
+                ),
+              );
+          return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(children: [
+                count('Public sites', counts['publicSites'], key: const Key('countSites')),
+                count('LPC checks', counts['practitioners'], key: const Key('countLpc')),
+                count('Hidden listings', counts['hiddenListings']),
+              ]),
+            ),
+            const SectionTitle('Public sites'),
+            if (sites.isEmpty) const ListTile(title: Text('Nothing waiting.')),
+            for (final s in sites)
+              Card(
+                child: ListTile(
+                  title: Text('${s['firmName']}'),
+                  subtitle: Text([
+                    switch ('${s['kind']}') { 'publish' => 'Publish the site', 'branding' => 'Branding change', _ => 'Feature: ${s['featureLabel'] ?? s['featureKey']}' },
+                    if (s['draftTagline'] != null) '${s['draftTagline']}',
+                    '${s['siteUrl'] ?? ''}',
+                  ].join('\n')),
+                  isThreeLine: true,
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton(key: Key('approve-${s['tenantId']}-${s['kind']}'), tooltip: 'Approve', icon: const Icon(Icons.check_circle_outline, color: Colors.green), onPressed: () => _decideSite(s, 'approved')),
+                    IconButton(tooltip: 'Reject', icon: Icon(Icons.cancel_outlined, color: Colors.red.shade700), onPressed: () => _decideSite(s, 'rejected')),
+                  ]),
+                ),
+              ),
+            const SectionTitle('LPC verification'),
+            if (lpc.isEmpty) const ListTile(title: Text('Nothing waiting.')),
+            for (final p in lpc) Card(child: ListTile(title: Text('${p['fullName']}'), subtitle: Text('LPC ${p['lpcNumber'] ?? ''} · ${p['firmName'] ?? ''}'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text('Directory')), body: DirectoryAdminScreen(api: widget.api)))))),
+            const Padding(padding: EdgeInsets.all(16), child: Text('Every decision is written to the platform log and to the firm\'s own log.', style: TextStyle(fontSize: 12, color: Colors.black54))),
+          ]);
+        },
+      );
+}
+
+/// Operator-only extras: billing overview, platform log and support staff.
+class OperatorMoreScreen extends StatelessWidget {
+  const OperatorMoreScreen({super.key, required this.api});
+  final ApiClient api;
+  @override
+  Widget build(BuildContext context) {
+    void open(String title, Widget w) => Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: Text(title)), body: w)));
+    return ListView(children: [
+      Card(child: ListTile(key: const Key('opStaff'), leading: const Icon(Icons.badge_outlined, color: navy), title: const Text('Support staff'), subtitle: const Text('Invite or remove Owlaw support'), onTap: () => open('Support staff', SupportStaffScreen(api: api)))),
+      Card(child: ListTile(leading: const Icon(Icons.payments_outlined, color: navy), title: const Text('Billing overview'), onTap: () => open('Billing overview', BillingOverviewScreen(api: api)))),
+      Card(child: ListTile(leading: const Icon(Icons.history, color: navy), title: const Text('Platform audit log'), onTap: () => open('Platform audit log', AuditScreen(api: api)))),
+    ]);
+  }
+}
+
+class SupportStaffScreen extends StatefulWidget {
+  const SupportStaffScreen({super.key, required this.api});
+  final ApiClient api;
+  @override
+  State<SupportStaffScreen> createState() => _SupportStaffScreenState();
+}
+
+class _SupportStaffScreenState extends State<SupportStaffScreen> {
+  final _loader = GlobalKey<LoaderState<List<Map<String, dynamic>>>>();
+
+  Future<void> _invite() async {
+    final first = TextEditingController(), last = TextEditingController(), email = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Invite support staff'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: first, decoration: const InputDecoration(labelText: 'First name')),
+          TextField(controller: last, decoration: const InputDecoration(labelText: 'Last name')),
+          TextField(key: const Key('staffEmail'), controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
+          const SizedBox(height: 8),
+          const Text('They must set up two-factor sign-in and can only work approvals.', style: TextStyle(fontSize: 12)),
+        ]),
+        actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(key: const Key('staffInvite'), onPressed: () => Navigator.pop(c, true), child: const Text('Invite'))],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final r = await widget.api.post('/api/v1/platform/support-staff', {'firstName': first.text.trim(), 'lastName': last.text.trim(), 'email': email.text.trim()}) as Map;
+      if (!mounted) return;
+      snack(context, r['inviteEmailSent'] == true ? 'Invite emailed' : 'Invite created. Share the set-up link from the web if email is off.');
+      await _loader.currentState?.reload();
+    } catch (e) {
+      if (mounted) snack(context, cleanError(e), error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Stack(children: [
+        Loader<List<Map<String, dynamic>>>(
+          key: _loader,
+          load: () async => _rows(await widget.api.get('/api/v1/platform/support-staff')),
+          isEmpty: (d) => d.isEmpty,
+          emptyText: 'No support staff yet.',
+          builder: (context, rows, reload) => ListView(children: [
+            for (final u in rows)
+              Card(
+                child: ListTile(
+                  title: Text('${u['fullName']}'),
+                  subtitle: Text('${u['email']} · ${u['status'] == 'inactive' ? 'Removed' : u['totpEnabled'] == true ? '2FA on' : '2FA not set up yet'}'),
+                  trailing: u['status'] == 'inactive'
+                      ? null
+                      : TextButton(
+                          onPressed: () async {
+                            final r = await askReason(context, title: 'Remove ${u['fullName']}', action: 'Remove', required: false);
+                            if (r == null) return;
+                            try {
+                              await widget.api.post('/api/v1/platform/support-staff/${u['id']}/remove');
+                              await reload();
+                            } catch (e) {
+                              if (context.mounted) snack(context, cleanError(e), error: true);
+                            }
+                          },
+                          child: const Text('Remove'),
+                        ),
+                ),
+              ),
+          ]),
+        ),
+        Positioned(right: 16, bottom: 16, child: FloatingActionButton.extended(key: const Key('addStaff'), onPressed: _invite, icon: const Icon(Icons.person_add_alt), label: const Text('Invite'))),
+      ]);
 }
 
 List<Map<String, dynamic>> _rows(dynamic d) => [for (final x in (d as List? ?? const [])) Map<String, dynamic>.from(x as Map)];
@@ -351,8 +524,16 @@ class _FirmsScreenState extends State<FirmsScreen> {
           ListTile(title: Text('${f['firmName']}', style: const TextStyle(fontWeight: FontWeight.bold))),
           if (f['status'] == 'deleted')
             ListTile(key: const Key('restore'), leading: const Icon(Icons.restore), title: const Text('Restore firm'), onTap: () => Navigator.pop(c, 'restore')),
+          if (f['status'] == 'deleted')
+            ListTile(
+              key: const Key('purgeFirm'),
+              leading: Icon(Icons.local_fire_department_outlined, color: Colors.red.shade700),
+              title: Text('Purge for good', style: TextStyle(color: Colors.red.shade700)),
+              subtitle: Text('Allowed from ${niceDate(f['purgeAvailableAt'])}. This cannot be undone.'),
+              onTap: () => Navigator.pop(c, 'purge'),
+            ),
           if (deleted)
-            const ListTile(subtitle: Text('Deleted firms can be purged for good on the website, 30 days after deletion.'))
+            const ListTile(subtitle: Text('Deleted firms can be restored until they are purged.'))
           else ...[
           if (suspended)
             ListTile(key: const Key('reactivate'), leading: const Icon(Icons.play_circle_outline), title: const Text('Reactivate'), onTap: () => Navigator.pop(c, 'reactivate'))
@@ -381,6 +562,17 @@ class _FirmsScreenState extends State<FirmsScreen> {
           return;
         }
         await _act(f, 'delete', {'reason': r['reason'], 'confirmName': r['extra']!.trim()}, 'Firm deleted');
+      case 'purge':
+        final name = '${f['firmName']}'.trim();
+        final r = await askReason(context, title: 'Purge $name', action: 'Purge for good',
+            note: 'Every record of this firm is removed permanently. The platform log keeps only that the purge happened.',
+            extra: (set) => TextField(key: const Key('confirmPurgeName'), decoration: InputDecoration(labelText: 'Type "$name" to confirm'), onChanged: set));
+        if (r == null) return;
+        if ((r['extra'] ?? '').trim() != name) {
+          if (mounted) snack(context, 'The firm name did not match, so nothing was purged.', error: true);
+          return;
+        }
+        await _act(f, 'purge', {'reason': r['reason'], 'confirmName': r['extra']!.trim()}, 'Firm purged');
       case 'restore':
         final r = await askReason(context, title: 'Restore ${f['firmName']}', action: 'Restore');
         if (r != null) await _act(f, 'restore', {'reason': r['reason']}, 'Firm restored');

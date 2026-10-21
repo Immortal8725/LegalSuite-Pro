@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api/access.dart';
 import '../api/api_client.dart';
+import '../config.dart';
 import '../ui/common.dart';
 import '../ui/launch.dart';
 import '../ui/theme.dart';
@@ -10,6 +11,8 @@ import 'billing.dart';
 import 'calls.dart';
 import 'documents.dart';
 import 'matter_form.dart';
+import 'fica.dart';
+import 'practice.dart';
 import 'trust_ledger.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -31,18 +34,39 @@ class MoreScreen extends StatelessWidget {
         if (a.documents) _item(context, Icons.folder_copy_outlined, 'Documents', 'Open, upload from camera or files', () => _open(context, DocumentsScreen(api: api))),
         if (a.esign) _item(context, Icons.draw_outlined, 'E-sign', 'Send for signature and track status', () => _open(context, SignaturesScreen(api: api))),
         if (a.ai) _item(context, Icons.edit_note, 'Draft help', 'Ask about a matter, draft client emails', () => _open(context, DraftHelpScreen(api: api))),
+        if (a.clients) _item(context, Icons.verified_user_outlined, 'FICA', 'Client due diligence, ID capture and reviews due', () => _open(context, FicaScreen(api: api))),
+        if (a.billing) _item(context, Icons.insights_outlined, 'Practice dashboard', 'Unbilled work, debtors, collections, time', () => _open(context, PracticeDashboardScreen(api: api))),
+        if (a.trust) _item(context, Icons.fact_check_outlined, 'Trust audit pack', 'Auditor PDF and CSV, investments register', () => _open(context, TrustAuditScreen(api: api))),
+        if (a.documents) _item(context, Icons.menu_book_outlined, 'Court bundles', 'Indexed, paginated PDF for CaseLines', () => _open(context, BundleScreen(api: api))),
+        if (a.isFirmAdmin) _item(context, Icons.upload_file_outlined, 'Import data', 'CSV of clients, matters, time or trust balances', () => _open(context, ImportScreen(api: api))),
         _item(context, Icons.people_outline, 'Clients and contacts', 'Tap to call or email', () => _open(context, PeopleScreen(api: api))),
         _item(context, Icons.phone_in_talk_outlined, 'Calls', 'Call through the firm number', () => _open(context, CallsScreen(api: api))),
         _item(context, Icons.notifications_outlined, 'Notifications', 'Intakes, payments and reminders', () => _open(context, NotificationsScreen(api: api))),
         _item(context, Icons.person_outline, 'Profile', 'Your details and sign out', () => _open(context, ProfileScreen(api: api, onLogout: onLogout))),
+        const SectionTitle('Help'),
+        _web(context, Icons.help_outline, 'Help centre', '/help'),
+        _web(context, Icons.lock_outline, 'Security and POPIA', '/security'),
+        _web(context, Icons.monitor_heart_outlined, 'System status', '/status'),
+        const SectionTitle('More on the web'),
         const Padding(
-          padding: EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Text('Team, the public website, the Owlaw subscription and firm settings are managed in the Owlaw web app.',
-              style: TextStyle(color: Colors.black54, fontSize: 12)),
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text('Firm administration opens in your phone browser. Sign in once and the pages fit your screen.', style: TextStyle(color: Colors.black54, fontSize: 12)),
         ),
+        for (final w in webPages(a)) _web(context, w.$1, w.$2, w.$3),
+        const SizedBox(height: 24),
       ]),
     );
   }
+
+  Widget _web(BuildContext context, IconData icon, String title, String path) => Card(
+        child: ListTile(
+          key: Key('web$path'),
+          leading: Icon(icon, color: navy),
+          title: Text(title),
+          trailing: const Icon(Icons.open_in_new, size: 18),
+          onTap: () => openUri(context, Uri.parse(AppConfig.webLink(api.baseUrl, path))),
+        ),
+      );
 
   Widget _item(BuildContext context, IconData icon, String title, String sub, VoidCallback onTap) => Card(
         child: ListTile(leading: Icon(icon, color: navy), title: Text(title), subtitle: Text(sub), trailing: const Icon(Icons.chevron_right), onTap: onTap),
@@ -227,3 +251,21 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
+/// Admin pages kept on the phone-friendly web app rather than rebuilt in the app.
+List<(IconData, String, String)> webPages(Access a) => [
+      if (a.isFirmAdmin) (Icons.settings_outlined, 'Firm settings, letterhead, 2FA and PAIA', '/settings'),
+      if (a.isFirmAdmin) (Icons.group_outlined, 'Team and roles', '/team'),
+      if (a.isFirmAdmin) (Icons.extension_outlined, 'Modules', '/modules'),
+      if (a.isFirmAdmin) (Icons.hub_outlined, 'Integrations', '/integrations'),
+      if (a.isFirmAdmin) (Icons.credit_card_outlined, 'PayFast online payments', '/settings/payments'),
+      (Icons.article_outlined, 'Templates', '/templates'),
+      if (a.isFirmAdmin) (Icons.public, 'Website setup and branding', '/website'),
+      (Icons.badge_outlined, 'Directory listing and practitioners', '/directory-listing'),
+      (Icons.mark_email_unread_outlined, 'Leads', '/leads'),
+      (Icons.summarize_outlined, 'Reports and accounting export', '/reports'),
+      if (a.isFirmAdmin) (Icons.support_agent, 'Support access', '/support-access'),
+      if (a.isFirmAdmin) (Icons.manage_search, 'Owlaw staff activity', '/staff-activity'),
+      if (a.isFirmAdmin) (Icons.workspace_premium_outlined, 'Owlaw plan and billing', '/product-billing'),
+      (Icons.history, 'Audit log', '/audit'),
+    ];

@@ -86,6 +86,40 @@ extension OwlawApi on ApiClient {
   // In-app calling
   Future<Json> voiceAppToken() async => _map(await get('/api/v1/voice/app/token'));
 
+
+  // FICA
+  Future<List<Json>> ficaReport() async => _list(await get('/api/v1/fica/report'));
+  Future<Json> ficaProfile(String clientId) async => _map(await get('/api/v1/fica/clients/$clientId'));
+  Future<Json> saveFica(String clientId, Json body) async => _map(await put('/api/v1/fica/clients/$clientId', body));
+  Future<Json> verifyFica(String clientId) async => _map(await post('/api/v1/fica/clients/$clientId/verify'));
+  Future<Json> uploadFicaDoc(String clientId, String kind, List<int> bytes, String filename) async =>
+      _map(await upload('/api/v1/fica/clients/$clientId/documents', bytes: bytes, filename: filename, fields: {'kind': kind}));
+  Future<Json> ficaFactors() async => _map(await get('/api/v1/fica/factors'));
+  Future<Json> ficaRemind() async => _map(await post('/api/v1/fica/reminders/run'));
+
+  // Online payments and statements
+  Future<Json> paymentLink(String invoiceId) async => _map(await post('/api/v1/invoices/$invoiceId/payment-link'));
+  Future<Json> paymentSettings() async => _map(await get('/api/v1/payments/settings'));
+  Future<Json> savePaymentSettings(Json body) async => _map(await put('/api/v1/payments/settings', body));
+  Future<List<int>> statementPdf(String clientId) => download('/api/v1/clients/$clientId/statement.pdf');
+
+  // Reports, trust audit, bundles, import
+  Future<Json> practiceReport() async => _map(await get('/api/v1/reports/practice'));
+  Future<List<int>> accountingCsv(String format, String from, String to, {String? accountCode}) =>
+      download('/api/v1/exports/accounting.csv?format=$format&from=$from&to=$to${accountCode == null || accountCode.isEmpty ? '' : '&accountCode=${Uri.encodeQueryComponent(accountCode)}'}');
+  Future<Json> trustAuditPack(String from, String to) async => _map(await get('/api/v1/trust/audit-pack?from=$from&to=$to'));
+  Future<List<int>> trustAuditPdf(String from, String to) => download('/api/v1/trust/audit-pack.pdf?from=$from&to=$to');
+  Future<List<int>> trustAuditCsv(String from, String to) => download('/api/v1/trust/audit-pack.csv?from=$from&to=$to');
+  Future<List<Json>> trustInvestments() async => _list(await get('/api/v1/trust/investments'));
+  Future<Json> saveTrustInvestment(Json body, {String? id}) async =>
+      _map(id == null ? await post('/api/v1/trust/investments', body) : await put('/api/v1/trust/investments/$id', body));
+  Future<List<Json>> bundleDocuments(String caseId) async => _list(await get('/api/v1/cases/$caseId/bundle/documents'));
+  Future<List<int>> buildBundle(String caseId, Json body) => download('/api/v1/cases/$caseId/bundle', body: body);
+  Future<List<Json>> importKinds() async => _list(await get('/api/v1/import/kinds'));
+  Future<List<int>> importTemplate(String kind) => download('/api/v1/import/templates/$kind');
+  Future<Json> runImport(String kind, String csv, {required bool dryRun, String? trustAccountId}) async =>
+      _map(await post('/api/v1/import/$kind', clean({'csv': csv, 'dryRun': dryRun, 'trustAccountId': trustAccountId})));
+
   // Access
   Future<List<Json>> tenantModules(String tenantId) async => _list(await get('/api/v1/tenants/$tenantId/modules'));
 }
