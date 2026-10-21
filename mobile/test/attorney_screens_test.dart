@@ -84,7 +84,8 @@ void main() {
     expect(find.text('Documents'), findsOneWidget);
     expect(find.text('Trust'), findsNothing);
     expect(find.text('E-sign'), findsNothing);
-    expect(find.textContaining('managed in the Owlaw web app'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('web/help')), 300);
+    expect(find.text('Help centre'), findsOneWidget);
     Access.current = Access.everything;
   });
 

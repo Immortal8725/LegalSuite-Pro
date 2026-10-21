@@ -78,3 +78,54 @@ Future<void> shareText(BuildContext context, String text, {String? subject}) asy
     if (context.mounted) snack(context, 'Could not share: ${cleanError(e)}', error: true);
   }
 }
+
+/// Saves bytes to a temporary file and opens the phone's share sheet (WhatsApp, email, Drive and so on).
+Future<void> shareBytes(BuildContext context, List<int> bytes, String name, {String? text}) async {
+  try {
+    if (kIsWeb) {
+      await launchUrl(Uri.dataFromBytes(bytes, mimeType: 'application/octet-stream'), webOnlyWindowName: '_blank');
+      return;
+    }
+    final dir = await getTemporaryDirectory();
+    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._ -]'), '_');
+    final f = File('${dir.path}/$safe');
+    await f.writeAsBytes(bytes, flush: true);
+    await SharePlus.instance.share(ShareParams(files: [XFile(f.path)], subject: name, text: text));
+  } catch (e) {
+    if (context.mounted) snack(context, 'Could not share $name: ${cleanError(e)}', error: true);
+  }
+}
+
+/// Lets the user open or share a generated file.
+Future<void> openOrShare(BuildContext context, List<int> bytes, String name) async {
+  final pick = await showModalBottomSheet<String>(
+    context: context,
+    builder: (c) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold))),
+        ListTile(key: const Key('openFile'), leading: const Icon(Icons.open_in_new, color: navy), title: const Text('Open'), onTap: () => Navigator.pop(c, 'open')),
+        ListTile(key: const Key('shareFile'), leading: const Icon(Icons.share_outlined, color: navy), title: const Text('Share or save'), onTap: () => Navigator.pop(c, 'share')),
+      ]),
+    ),
+  );
+  if (!context.mounted || pick == null) return;
+  if (pick == 'open') {
+    await openBytes(context, bytes, name);
+  } else {
+    await shareBytes(context, bytes, name);
+  }
+}
+
+/// Picks a CSV or text file and returns its text.
+Future<PickedFile?> pickCsv(BuildContext context) async {
+  try {
+    final r = await FilePicker.pickFiles(withData: true, type: FileType.custom, allowedExtensions: const ['csv', 'txt']);
+    final f = r?.files.singleOrNull;
+    if (f == null) return null;
+    final bytes = f.bytes ?? (f.path != null ? await File(f.path!).readAsBytes() : null);
+    return bytes == null ? null : PickedFile(bytes, f.name);
+  } catch (e) {
+    if (context.mounted) snack(context, 'Could not open that file: ${cleanError(e)}', error: true);
+    return null;
+  }
+}

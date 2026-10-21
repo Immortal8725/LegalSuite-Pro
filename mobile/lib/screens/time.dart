@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../api/drafts.dart';
 import '../ui/common.dart';
 import '../ui/theme.dart';
 
@@ -76,17 +77,26 @@ class _TimeEntryFormState extends State<_TimeEntryForm> {
       busy = true;
       error = null;
     });
+    final entry = <String, dynamic>{
+      if (caseId != null) 'caseId': caseId,
+      'durationMinutes': mins,
+      'description': desc.text.trim(),
+      'billable': billable,
+      'source': 'mobile',
+      'date': DateTime.now().toIso8601String().substring(0, 10),
+    };
     try {
-      await widget.api.post('/api/v1/time-entries', {
-        if (caseId != null) 'caseId': caseId,
-        'durationMinutes': mins,
-        'description': desc.text.trim(),
-        'billable': billable,
-        'source': 'mobile',
-        'date': DateTime.now().toIso8601String().substring(0, 10),
-      });
+      await widget.api.post('/api/v1/time-entries', entry);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
+      if (OfflineDrafts.isOffline(e)) {
+        await OfflineDrafts.add(entry);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No signal. Saved on this phone; it will be sent when you are back online.')));
+          Navigator.pop(context, false);
+        }
+        return;
+      }
       if (mounted) setState(() => error = e.toString());
     } finally {
       if (mounted) setState(() => busy = false);
@@ -151,6 +161,7 @@ class _TimeScreenState extends State<TimeScreen> {
   }
 
   Future<_TimeData> _load() async {
+    await OfflineDrafts.sync(widget.api).catchError((_) => 0);
     final results = await Future.wait([
       widget.api.get('/api/v1/time-entries'),
       widget.api.get('/api/v1/timers/active'),

@@ -46,7 +46,14 @@ class ApiClient {
   static const roleKey = 'owlaw_role';
 
   /// True for the Owlaw platform operator (superadmin). Known after sign-in, or from the saved session.
-  Future<bool> isOperator() async => user != null ? user!['role'] == 'superadmin' : (await store.read(roleKey)) == 'superadmin';
+  /// Owlaw staff (operator or support) use the platform screens, not the firm app.
+  Future<bool> isOperator() async {
+    final r = user != null ? '${user!['role']}' : await store.read(roleKey);
+    return r == 'superadmin' || r == 'support';
+  }
+
+  /// Support staff work approvals only. Known after sign-in, or from the saved session.
+  Future<bool> isSupport() async => (user != null ? '${user!['role']}' : await store.read(roleKey)) == 'support';
 
   /// Starts authenticator enrolment: returns the setup key and otpauth link.
   Future<Map<String, dynamic>> totpStart() async => await post('/api/v1/auth/totp/start') as Map<String, dynamic>;
@@ -133,18 +140,30 @@ class ApiClient {
   }
 
   /// Downloads a file (a document or a proof of payment) as raw bytes.
-  Future<List<int>> download(String path) async {
+  /// With [body] the request is a JSON POST (for generated files such as court bundles).
+  Future<List<int>> download(String path, {Map<String, dynamic>? body}) async {
     Future<List<int>> once() async {
-      final req = http.Request('GET', Uri.parse('$baseUrl$path'));
+      final req = http.Request(body == null ? 'GET' : 'POST', Uri.parse('$baseUrl$path'));
       final t = await store.read(accessKey);
       if (t != null) req.headers['Authorization'] = 'Bearer $t';
+      if (body != null) {
+        req.headers['Content-Type'] = 'application/json';
+        req.body = jsonEncode(body);
+      }
       http.Response res;
       try {
         res = await http.Response.fromStream(await _http.send(req).timeout(timeout));
       } catch (_) {
         throw ApiException('Cannot reach the Owlaw server at $baseUrl. Check the server address and your connection.');
       }
-      if (res.statusCode >= 400) throw ApiException('Download failed (${res.statusCode}).', status: res.statusCode);
+      if (res.statusCode >= 400) {
+        String? msg;
+        try {
+          final j = jsonDecode(utf8.decode(res.bodyBytes));
+          if (j is Map) msg = j['message']?.toString();
+        } catch (_) {}
+        throw ApiException(msg ?? 'Download failed (${res.statusCode}).', status: res.statusCode);
+      }
       return res.bodyBytes;
     }
 

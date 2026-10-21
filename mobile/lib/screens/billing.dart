@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api/access.dart';
 import '../api/api_client.dart';
@@ -436,6 +438,22 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                   ),
                 if (open) ActionChip(avatar: const Icon(Icons.upload_file, size: 18), label: const Text('Upload proof'), onPressed: () => _proof(inv)),
                 if (open) ActionChip(avatar: const Icon(Icons.money_off, size: 18), label: const Text('Write off'), onPressed: () => _writeOff(inv)),
+                if (open && status != 'draft')
+                  ActionChip(key: const Key('payLink'), avatar: const Icon(Icons.link, size: 18), label: const Text('Payment link'), onPressed: () => showPayLinkSheet(context, api, inv)),
+                if (inv['clientId'] != null)
+                  ActionChip(
+                    key: const Key('statement'),
+                    avatar: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                    label: const Text('Statement'),
+                    onPressed: () async {
+                      try {
+                        final b = await api.statementPdf('${inv['clientId']}');
+                        if (context.mounted) await openOrShare(context, b, 'Statement $client.pdf');
+                      } catch (e) {
+                        if (context.mounted) snack(context, cleanError(e), error: true);
+                      }
+                    },
+                  ),
                 ActionChip(avatar: const Icon(Icons.share_outlined, size: 18), label: const Text('Share'), onPressed: () => _share(inv, client)),
               ]),
             ),
@@ -578,4 +596,80 @@ class _ProofsScreenState extends State<ProofsScreen> {
       ),
     );
   }
+}
+
+
+/// Message text for a payment link in the client's language. Matches the public pay page languages.
+String payLinkMessage(String lang, {required String firm, required String invoice, required String amount, required String url}) => switch (lang) {
+      'af' => 'Goeie dag. U kan faktuur $invoice van $firm ($amount) veilig aanlyn betaal: $url',
+      'zu' => 'Sawubona. Ungakhokha i-invoyisi $invoice evela ku-$firm ($amount) ngokuphephile ku-inthanethi: $url',
+      _ => 'Good day. You can pay invoice $invoice from $firm ($amount) securely online: $url',
+    };
+
+/// Creates a PayFast payment link for an invoice and shares it by WhatsApp, email or the share sheet.
+Future<void> showPayLinkSheet(BuildContext context, ApiClient api, Json inv) async {
+  Json link;
+  try {
+    link = await api.paymentLink('${inv['id']}');
+  } catch (e) {
+    if (context.mounted) snack(context, cleanError(e), error: true);
+    return;
+  }
+  if (!context.mounted) return;
+  var lang = 'en';
+  final firm = '${api.tenant?['firmName'] ?? 'your attorneys'}';
+  final amount = money(link['amount'], currencyOf(api));
+  String msg() => payLinkMessage(lang, firm: firm, invoice: '${link['invoiceNumber'] ?? inv['invoiceNumber']}', amount: amount, url: '${link['url']}');
+  final phone = '${link['clientPhone'] ?? ''}'.replaceAll(RegExp(r'[^0-9+]'), '');
+  final wa = phone.startsWith('0') ? '27${phone.substring(1)}' : phone.replaceFirst('+', '');
+  final email = '${link['clientEmail'] ?? ''}';
+  await showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (c) => StatefulBuilder(
+      builder: (c, setState) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          const Text('Payment link', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: navy)),
+          const SizedBox(height: 6),
+          Text('$amount · ${link['mode'] == 'live' ? 'Live' : 'Test mode (PayFast sandbox)'} · expires ${niceDate(link['expiresAt'])}', key: const Key('payLinkInfo')),
+          const SizedBox(height: 6),
+          SelectableText('${link['url']}', style: const TextStyle(color: Colors.black54)),
+          const SizedBox(height: 12),
+          SegmentedButton<String>(
+            segments: const [ButtonSegment(value: 'en', label: Text('English')), ButtonSegment(value: 'af', label: Text('Afrikaans')), ButtonSegment(value: 'zu', label: Text('isiZulu'))],
+            selected: {lang},
+            onSelectionChanged: (s) => setState(() => lang = s.first),
+          ),
+          const SizedBox(height: 8),
+          Text(msg(), key: const Key('payLinkMessage')),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            key: const Key('shareWhatsApp'),
+            icon: const Icon(Icons.chat_outlined),
+            label: const Text('WhatsApp'),
+            onPressed: () => launchUrl(Uri.parse('https://wa.me/${wa.isEmpty ? '' : wa}?text=${Uri.encodeComponent(msg())}'), mode: LaunchMode.externalApplication),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            key: const Key('shareEmail'),
+            icon: const Icon(Icons.email_outlined),
+            label: Text(email.isEmpty ? 'Email' : 'Email $email'),
+            onPressed: () => launchUrl(Uri(scheme: 'mailto', path: email, query: 'subject=${Uri.encodeComponent('Invoice ${link['invoiceNumber'] ?? ''}')}&body=${Uri.encodeComponent(msg())}')),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(icon: const Icon(Icons.share_outlined), label: const Text('More options'), onPressed: () => shareText(c, msg(), subject: 'Invoice ${link['invoiceNumber'] ?? ''}')),
+          TextButton.icon(
+            icon: const Icon(Icons.copy),
+            label: const Text('Copy link'),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: '${link['url']}'));
+              if (c.mounted) snack(c, 'Link copied');
+            },
+          ),
+        ]),
+      ),
+    ),
+  );
 }

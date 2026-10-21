@@ -18,14 +18,15 @@ final firms = [
 
 class Fake {
   bool totpEnabled;
+  final String role;
   final calls = <String>[];
   final bodies = <String, Map>{};
-  Fake({this.totpEnabled = true});
+  Fake({this.totpEnabled = true, this.role = 'superadmin'});
 
   ApiClient api() {
     final store = MemoryTokenStore();
     store.values[ApiClient.accessKey] = 'A';
-    store.values[ApiClient.roleKey] = 'superadmin';
+    store.values[ApiClient.roleKey] = role;
     return ApiClient(
       baseUrl: 'http://api.test',
       store: store,
@@ -36,12 +37,20 @@ class Fake {
         Object? data;
         switch (path) {
           case '/api/v1/auth/me':
-            data = {'user': {'role': 'superadmin', 'totpEnabled': totpEnabled, 'mfaRequired': true}, 'tenant': {}};
+            data = {'user': {'role': role, 'totpEnabled': totpEnabled, 'mfaRequired': true}, 'tenant': {}};
           case '/api/v1/auth/totp/start':
             data = {'secret': 'JBSWY3DPEHPK3PXP', 'otpauthUrl': 'otpauth://totp/Owlaw:ops?secret=JBSWY3DPEHPK3PXP&issuer=Owlaw', 'totpEnabled': false};
           case '/api/v1/auth/totp/confirm':
             totpEnabled = true;
             data = {'accessToken': 'A2', 'refreshToken': 'R2', 'totpEnabled': true, 'recoveryCodes': ['AAAA-1111', 'BBBB-2222']};
+          case '/api/v1/platform/approvals':
+            data = {
+              'counts': {'publicSites': 1, 'practitioners': 1, 'listings': 1, 'hiddenListings': 0, 'total': 2},
+              'publicSites': [{'tenantId': 'f1', 'firmName': 'Ndlovu & Partners', 'kind': 'publish', 'siteUrl': 'https://owlaw.co.za/firm/ndlovu-partners'}],
+              'practitioners': [{'id': 'p1', 'fullName': 'Thabo Ndlovu', 'lpcNumber': 'LPC 12345', 'firmName': 'Ndlovu & Partners'}],
+            };
+          case '/api/v1/platform/support-staff' when req.method == 'GET':
+            data = [{'id': 'u9', 'fullName': 'Help Desk', 'email': 'help@owlaw.co.za', 'totpEnabled': true, 'status': 'active'}];
           case '/api/v1/platform/firms':
             data = firms;
           case '/api/v1/platform/plans':
@@ -84,10 +93,43 @@ void main() {
     final f = Fake();
     await t.pumpWidget(OwlawApp(api: f.api(), signedIn: true, operator: true));
     await t.pumpAndSettle();
-    expect(find.text('Ndlovu & Partners'), findsOneWidget);
-    for (final l in ['Firms', 'Directory', 'Support', 'Billing', 'Audit']) {
+    expect(find.text('Approvals'), findsWidgets);
+    expect((t.widget<Text>(find.byKey(const Key('countSites')))).data, '1');
+    for (final l in ['Firms', 'Directory', 'Support', 'More']) {
       expect(find.text(l), findsWidgets);
     }
+    await t.tap(find.text('Firms'));
+    await t.pumpAndSettle();
+    expect(find.text('Ndlovu & Partners'), findsOneWidget);
+  });
+
+  testWidgets('support staff see only approvals and the directory, and can approve a site', (t) async {
+    final f = Fake(role: 'support');
+    await t.pumpWidget(OwlawApp(api: f.api(), signedIn: true, operator: true));
+    await t.pumpAndSettle();
+    expect(find.text('Firms'), findsNothing);
+    expect(find.text('More'), findsNothing);
+    expect(find.text('Directory'), findsOneWidget);
+    expect(f.calls.any((c) => c.contains('/platform/firms') || c.contains('/platform/billing')), isFalse);
+    await t.tap(find.byKey(const Key('approve-f1-publish')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('reasonOk')));
+    await t.pumpAndSettle();
+    expect(f.bodies['/api/v1/platform/public-sites/f1/publish']?['decision'], 'approved');
+  });
+
+  testWidgets('the operator invites support staff from More', (t) async {
+    final f = Fake();
+    await pump(t, OperatorMoreScreen(api: f.api()));
+    await t.tap(find.byKey(const Key('opStaff')));
+    await t.pumpAndSettle();
+    expect(find.text('Help Desk'), findsOneWidget);
+    await t.tap(find.byKey(const Key('addStaff')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('staffEmail')), 'new.support@owlaw.co.za');
+    await t.tap(find.byKey(const Key('staffInvite')));
+    await t.pumpAndSettle();
+    expect(f.bodies['/api/v1/platform/support-staff']?['email'], 'new.support@owlaw.co.za');
   });
 
   testWidgets('an operator without 2FA must enrol: setup key, QR, code, recovery codes', (t) async {
@@ -112,7 +154,7 @@ void main() {
     await t.ensureVisible(find.byKey(const Key('recoveryDone')));
     await t.tap(find.byKey(const Key('recoveryDone')));
     await t.pumpAndSettle();
-    expect(find.text('Mokoena Attorneys'), findsOneWidget);
+    expect(find.byKey(const Key('countLpc')), findsOneWidget);
   });
 
   testWidgets('firms: search, suspend with a reason, extend trial, change plan', (t) async {
