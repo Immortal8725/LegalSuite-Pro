@@ -64,6 +64,7 @@ const NAV = [
       { href: "/usage", label: "Month-end usage", icon: Receipt },
       { href: "/product-billing", label: "Product billing", icon: CreditCard },
       { href: "/trust", label: "Trust Accounting", icon: Landmark, module: "trust" },
+      { href: "/trust/audit", label: "Trust audit pack", icon: Landmark, module: "trust" },
       { href: "/expenses", label: "Expenses", icon: Wallet, module: "expenses" },
     ],
   },
