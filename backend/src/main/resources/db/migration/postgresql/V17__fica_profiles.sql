@@ -1,0 +1,30 @@
+-- FICA customer due diligence record per client (FIC Act 38 of 2001, ss 21 to 22A, 42 RMCP).
+CREATE TABLE IF NOT EXISTS fica_profiles (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    client_id UUID NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    risk_rating VARCHAR(10),
+    risk_score INTEGER,
+    risk_factors_json VARCHAR(2000),
+    id_type VARCHAR(40),
+    id_number VARCHAR(60),
+    id_expiry DATE,
+    id_document_id UUID,
+    poa_date DATE,
+    poa_document_id UUID,
+    pep_status VARCHAR(20),
+    sanctions_checked_at TIMESTAMP WITH TIME ZONE,
+    sanctions_result VARCHAR(20),
+    sanctions_sources VARCHAR(1000),
+    source_of_funds VARCHAR(1000),
+    checklist_json VARCHAR(4000),
+    verified_by UUID,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    next_review_date DATE,
+    notes VARCHAR(4000),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT uq_fica_client UNIQUE (tenant_id, client_id)
+);
+CREATE INDEX IF NOT EXISTS idx_fica_tenant ON fica_profiles (tenant_id);
