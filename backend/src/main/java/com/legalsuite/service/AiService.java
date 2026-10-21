@@ -41,6 +41,13 @@ public class AiService {
     private final TenantModuleRepository tenantModules;
     private final AuditService audit;
     private final AiModelGateway models;
+    private final com.legalsuite.config.AiProperties aiProps;
+    private final com.legalsuite.repo.AuditLogRepository auditLogs;
+
+    /** Guardrails added to every prompt sent to a model vendor. */
+    static final String GUARDRAILS = " Rules: assist a South African attorney only. Do not draft full legal documents"
+            + " (pleadings, contracts, wills, affidavits); offer short outlines or emails only. Never predict the outcome"
+            + " of a case or the chance of winning. Use only the facts given. Say when information is missing.";
 
     public AiService(
             LegalCaseRepository cases,
@@ -51,7 +58,9 @@ public class AiService {
             AppModuleRepository modules,
             TenantModuleRepository tenantModules,
             AuditService audit,
-            AiModelGateway models) {
+            AiModelGateway models,
+            com.legalsuite.config.AiProperties aiProps,
+            com.legalsuite.repo.AuditLogRepository auditLogs) {
         this.cases = cases;
         this.clients = clients;
         this.notes = notes;
@@ -61,6 +70,32 @@ public class AiService {
         this.tenantModules = tenantModules;
         this.audit = audit;
         this.models = models;
+        this.aiProps = aiProps;
+        this.auditLogs = auditLogs;
+    }
+
+    /**
+     * Calls the configured model when the firm still has model actions left this month.
+     * Returns a LOCAL completion with a friendly notice when the allowance is used up.
+     */
+    AiModelGateway.Completion model(String system, String prompt) {
+        AiModelGateway.Completion state = models.peek();
+        if (state.status() != AiModelGateway.Status.CONFIGURED) return state;
+        UUID tid = TenantContext.requireTenant();
+        java.time.Instant monthStart = java.time.LocalDate.now(java.time.ZoneOffset.UTC).withDayOfMonth(1)
+                .atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
+        int cap = aiProps.getMonthlyModelActions();
+        if (auditLogs.countByTenantIdAndActionAndCreatedAtAfter(tid, "ai.model", monthStart) >= cap) {
+            return new AiModelGateway.Completion(AiModelGateway.Status.LOCAL, "local", null,
+                    "Your firm has used its " + cap + " AI actions for this month. Showing the on-tenant draft instead.");
+        }
+        AiModelGateway.Completion c = models.complete(system + GUARDRAILS, prompt);
+        if (ok(c)) audit.record("ai.model", "ai", c.provider(), c.provider());
+        return c;
+    }
+
+    private static boolean ok(AiModelGateway.Completion c) {
+        return c.status() == AiModelGateway.Status.CONFIGURED && c.text() != null && !c.text().isBlank();
     }
 
     public Map<String, Object> chat(Map<String, Object> body) {
@@ -87,14 +122,21 @@ public class AiService {
                 .map(Note::getBody)
                 .toList();
         String summary = HeuristicAi.summarize(c.getTitle(), noteBodies);
+        AiModelGateway.Completion mc = model(
+                "Summarise this matter's file notes in under 150 words for the attorney. Plain English.",
+                "Matter: " + c.getTitle() + "\nNotes (newest first):\n- " + String.join("\n- ", noteBodies.stream().limit(30).map(n -> clip(n, 800)).toList()));
+        if (ok(mc)) summary = mc.text().trim();
         audit.record("ai.summarize", "case", caseId.toString(), c.getTitle());
-        return Map.of(
-                "caseId", caseId,
-                "title", c.getTitle(),
-                "summary", summary,
-                "noteCount", noteBodies.size(),
-                "assistive", true,
-                "disclaimer", MatterAssistant.DISCLAIMER);
+        Map<String, Object> out = new HashMap<>();
+        out.put("caseId", caseId);
+        out.put("title", c.getTitle());
+        out.put("summary", summary);
+        out.put("noteCount", noteBodies.size());
+        out.put("mode", ok(mc) ? mc.provider() : "local-heuristic");
+        out.put("notice", mc.notice() == null ? LOCAL_NOTICE : mc.notice());
+        out.put("assistive", true);
+        out.put("disclaimer", MatterAssistant.DISCLAIMER);
+        return out;
     }
 
     public Map<String, Object> draftEmail(Map<String, Object> body) {
@@ -122,8 +164,20 @@ public class AiService {
                     .orElse(null);
         }
         String draft = HeuristicAi.draftEmail(kind, resolvedClient, resolvedMatter, extra);
+        AiModelGateway.Completion mc = model(
+                "Write a short, polite client email (under 180 words) from a South African law firm. Email only, no legal opinion.",
+                "Kind: " + kind + "\nClient: " + nz(resolvedClient) + "\nMatter: " + nz(resolvedMatter) + "\nNotes: " + clip(extra, 1500)
+                        + "\nStarting draft:\n" + draft);
+        if (ok(mc)) draft = mc.text().trim();
         audit.record("ai.draft", "email", kind, kind);
-        return Map.of("kind", kind, "draft", draft, "assistive", true, "disclaimer", MatterAssistant.DISCLAIMER);
+        Map<String, Object> out = new HashMap<>();
+        out.put("kind", kind);
+        out.put("draft", draft);
+        out.put("mode", ok(mc) ? mc.provider() : "local-heuristic");
+        out.put("notice", mc.notice() == null ? LOCAL_NOTICE : mc.notice());
+        out.put("assistive", true);
+        out.put("disclaimer", MatterAssistant.DISCLAIMER);
+        return out;
     }
 
     public Map<String, Object> screenIntake(Map<String, Object> body) {
@@ -140,6 +194,13 @@ public class AiService {
             description = lead.getDescription();
         }
         Map<String, Object> result = new HashMap<>(HeuristicAi.screenIntake(name, caseType, description));
+        AiModelGateway.Completion mc = model(
+                "Triage this new enquiry for the attorney in under 120 words: the legal area, facts still needed, and urgent time limits."
+                        + " Do not assess the merits or the chance of success.",
+                "Name: " + nz(name) + "\nCase type: " + nz(caseType) + "\nDescription: " + clip(description, 2000));
+        if (ok(mc)) result.put("summary", mc.text().trim());
+        result.put("mode", ok(mc) ? mc.provider() : "local-heuristic");
+        result.put("notice", mc.notice() == null ? LOCAL_NOTICE : mc.notice());
         result.put("assistive", true);
         result.put("disclaimer", MatterAssistant.DISCLAIMER);
         audit.record("ai.screen", "intake", name, String.valueOf(result.get("band")));
@@ -155,7 +216,7 @@ public class AiService {
             throw ApiException.notFound("Matter not found");
         }
         MatterPacket packet = packet(matter);
-        AiModelGateway.Completion completion = models.complete(MatterAssistant.systemPrompt(packet), prompt);
+        AiModelGateway.Completion completion = model(MatterAssistant.systemPrompt(packet), prompt);
         String reply;
         String mode;
         String notice;

@@ -58,6 +58,12 @@ public class AiModelGateway {
             }
             return new Completion(Status.CONFIGURED, "anthropic", null, null);
         }
+        if ("gemini".equals(provider)) {
+            if (blank(props.getGeminiApiKey())) {
+                return missing("gemini", "Gemini is selected but GEMINI_API_KEY is not set. This answer stayed on the tenant.");
+            }
+            return new Completion(Status.CONFIGURED, "gemini", null, null);
+        }
         if (!"local".equals(provider) && !"heuristic".equals(provider)) {
             return new Completion(Status.LOCAL, "local", null, "Unknown LEGALSUITE_AI_PROVIDER value. Showing the on-tenant draft.");
         }
@@ -102,6 +108,21 @@ public class AiModelGateway {
                         "anthropic",
                         null,
                         "The Anthropic request did not return an answer. Showing the on-tenant draft instead.");
+            }
+        }
+        if ("gemini".equals(provider)) {
+            if (blank(props.getGeminiApiKey())) {
+                return missing("gemini", "Gemini is selected but GEMINI_API_KEY is not set. This answer stayed on the tenant.");
+            }
+            try {
+                return new Completion(Status.CONFIGURED, "gemini", gemini(system, userPrompt),
+                        "This answer used Google Gemini. It can be wrong. The attorney remains responsible.");
+            } catch (org.springframework.web.client.HttpClientErrorException.TooManyRequests ex) {
+                return new Completion(Status.VENDOR_ERROR, "gemini", null,
+                        "The AI service has reached its free limit for now. Showing the on-tenant draft instead. Try again later.");
+            } catch (Exception ex) {
+                return new Completion(Status.VENDOR_ERROR, "gemini", null,
+                        "The Gemini request did not return an answer. Showing the on-tenant draft instead.");
             }
         }
         if (!"local".equals(provider) && !"heuristic".equals(provider)) {
@@ -172,6 +193,28 @@ public class AiModelGateway {
         if (text.isEmpty()) {
             throw new IllegalStateException("empty completion");
         }
+        return text.toString();
+    }
+
+    /** Key goes in the x-goog-api-key header, never in the URL, so it cannot appear in access logs. */
+    private String gemini(String system, String userPrompt) throws Exception {
+        String base = trimSlash(props.getGeminiBaseUrl());
+        String model = blank(props.getGeminiModel()) ? "gemini-2.5-flash" : props.getGeminiModel().trim();
+        Map<String, Object> body = Map.of(
+                "systemInstruction", Map.of("parts", List.of(Map.of("text", system))),
+                "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))),
+                "generationConfig", Map.of("temperature", 0.2, "maxOutputTokens", 1024));
+        String json = client.post()
+                .uri(base + "/models/" + model + ":generateContent")
+                .header("x-goog-api-key", props.getGeminiApiKey().trim())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .body(String.class);
+        JsonNode parts = mapper.readTree(json == null ? "{}" : json).path("candidates").path(0).path("content").path("parts");
+        StringBuilder text = new StringBuilder();
+        if (parts.isArray()) for (JsonNode p : parts) text.append(p.path("text").asText(""));
+        if (text.toString().isBlank()) throw new IllegalStateException("empty completion");
         return text.toString();
     }
 
