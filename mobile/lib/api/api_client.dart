@@ -27,7 +27,7 @@ class LoginResult {
 }
 
 class ApiClient {
-  ApiClient({required this.baseUrl, TokenStore? store, http.Client? client, this.timeout = const Duration(seconds: 20)})
+  ApiClient({required this.baseUrl, TokenStore? store, http.Client? client, this.timeout = const Duration(seconds: 60)})
       
       : store = store ?? SecureTokenStore(),
         _http = client ?? http.Client();
@@ -45,6 +45,9 @@ class ApiClient {
 
   Future<bool> hasSession() async => (await store.read(accessKey)) != null;
 
+  static const operatorUseWebsite =
+      'This is an Owlaw operator account. Operator tools are on the website only: sign in at https://owlaw.co.za/login on a computer or your phone browser. The app is for firm staff.';
+
   Future<LoginResult> login({required String firmSlug, required String email, required String password, String? totpCode}) async {
     final data = await _raw('POST', '/api/v1/auth/login', {
       'firmSlug': firmSlug.trim(),
@@ -53,6 +56,11 @@ class ApiClient {
       if (totpCode != null && totpCode.trim().isNotEmpty) 'totpCode': totpCode.trim(),
     }, auth: false) as Map<String, dynamic>;
     if (data['requiresTotp'] == true) return LoginResult(needsTotp: true);
+    final signedInUser = data['user'] as Map<String, dynamic>?;
+    if (signedInUser?['role'] == 'superadmin') {
+      // Operator tools (firms, audit, billing, two-factor enrolment) live on the website only.
+      throw ApiException(operatorUseWebsite, status: 403);
+    }
     await store.write(accessKey, data['accessToken'] as String);
     if (data['refreshToken'] != null) await store.write(refreshKey, data['refreshToken'] as String);
     user = data['user'] as Map<String, dynamic>?;

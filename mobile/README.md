@@ -40,7 +40,7 @@ Every list shows a spinner while loading, a readable error with **Try again**, a
 Build-time default:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://api.owlaw.co.za
+flutter run --dart-define=API_BASE_URL=https://owlaw-api.onrender.com
 ```
 
 Debug and profile builds default to `http://10.0.2.2:18081` (the host machine from an Android emulator). Release builds default to the live API, `https://owlaw-api.onrender.com`; pass `--dart-define=API_BASE_URL=https://...` to point at another host. The Gradle build stops if that value is not `https://`. The attorney can change the address on the sign-in screen; it is remembered on the device. A release build refuses any address that is not `https://`.
@@ -64,10 +64,10 @@ Demo sign-in on a local API with demo data: firm `smith-associates`, `john@smith
 ## Build
 
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=https://api.owlaw.co.za
-flutter build appbundle --release --dart-define=API_BASE_URL=https://api.owlaw.co.za   # Play Store
-flutter build web --release --dart-define=API_BASE_URL=https://api.owlaw.co.za
-flutter build ipa --dart-define=API_BASE_URL=https://api.owlaw.co.za                  # needs a Mac with Xcode
+flutter build apk --release --dart-define=API_BASE_URL=https://owlaw-api.onrender.com
+flutter build appbundle --release --dart-define=API_BASE_URL=https://owlaw-api.onrender.com   # Play Store
+flutter build web --release --dart-define=API_BASE_URL=https://owlaw-api.onrender.com
+flutter build ipa --dart-define=API_BASE_URL=https://owlaw-api.onrender.com                  # needs a Mac with Xcode
 ```
 
 ### Release signing

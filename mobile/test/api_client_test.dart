@@ -96,4 +96,19 @@ void main() {
     await api.logout();
     expect(await api.hasSession(), isFalse);
   });
+
+  test('an operator account is told to use the website and no session is kept', () async {
+    final store = MemoryTokenStore();
+    final api = ApiClient(
+      baseUrl: 'http://api.test',
+      store: store,
+      client: MockClient((_) async => ok({'accessToken': 'A1', 'refreshToken': 'R1', 'user': {'role': 'superadmin', 'mfaRequired': true}})),
+    );
+    await expectLater(
+      api.login(firmSlug: 'legalsuite', email: 'operator@owlaw.co.za', password: 'x'),
+      throwsA(isA<ApiException>().having((e) => e.toString(), 'message', contains('owlaw.co.za/login'))),
+    );
+    expect(store.values[ApiClient.accessKey], isNull);
+    expect(await api.hasSession(), isFalse);
+  });
 }
