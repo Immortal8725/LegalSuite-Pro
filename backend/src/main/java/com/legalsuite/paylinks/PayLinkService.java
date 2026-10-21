@@ -169,6 +169,7 @@ public class PayLinkService {
         m.put("status", l.getExpiresAt().isBefore(Instant.now()) && "open".equals(l.getStatus()) ? "expired" : l.getStatus());
         m.put("mode", l.getMode());
         if (!"open".equals(m.get("status"))) return m;
+        if (java.util.Set.of("write_off", "void", "cancelled").contains(inv.getStatus())) { m.put("status", "closed"); return m; }
         BigDecimal due = due(inv);
         if (due.signum() <= 0) { m.put("status", "paid"); return m; }
         Creds c = creds(l);

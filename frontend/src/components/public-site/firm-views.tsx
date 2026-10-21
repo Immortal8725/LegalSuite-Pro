@@ -9,6 +9,7 @@ import { apiPost } from "@/lib/api";
 import { usePublicSite } from "@/components/public-site/site-context";
 import { EnquiryForm } from "@/components/public-site/enquiry-form";
 import { DESK, READING_ROOM, portraitSrc } from "@/components/public-site/photos";
+import { LANGS, useLang } from "@/lib/i18n";
 import { PageIntro, Portrait, SectionTitle, SiteFrame, href, serifStyle, useSiteBase } from "@/components/public-site/site-chrome";
 
 export type FirmPage =
@@ -41,6 +42,7 @@ export function FirmView({ view }: { view: FirmPage }) {
   // The route slug is known before the site loads, so links keep the /firm/<slug> prefix from the first render.
   const { slug, site, error, loading } = usePublicSite();
   const base = useSiteBase(slug);
+  const { lang, t, setLang } = useLang();
 
   if (loading) return <p className="px-6 py-16 text-sm text-[var(--ps-meta)]">Loading…</p>;
   if (error || !site) {
@@ -54,17 +56,18 @@ export function FirmView({ view }: { view: FirmPage }) {
   if (!site.published) {
     return (
       <div className="mx-auto max-w-xl px-6 py-24">
-        <p className="ps-kicker text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ps-meta)]">Public site</p>
+        <div className="mb-6 flex gap-3 text-xs" aria-label="Language">
+          {LANGS.map((l) => (
+            <button key={l.code} onClick={() => setLang(l.code)} className={l.code === lang ? "font-semibold underline" : "text-[var(--ps-meta)]"}>{l.label}</button>
+          ))}
+        </div>
+        <p className="ps-kicker text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ps-meta)]">{t.siteKicker}</p>
         <h1 className="mt-3 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{site.firmName}</h1>
         <p className="mt-4 text-[var(--ps-body)]">
-          {site.status === "in_review"
-            ? "This firm's public site is waiting for Owlaw approval. Please check back soon."
-            : site.status === "updating"
-              ? "This firm's public site is being updated. Please check back soon."
-              : "This public site is not live yet."}
+          {site.status === "in_review" ? t.siteInReview : site.status === "updating" ? t.siteUpdating : t.siteNotLive}
         </p>
         <p className="mt-6 text-sm text-[var(--ps-meta)]">
-          Work at this firm? <Link href="/website" className="font-semibold underline">Set up and submit your site</Link> in Owlaw.
+          {t.siteWorkHere} <Link href="/website" className="font-semibold underline">{t.siteSetUp}</Link> {t.siteInOwlaw}
         </p>
       </div>
     );

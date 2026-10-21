@@ -61,6 +61,14 @@ const en = {
   cancelledTry: "Payment cancelled. You can try again below.",
   expired: "This link has expired. Ask your attorney for a new one.",
   replaced: "This link was replaced by a newer one. Ask your attorney for the latest link.",
+  siteKicker: "Public site",
+  siteInReview: "This firm's public site is waiting for Owlaw approval. Please check back soon.",
+  siteUpdating: "This firm's public site is being updated. Please check back soon.",
+  siteNotLive: "This public site is not live yet.",
+  siteWorkHere: "Work at this firm?",
+  siteSetUp: "Set up and submit your site",
+  siteInOwlaw: "in Owlaw.",
+  closed: "This invoice is no longer payable online. Please contact the firm if you have questions.",
 };
 export type Strings = typeof en;
 
@@ -111,6 +119,14 @@ const af: Strings = {
   cancelledTry: "Betaling gekanselleer. U kan hieronder weer probeer.",
   expired: "Hierdie skakel het verval. Vra u prokureur vir 'n nuwe een.",
   replaced: "Hierdie skakel is deur 'n nuwer een vervang. Vra u prokureur vir die nuutste skakel.",
+  siteKicker: "Openbare webwerf",
+  siteInReview: "Hierdie firma se openbare webwerf wag vir goedkeuring deur Owlaw. Kom asseblief later weer terug.",
+  siteUpdating: "Hierdie firma se openbare webwerf word tans bygewerk. Kom asseblief later weer terug.",
+  siteNotLive: "Hierdie openbare webwerf is nog nie aanlyn nie.",
+  siteWorkHere: "Werk u by hierdie firma?",
+  siteSetUp: "Stel u webwerf op en dien dit in",
+  siteInOwlaw: "in Owlaw.",
+  closed: "Hierdie faktuur kan nie meer aanlyn betaal word nie. Kontak asseblief die firma as u vrae het.",
 };
 
 const zu: Strings = {
@@ -160,6 +176,14 @@ const zu: Strings = {
   cancelledTry: "Inkokhelo ikhanseliwe. Ungazama futhi ngezansi.",
   expired: "Lesi sixhumanisi siphelelwe yisikhathi. Cela ummeli wakho akunike esisha.",
   replaced: "Lesi sixhumanisi sithathelwe indawo esisha. Cela ummeli wakho akunike esakamuva.",
+  siteKicker: "Iwebhusayithi yomphakathi",
+  siteInReview: "Iwebhusayithi yomphakathi yaleli femu ilinde ukugunyazwa yi-Owlaw. Sicela uphinde ubheke maduze.",
+  siteUpdating: "Iwebhusayithi yomphakathi yaleli femu iyabuyekezwa. Sicela uphinde ubheke maduze.",
+  siteNotLive: "Le webhusayithi yomphakathi ayikakavulwa.",
+  siteWorkHere: "Usebenza kuleli femu?",
+  siteSetUp: "Setha bese uthumela iwebhusayithi yakho",
+  siteInOwlaw: "ku-Owlaw.",
+  closed: "Le invoyisi ayisakwazi ukukhokhwa ku-inthanethi. Sicela uxhumane nefemu uma unemibuzo.",
 };
 
 export const DICT: Record<Lang, Strings> = { en, af, zu };

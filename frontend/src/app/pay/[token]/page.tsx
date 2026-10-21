@@ -45,6 +45,7 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
           {flag === "done" && v.status === "open" && <p className="mt-4 text-sm text-emerald-700">{t.confirming}</p>}
           {flag === "cancelled" && v.status === "open" && <p className="mt-4 text-sm text-amber-700">{t.cancelledTry}</p>}
           {v.status === "paid" && <p className="mt-4 font-semibold text-emerald-700">{t.paid}</p>}
+          {v.status === "closed" && <p className="mt-4 text-sm">{t.closed}</p>}
           {v.status === "expired" && <p className="mt-4 text-sm">{t.expired}</p>}
           {v.status === "cancelled" && <p className="mt-4 text-sm">{t.replaced}</p>}
           {v.status === "open" && v.action && v.fields && (
