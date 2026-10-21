@@ -14,10 +14,37 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlatformController {
     private final PlatformFirmService firms;
     private final PlatformAuditService audit;
+    private final SupportAccessService support;
 
-    public PlatformController(PlatformFirmService firms, PlatformAuditService audit) {
+    public PlatformController(PlatformFirmService firms, PlatformAuditService audit, SupportAccessService support) {
         this.firms = firms;
         this.audit = audit;
+        this.support = support;
+    }
+
+    @GetMapping("/api/v1/support-access")
+    public ApiResponse<?> supportAccess() {
+        return ApiResponse.ok(support.firmView());
+    }
+
+    @PostMapping("/api/v1/support-access")
+    public ApiResponse<?> grantSupport(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(support.grant(body), "Owlaw support can now view your firm, read-only");
+    }
+
+    @PostMapping("/api/v1/support-access/{id}/revoke")
+    public ApiResponse<?> revokeSupport(@PathVariable UUID id) {
+        return ApiResponse.ok(support.revoke(id), "Support access revoked");
+    }
+
+    @GetMapping("/api/v1/platform/support")
+    public ApiResponse<?> activeSupport() {
+        return ApiResponse.ok(support.activeGrants());
+    }
+
+    @GetMapping("/api/v1/platform/support/{tenantId}/{section}")
+    public ApiResponse<?> supportLook(@PathVariable UUID tenantId, @PathVariable String section) {
+        return ApiResponse.ok(support.look(tenantId, section));
     }
 
     @GetMapping("/api/v1/platform/audit")
