@@ -89,6 +89,7 @@ const NAV = [
       { href: "/import", label: "Import data", icon: Upload },
       { href: "/modules", label: "Modules", icon: Puzzle },
       { href: "/team", label: "Team", icon: UserCog },
+      { href: "/settings/payments", label: "Online payments", icon: CreditCard },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },

@@ -5,6 +5,7 @@ import { apiBlob, apiGet, apiPost } from "@/lib/api";
 import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { InvoiceLines } from "@/components/invoice-lines";
+import { PayLinkButton } from "@/components/pay-link";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -219,6 +220,7 @@ export default function BillingPage() {
                       >
                         Write off
                       </button>
+                      <PayLinkButton invoiceId={i.id} clientId={i.clientId} />
                       <button
                         className="text-sm font-semibold text-navy"
                         onClick={() => {
