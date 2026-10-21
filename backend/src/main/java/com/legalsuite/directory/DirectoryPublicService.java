@@ -304,7 +304,7 @@ public class DirectoryPublicService {
     }
 
     /** POPIA: enquiries that never became clients are deleted after the retention period. */
-    @Scheduled(cron = "0 15 2 * * *", zone = "Africa/Johannesburg")
+    @Scheduled(cron = "0 15 6 * * *", zone = "Africa/Johannesburg")
     @Transactional
     public int purgeExpired() {
         int n = 0;
