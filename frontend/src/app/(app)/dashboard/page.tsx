@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { PrivilegeStrip } from "@/components/privilege-strip";
 import type { Dashboard, DocketItem } from "@/lib/types";
+import { publicSiteUrl, publicSiteLabel } from "@/lib/site-url";
 
 const URGENCY: Record<string, string> = {
   overdue: "bg-red-50 text-red-800 border-red-200",
@@ -177,8 +178,8 @@ export default function DashboardPage() {
               <li>
                 Public site{" "}
                 {tenant?.slug ? (
-                  <Link className="font-semibold text-navy" href={`/firm/${tenant.slug}`}>
-                    /{tenant.slug}
+                  <Link className="font-semibold text-navy" href={publicSiteUrl(tenant.slug)}>
+                    {publicSiteLabel(tenant.slug)}
                   </Link>
                 ) : null}{" "}
                 takes the consult.

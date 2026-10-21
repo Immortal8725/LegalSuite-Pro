@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
 import type { Tenant } from "@/lib/api";
+import { publicSiteLabel } from "@/lib/site-url";
 
 const STEPS = ["Firm profile", "Landing page", "Modules", "Billing defaults"];
 const TEMPLATES = [
@@ -86,7 +87,7 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Public site template</h2>
-              <p className="text-sm text-slate-600">When you finish setup, your public site is sent to Owlaw for approval. It goes live at owlaw.co.za/firm/{tenant?.slug} once approved. You can change it any time under Website.</p>
+              <p className="text-sm text-slate-600">When you finish setup, your public site is sent to Owlaw for approval. It goes live at {publicSiteLabel(tenant?.slug || "")} once approved. You can change it any time under Website.</p>
               <div>
                 <Label>Tagline</Label>
                 <Input aria-label="Tagline" value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
@@ -105,7 +106,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
-                Live at <strong>/firm/{tenant?.slug}</strong> as soon as you launch.
+                Live at <strong>{publicSiteLabel(tenant?.slug || "")}</strong> once Owlaw approves it.
               </p>
             </div>
           )}

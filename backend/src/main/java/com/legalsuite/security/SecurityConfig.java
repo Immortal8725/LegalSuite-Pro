@@ -108,7 +108,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @org.springframework.beans.factory.annotation.Value("${legalsuite.cors.allowed-origins:}") String allowedOrigins) {
+            @org.springframework.beans.factory.annotation.Value("${legalsuite.cors.allowed-origins:}") String allowedOrigins,
+            @org.springframework.beans.factory.annotation.Value("${legalsuite.public-site-root:}") String publicSiteRoot) {
         CorsConfiguration config = new CorsConfiguration();
         // Exact origins only. The web app calls the API through its own origin, so this list is for
         // other browser clients (for example a separate admin host). Never "*" with credentials.
@@ -117,6 +118,9 @@ public class SecurityConfig {
                 .filter(o -> !o.isEmpty() && !"*".equals(o))
                 .toList();
         config.setAllowedOrigins(origins);
+        // Firm sites on <slug>.<root>: one https pattern for that exact parent domain, never a bare "*".
+        String root = com.legalsuite.config.PublicSiteUrls.clean(publicSiteRoot);
+        if (!root.isEmpty()) config.setAllowedOriginPatterns(List.of("https://*." + root));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Disposition"));

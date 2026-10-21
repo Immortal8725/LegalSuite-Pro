@@ -11,6 +11,7 @@ import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { Tenant } from "@/lib/api";
 import { LetterheadSettings } from "@/components/letterhead-settings";
+import { publicSiteUrl } from "@/lib/site-url";
 
 export default function SettingsPage() {
   const { tenant, user, refreshTenant, reloadMe } = useAuth();
@@ -83,7 +84,7 @@ export default function SettingsPage() {
               </Link>
             ) : null}
             {tenant?.slug ? (
-              <Link href={`/firm/${tenant.slug}`} className="text-sm font-semibold text-navy underline">
+              <Link href={publicSiteUrl(tenant.slug)} className="text-sm font-semibold text-navy underline">
                 View public site
               </Link>
             ) : null}

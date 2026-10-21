@@ -167,7 +167,7 @@ public class DirectoryPublicService {
                     x.put("verifiedOn", p.getVerifiedAt() == null ? null : p.getVerifiedAt().atZone(DirectoryService.SA).toLocalDate());
                     return x;
                 }).toList());
-        m.put("publicSite", directory.publicSitePublished(t.getId()) ? "/firm/" + t.getSlug() : null);
+        m.put("publicSite", directory.publicSitePublished(t.getId()) ? com.legalsuite.config.PublicSiteUrls.of(t.getSlug()) : null);
         m.put("lpcRegisterUrl", "https://lpc.org.za/");
         m.put("consentVersion", CONSENT_VERSION);
         m.put("consentText", consentText(publicName(t)));

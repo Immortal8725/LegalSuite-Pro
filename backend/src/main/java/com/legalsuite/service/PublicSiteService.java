@@ -149,6 +149,7 @@ public class PublicSiteService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("published", true);
         m.put("slug", tenant.getSlug());
+        m.put("siteUrl", com.legalsuite.config.PublicSiteUrls.of(tenant.getSlug()));
         m.put("firmName", blankTo(site.getLiveFirmName(), tenant.getFirmName()));
         m.put("tagline", site.getLiveTagline() == null ? "" : site.getLiveTagline());
         String accent = site.getLiveAccent() == null ? "navy" : site.getLiveAccent();
@@ -403,6 +404,7 @@ public class PublicSiteService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("tenantId", tenant.getId());
         m.put("slug", tenant.getSlug());
+        m.put("siteUrl", com.legalsuite.config.PublicSiteUrls.of(tenant.getSlug()));
         m.put("publishStatus", site.getPublishStatus());
         m.put("publishNote", site.getPublishNote());
         m.put("firmName", site.getFirmName());
@@ -441,6 +443,7 @@ public class PublicSiteService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("tenantId", tenant.getId());
         m.put("slug", tenant.getSlug());
+        m.put("siteUrl", com.legalsuite.config.PublicSiteUrls.of(tenant.getSlug()));
         m.put("firmName", tenant.getFirmName());
         m.put("city", tenant.getCity());
         m.put("country", tenant.getCountry());
