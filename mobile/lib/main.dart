@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'api/api_client.dart';
 import 'config.dart';
 import 'screens/login.dart';
+import 'screens/operator.dart';
 import 'screens/shell.dart';
 import 'ui/theme.dart';
 
@@ -11,13 +12,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('en_ZA');
   final api = ApiClient(baseUrl: await AppConfig.loadBaseUrl());
-  runApp(OwlawApp(api: api, signedIn: await api.hasSession()));
+  final signedIn = await api.hasSession();
+  runApp(OwlawApp(api: api, signedIn: signedIn, operator: signedIn && await api.isOperator()));
 }
 
 class OwlawApp extends StatefulWidget {
-  const OwlawApp({super.key, required this.api, this.signedIn = false});
+  const OwlawApp({super.key, required this.api, this.signedIn = false, this.operator = false});
   final ApiClient api;
   final bool signedIn;
+  final bool operator;
   @override
   State<OwlawApp> createState() => _OwlawAppState();
 }
@@ -25,6 +28,7 @@ class OwlawApp extends StatefulWidget {
 class _OwlawAppState extends State<OwlawApp> {
   final _messenger = GlobalKey<ScaffoldMessengerState>();
   late bool signedIn = widget.signedIn;
+  late bool operator = widget.operator;
 
   @override
   void initState() {
@@ -48,9 +52,21 @@ class _OwlawAppState extends State<OwlawApp> {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _messenger,
       theme: owlawTheme(),
-      home: signedIn
-          ? HomeShell(api: widget.api, onLogout: _logout)
-          : LoginScreen(api: widget.api, onSignedIn: () => setState(() => signedIn = true)),
+      home: !signedIn
+          ? LoginScreen(
+              api: widget.api,
+              onSignedIn: () async {
+                final op = await widget.api.isOperator();
+                if (mounted) {
+                  setState(() {
+                    operator = op;
+                    signedIn = true;
+                  });
+                }
+              })
+          : operator
+              ? OperatorRoot(api: widget.api, onLogout: _logout)
+              : HomeShell(api: widget.api, onLogout: _logout),
     );
   }
 }

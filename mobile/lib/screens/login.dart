@@ -127,9 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             key: const Key('totp'),
                             controller: code,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.visiblePassword,
+                            autocorrect: false,
                             autofillHints: const [AutofillHints.oneTimeCode],
-                            decoration: const InputDecoration(labelText: 'Authenticator code', helperText: 'Your firm requires a 6-digit code.'),
+                            decoration: const InputDecoration(labelText: 'Authenticator or recovery code', helperText: '6-digit code from your app, or a recovery code like ABCD-1234.'),
                             onSubmitted: (_) => _submit(),
                           ),
                         ],
