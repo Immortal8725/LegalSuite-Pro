@@ -37,6 +37,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useTimer } from "@/components/timer-provider";
 import { apiGet, apiPatch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { PhoneTables } from "@/components/phone-tables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Notice, Matter, Party } from "@/lib/types";
@@ -326,7 +327,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         )}
-        <main className="p-4 sm:p-8">{children}</main>
+        <main className="p-4 sm:p-8"><PhoneTables>{children}</PhoneTables></main>
       </div>
     </div>
   );
