@@ -81,6 +81,8 @@ class SuperadminMfaTest extends PlatformTestSupport {
         // Cannot be switched off for an operator.
         postJson("/api/v1/auth/totp/disable", t3, "{\"password\":\"a-long-test-password\"}").andExpect(status().isForbidden());
 
+        String log = data(getAs("/api/v1/platform/audit?action=mfa", OperatorTokensBridge.ops(mvc)).andExpect(status().isOk()).andReturn()).toString();
+        assertTrue(log.contains("platform.mfa.enrolled") && log.contains("second.ops@owlaw.test"), log);
         users.delete(users.findById(u.getId()).orElseThrow());
     }
 }

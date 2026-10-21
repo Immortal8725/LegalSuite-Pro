@@ -13,9 +13,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PlatformController {
     private final PlatformFirmService firms;
+    private final PlatformAuditService audit;
 
-    public PlatformController(PlatformFirmService firms) {
+    public PlatformController(PlatformFirmService firms, PlatformAuditService audit) {
         this.firms = firms;
+        this.audit = audit;
+    }
+
+    @GetMapping("/api/v1/platform/audit")
+    public ApiResponse<?> platformAudit(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID tenantId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String action) {
+        return ApiResponse.ok(audit.platformLog(tenantId, action));
+    }
+
+    @GetMapping("/api/v1/staff-activity")
+    public ApiResponse<?> staffActivity() {
+        return ApiResponse.ok(audit.staffActivity());
     }
 
     @GetMapping("/api/v1/platform/firms")
