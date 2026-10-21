@@ -233,3 +233,18 @@ input[type="date"] {
 .ps-site[data-theme="dark"] textarea:focus-visible {
   outline-color: #e6d3a4;
 }
+
+/* Phone layout: tables become stacked cards (labels come from components/phone-tables.tsx). */
+@media (max-width: 639px) {
+  table.rt-cards, table.rt-cards tbody, table.rt-cards tr, table.rt-cards td { display: block; width: 100%; }
+  table.rt-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.rt-cards tr { border-top: 1px solid rgb(226 232 240); padding: 0.5rem 0; }
+  table.rt-cards tr:first-child { border-top: 0; }
+  table.rt-cards td { border-top: 0 !important; padding: 0.25rem 1rem !important; display: flex; gap: 0.75rem;
+    justify-content: space-between; align-items: center; text-align: right; overflow-wrap: anywhere; }
+  table.rt-cards td::before { content: attr(data-label); flex: 0 0 auto; max-width: 45%; text-align: left;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: rgb(71 85 105); }
+  table.rt-cards td[data-label=""]::before { content: none; }
+  table.rt-cards td[data-label=""] { justify-content: flex-end; }
+  table.rt-cards tfoot { display: block; }
+}
