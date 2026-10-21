@@ -32,8 +32,7 @@ import {
   FileSignature,
   Plug,
   ScrollText,
-  PenLine,
-} from "lucide-react";
+  PenLine, Upload } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useTimer } from "@/components/timer-provider";
 import { apiGet, apiPatch } from "@/lib/api";
@@ -85,6 +84,7 @@ const NAV = [
       { href: "/reports", label: "Reports", icon: BarChart3, module: "reports" },
       { href: "/integrations", label: "Integrations", icon: Plug, module: "integrations" },
       { href: "/audit", label: "Audit log", icon: PenLine, module: "audit" },
+      { href: "/import", label: "Import data", icon: Upload },
       { href: "/modules", label: "Modules", icon: Puzzle },
       { href: "/team", label: "Team", icon: UserCog },
       { href: "/settings", label: "Settings", icon: Settings },
