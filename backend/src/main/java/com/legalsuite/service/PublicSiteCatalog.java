@@ -23,7 +23,8 @@ public final class PublicSiteCatalog {
             new Feature("whatsapp", "WhatsApp", "A WhatsApp link beside the office phone."),
             new Feature("booking", "Enquiry", "The consultation form on the public site."),
             new Feature("newsletter", "Newsletter", "An unticked email opt-in. No message is sent until a mail tool is connected."),
-            new Feature("recognition", "Recognition", "Awards and credentials with a year and a source."));
+            new Feature("recognition", "Recognition", "Awards and credentials with a year and a source."),
+            new Feature("directory", "Find a Lawyer listing", "List the firm on owlaw.co.za/find-a-lawyer. Set it up under Directory listing; Owlaw checks LPC numbers first."));
 
     private static final Map<String, String> ACCENTS = new LinkedHashMap<>();
     private static final Map<String, String> ACCENT_LABELS = new LinkedHashMap<>();
