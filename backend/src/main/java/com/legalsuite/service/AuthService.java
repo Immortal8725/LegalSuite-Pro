@@ -346,6 +346,9 @@ public class AuthService {
     /** Suspended or closed firms cannot sign in, staff or clients. */
     static void requireOpen(Tenant tenant) {
         String status = tenant.getStatus() == null ? "" : tenant.getStatus();
+        if ("deleted".equals(status) || "purged".equals(status)) {
+            throw ApiException.forbidden(com.legalsuite.security.JwtAuthFilter.DELETED_MESSAGE);
+        }
         if ("suspended".equals(status)) {
             throw ApiException.forbidden(com.legalsuite.security.JwtAuthFilter.SUSPENDED_MESSAGE);
         }
@@ -409,7 +412,7 @@ public class AuthService {
     public Map<String, Object> portalLogin(PortalLoginRequest req) {
         Tenant tenant = tenants.findBySlug(slugify(req.firmSlug()))
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
-        if ("suspended".equals(tenant.getStatus())) {
+        if (!java.util.List.of("active", "trial").contains(String.valueOf(tenant.getStatus()))) {
             throw ApiException.forbidden("This firm's client portal is unavailable at the moment. Please contact the firm directly.");
         }
         Client client = clients.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,9 +36,12 @@ public class PlatformFirmService {
     private final RefreshTokenRepository refreshTokens;
     private final PlatformActionRepository actions;
     private final AuditService audit;
+    private final JdbcTemplate jdbc;
+    static final int PURGE_AFTER_DAYS = 30;
 
     public PlatformFirmService(TenantRepository tenants, AppUserRepository users, PlanRepository plans,
-            RefreshTokenRepository refreshTokens, PlatformActionRepository actions, AuditService audit) {
+            RefreshTokenRepository refreshTokens, PlatformActionRepository actions, AuditService audit, JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
         this.tenants = tenants;
         this.users = users;
         this.plans = plans;
@@ -92,6 +96,9 @@ public class PlatformFirmService {
         m.put("lastActivityAt", lastLogin);
         m.put("suspendedReason", t.getSuspendedReason());
         m.put("suspendedAt", t.getSuspendedAt());
+        m.put("deletedAt", t.getDeletedAt());
+        m.put("deletedReason", t.getDeletedReason());
+        m.put("purgeAvailableAt", t.getDeletedAt() == null ? null : t.getDeletedAt().plus(PURGE_AFTER_DAYS, ChronoUnit.DAYS));
         m.put("lastPlatformAction", actions.findTopByTenantIdOrderByCreatedAtDesc(t.getId())
                 .map(a -> a.getAction() + " on " + a.getCreatedAt()).orElse(null));
         return m;
@@ -175,6 +182,113 @@ public class PlatformFirmService {
         tenants.save(t);
         audit.platform(t.getId(), "platform.firm.plan_changed", "tenant", t.getId().toString(), before + " to " + plan.getSlug() + ": " + reason);
         return view(t);
+    }
+
+    private static void requireTypedName(Tenant t, Map<String, Object> body) {
+        String typed = body == null || body.get("confirmName") == null ? "" : String.valueOf(body.get("confirmName")).trim();
+        if (!typed.equals(t.getFirmName() == null ? "" : t.getFirmName().trim())) {
+            throw ApiException.badRequest("Type the firm's name exactly to confirm.");
+        }
+    }
+
+    /** Soft delete: the firm and every user are blocked, and it drops off the directory and public site at once. */
+    @Transactional
+    public Map<String, Object> softDelete(UUID id, Map<String, Object> body) {
+        PlatformGuard.requireSuperadmin();
+        String reason = PlatformGuard.reason(body == null ? null : body.get("reason"));
+        Tenant t = firm(id);
+        requireTypedName(t, body);
+        if ("deleted".equals(t.getStatus()) || "purged".equals(t.getStatus())) throw ApiException.badRequest("This firm is already deleted.");
+        if (!"suspended".equals(t.getStatus())) t.setStatusBeforeSuspend(t.getStatus());
+        t.setStatus("deleted");
+        t.setDeletedAt(Instant.now());
+        t.setDeletedReason(reason);
+        t.setUpdatedAt(Instant.now());
+        tenants.save(t);
+        for (AppUser u : users.findByTenantIdOrderByLastNameAsc(t.getId())) refreshTokens.deleteByUserId(u.getId());
+        audit.platform(t.getId(), "platform.firm.deleted", "tenant", t.getId().toString(), reason);
+        return view(t);
+    }
+
+    @Transactional
+    public Map<String, Object> restore(UUID id, Map<String, Object> body) {
+        PlatformGuard.requireSuperadmin();
+        String reason = PlatformGuard.reason(body == null ? null : body.get("reason"));
+        Tenant t = firm(id);
+        if (!"deleted".equals(t.getStatus())) throw ApiException.badRequest("Only a deleted firm can be restored.");
+        String back = t.getStatusBeforeSuspend();
+        t.setStatus(back == null || back.isBlank() || "deleted".equals(back) ? "active" : back);
+        t.setStatusBeforeSuspend(null);
+        t.setDeletedAt(null);
+        t.setDeletedReason(null);
+        t.setUpdatedAt(Instant.now());
+        tenants.save(t);
+        audit.platform(t.getId(), "platform.firm.restored", "tenant", t.getId().toString(), reason + " (status " + t.getStatus() + ")");
+        return view(t);
+    }
+
+    /**
+     * Permanent purge, 30 days after a soft delete. Removes every row that carries the firm's tenant_id and the users'
+     * own rows, then anonymises the firm record. The platform action log keeps only that the purge happened.
+     */
+    @Transactional
+    public Map<String, Object> purge(UUID id, Map<String, Object> body) {
+        PlatformGuard.requireSuperadmin();
+        String reason = PlatformGuard.reason(body == null ? null : body.get("reason"));
+        Tenant t = firm(id);
+        requireTypedName(t, body);
+        if (!"deleted".equals(t.getStatus()) || t.getDeletedAt() == null) throw ApiException.badRequest("Delete the firm first. Purge is only for deleted firms.");
+        Instant allowed = t.getDeletedAt().plus(PURGE_AFTER_DAYS, ChronoUnit.DAYS);
+        if (Instant.now().isBefore(allowed)) throw ApiException.badRequest("Purge opens on " + allowed + ", 30 days after the firm was deleted.");
+        int rows = purgeRows(t.getId());
+        String name = t.getFirmName();
+        String tail = t.getId().toString().substring(0, 8);
+        t.setFirmName("Purged firm " + tail);
+        t.setSlug("purged-" + t.getId());
+        t.setEmail(null);
+        t.setPhone(null);
+        t.setAddressLine1(null);
+        t.setCity(null);
+        t.setStatus("purged");
+        t.setDeletedReason(null);
+        t.setSuspendedReason(null);
+        t.setUpdatedAt(Instant.now());
+        tenants.save(t);
+        audit.platform(t.getId(), "platform.firm.purged", "tenant", t.getId().toString(), rows + " rows removed: " + reason);
+        return Map.of("status", "purged", "rowsRemoved", rows, "formerName", name);
+    }
+
+    private static final Set<String> KEEP = Set.of("TENANTS", "PLATFORM_ACTIONS", "FLYWAY_SCHEMA_HISTORY", "PLANS");
+
+    private int purgeRows(UUID tenantId) {
+        List<String> tenantTables = new ArrayList<>();
+        List<String> userTables = new ArrayList<>();
+        jdbc.execute((java.sql.Connection c) -> {
+            var md = c.getMetaData();
+            try (var rs = md.getColumns(c.getCatalog(), c.getSchema(), "%", "%")) {
+                while (rs.next()) {
+                    String table = rs.getString("TABLE_NAME");
+                    String col = rs.getString("COLUMN_NAME");
+                    if (table == null || col == null || KEEP.contains(table.toUpperCase(Locale.ROOT))) continue;
+                    if ("TENANT_ID".equalsIgnoreCase(col) && !tenantTables.contains(table)) tenantTables.add(table);
+                    if ("USER_ID".equalsIgnoreCase(col) && !userTables.contains(table)) userTables.add(table);
+                }
+            }
+            return null;
+        });
+        int rows = 0;
+        List<UUID> userIds = users.findByTenantIdOrderByLastNameAsc(tenantId).stream().map(AppUser::getId).toList();
+        for (String table : userTables) {
+            if (tenantTables.contains(table)) continue;
+            for (UUID u : userIds) rows += jdbc.update("DELETE FROM " + quote(table) + " WHERE user_id = ?", u);
+        }
+        for (String table : tenantTables) rows += jdbc.update("DELETE FROM " + quote(table) + " WHERE tenant_id = ?", tenantId);
+        return rows;
+    }
+
+    private static String quote(String table) {
+        if (!table.matches("[A-Za-z0-9_]+")) throw new IllegalStateException("Unexpected table name");
+        return table;
     }
 
     static String canonical(String slug) {

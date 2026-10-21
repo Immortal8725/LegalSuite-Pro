@@ -154,6 +154,28 @@ void main() {
     await t.tap(find.byKey(const Key('reasonOk')));
     await t.pumpAndSettle();
     expect(f.bodies['/api/v1/platform/firms/f1/plan'], {'reason': 'Upgrade requested by firm', 'planSlug': 'solo'});
+
+    // Delete needs the exact firm name; a wrong name sends nothing.
+    await t.tap(find.byKey(const Key('firm-ndlovu-partners')));
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.byKey(const Key('deleteFirm')));
+    await t.tap(find.byKey(const Key('deleteFirm')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('confirmName')), 'Ndlovu');
+    await t.enterText(find.byKey(const Key('reason')), 'Firm closed its practice');
+    await t.tap(find.byKey(const Key('reasonOk')));
+    await t.pumpAndSettle();
+    expect(f.bodies.containsKey('/api/v1/platform/firms/f1/delete'), isFalse);
+    await t.tap(find.byKey(const Key('firm-ndlovu-partners')));
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.byKey(const Key('deleteFirm')));
+    await t.tap(find.byKey(const Key('deleteFirm')));
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const Key('confirmName')), 'Ndlovu & Partners');
+    await t.enterText(find.byKey(const Key('reason')), 'Firm closed its practice');
+    await t.tap(find.byKey(const Key('reasonOk')));
+    await t.pumpAndSettle();
+    expect(f.bodies['/api/v1/platform/firms/f1/delete'], {'reason': 'Firm closed its practice', 'confirmName': 'Ndlovu & Partners'});
   });
 
   testWidgets('directory: verify a practitioner and hide a listing with a reason', (t) async {

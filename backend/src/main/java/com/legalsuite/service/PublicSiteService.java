@@ -132,6 +132,7 @@ public class PublicSiteService {
     public Map<String, Object> publicView(String slug) {
         Tenant tenant = tenants.findBySlug(normalizeSlug(slug))
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if ("deleted".equals(tenant.getStatus()) || "purged".equals(tenant.getStatus())) throw ApiException.notFound("Firm not found");
         TenantPublicSite site = sites.findByTenantId(tenant.getId()).orElse(null);
         if (site == null || !"published".equals(site.getPublishStatus())) {
             Map<String, Object> closed = new LinkedHashMap<>();
@@ -320,7 +321,7 @@ public class PublicSiteService {
         List<Map<String, Object>> items = new ArrayList<>();
         for (TenantPublicSite site : sites.findAll()) {
             Tenant tenant = tenants.findById(site.getTenantId()).orElse(null);
-            if (tenant == null || "legalsuite".equals(tenant.getSlug())) {
+            if (tenant == null || "legalsuite".equals(tenant.getSlug()) || "deleted".equals(tenant.getStatus()) || "purged".equals(tenant.getStatus())) {
                 continue;
             }
             if ("pending_approval".equals(site.getPublishStatus())) {
