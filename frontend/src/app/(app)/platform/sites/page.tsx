@@ -54,7 +54,7 @@ export default function PlatformSitesPage() {
   }
 
   useEffect(() => {
-    if (user?.role === "superadmin") load();
+    if ((user?.role === "superadmin" || user?.role === "support")) load();
     else setLoading(false);
   }, [user]);
 
@@ -71,7 +71,7 @@ export default function PlatformSitesPage() {
     load();
   }
 
-  if (user?.role !== "superadmin") {
+  if (!(user?.role === "superadmin" || user?.role === "support")) {
     return (
       <div>
         <PageHeader title="Site approvals" subtitle="This queue is for the Owlaw operator." />

@@ -43,7 +43,7 @@ export default function DirectoryVerificationPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (user?.role === "superadmin") load();
+    if ((user?.role === "superadmin" || user?.role === "support")) load();
     else setLoading(false);
   }, [user, load]);
 
@@ -57,7 +57,7 @@ export default function DirectoryVerificationPage() {
     }
   }
 
-  if (user?.role !== "superadmin") {
+  if (!(user?.role === "superadmin" || user?.role === "support")) {
     return (
       <div>
         <PageHeader title="LPC verification" subtitle="This screen is for the Owlaw operator." />

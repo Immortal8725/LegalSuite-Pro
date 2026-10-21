@@ -113,7 +113,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const role = (user?.role || "").toLowerCase();
   const tenantAdmin = role === "owner" || role === "partner" || role === "director";
   const superadmin = role === "superadmin";
-  const nav = NAV.map((section) => {
+  const support = role === "support";
+  const nav = support ? [{ section: "Owlaw support", items: [
+    { href: "/platform/approvals", label: "Approvals", icon: ShieldAlert },
+    { href: "/platform/sites", label: "Site approvals", icon: ShieldAlert },
+    { href: "/platform/directory", label: "LPC verification", icon: ShieldAlert },
+    { href: "/platform/directory/listings", label: "Directory listings", icon: ShieldAlert },
+    { href: "/help", label: "Help centre", icon: LifeBuoy },
+  ] }] : NAV.map((section) => {
     if (section.section !== "Admin") return section;
     const items = [...section.items];
     if (tenantAdmin) {
@@ -123,7 +130,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       items.splice(items.length - 1, 0, { href: "/support-access", label: "Owlaw support access", icon: ShieldAlert });
     }
     if (superadmin) {
+      items.push({ href: "/platform/approvals", label: "Approvals", icon: ShieldAlert });
       items.push({ href: "/platform/firms", label: "Firms", icon: ShieldAlert });
+      items.push({ href: "/platform/support-staff", label: "Support staff", icon: ShieldAlert });
       items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
       items.push({ href: "/platform/directory", label: "LPC verification", icon: ShieldAlert });
       items.push({ href: "/platform/directory/listings", label: "Directory listings", icon: ShieldAlert });

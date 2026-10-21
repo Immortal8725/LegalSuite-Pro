@@ -9,6 +9,21 @@ public final class PlatformGuard {
 
     public static final String PLATFORM_SLUG = "legalsuite";
 
+    public static final String SUPPORT = "support";
+
+    /** Owlaw staff accounts: the operator (superadmin) and support staff. Both need two-factor sign-in. */
+    public static boolean isPlatformRole(String role) {
+        return role != null && ("superadmin".equalsIgnoreCase(role) || SUPPORT.equalsIgnoreCase(role));
+    }
+
+    /**
+     * Approval queues (public sites, LPC verification, directory visibility). Support staff may work these;
+     * they cannot manage firms, plans or billing and have no standing access to client data.
+     */
+    public static void requireApprover() {
+        if (!isPlatformRole(TenantContext.getRole())) throw ApiException.forbidden("This is limited to Owlaw staff.");
+    }
+
     public static void requireSuperadmin() {
         String role = TenantContext.getRole();
         if (role == null || !"superadmin".equalsIgnoreCase(role)) {

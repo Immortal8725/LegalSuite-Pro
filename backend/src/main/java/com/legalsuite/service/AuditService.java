@@ -48,7 +48,7 @@ public class AuditService {
     /** Write to a named firm's log, for example when the platform operator approves that firm's site. */
     public void recordFor(UUID tenantId, String action, String entityType, String entityId, String detail) {
         if (tenantId == null) return;
-        if ("superadmin".equalsIgnoreCase(TenantContext.getRole()) && !tenantId.equals(TenantContext.getTenantId())) {
+        if (com.legalsuite.platform.PlatformGuard.isPlatformRole(TenantContext.getRole()) && !tenantId.equals(TenantContext.getTenantId())) {
             // An operator acting on a firm: keep it in the platform log as well as the firm's.
             platform(tenantId, action, entityType, entityId, detail);
             return;
