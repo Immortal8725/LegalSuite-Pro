@@ -12,7 +12,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' ws: wss:",
+  "connect-src 'self' ws: wss: https://api.github.com",
   "media-src 'self' blob:",
   "frame-src 'self' blob:",
   "object-src 'none'",

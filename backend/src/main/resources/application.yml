@@ -38,6 +38,11 @@ spring:
       max-request-size: 25MB
 
 legalsuite:
+  backup:
+    # base64 of 32 random bytes; the nightly export is AES-256-GCM encrypted with it. Empty turns backups off.
+    encryption-key: ${BACKUP_ENCRYPTION_KEY:}
+    # Shared secret the GitHub workflow sends in X-Backup-Token (32+ chars).
+    token: ${BACKUP_TOKEN:}
   # Public address of the web app, used in invite links.
   app-url: ${APP_URL:http://localhost:3000}
   # Firms' public sites live at https://<slug>.<root> when set (for example owlaw.co.za). Empty keeps /firm/<slug>.
