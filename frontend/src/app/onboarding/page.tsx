@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
-import { apiPut } from "@/lib/api";
+import { apiPost, apiPut } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
@@ -78,14 +78,15 @@ export default function OnboardingPage() {
                 <Label>Street</Label>
                 <Input aria-label="Street" value={profile.addressLine1} onChange={(e) => setProfile({ ...profile, addressLine1: e.target.value })} />
               </div>
-              <Input placeholder="City" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
-              <Input placeholder="State" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
-              <Input placeholder="ZIP" value={profile.zip} onChange={(e) => setProfile({ ...profile, zip: e.target.value })} />
+              <Input aria-label="City" placeholder="City" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
+              <Input aria-label="Province" placeholder="Province" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
+              <Input aria-label="Postal code" placeholder="Postal code" value={profile.zip} onChange={(e) => setProfile({ ...profile, zip: e.target.value })} />
             </div>
           )}
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Public site template</h2>
+              <p className="text-sm text-slate-600">When you finish setup, your public site is sent to Owlaw for approval. It goes live at owlaw.co.za/firm/{tenant?.slug} once approved. You can change it any time under Website.</p>
               <div>
                 <Label>Tagline</Label>
                 <Input aria-label="Tagline" value={profile.tagline} onChange={(e) => setProfile({ ...profile, tagline: e.target.value })} />
@@ -154,7 +155,11 @@ export default function OnboardingPage() {
                 variant="gold"
                 disabled={saving}
                 onClick={async () => {
-                  if (await save({ onboardingCompleted: true, heroSubtitle: profile.tagline, template: profile.template })) router.push("/dashboard");
+                  if (await save({ onboardingCompleted: true, heroSubtitle: profile.tagline, template: profile.template })) {
+                    // Send the new public site to Owlaw for approval, so it does not sit as a draft nobody sees.
+                    await apiPost("/api/v1/public-site/submit").catch(() => undefined);
+                    router.push("/dashboard");
+                  }
                 }}
               >
                 {saving ? "Saving…" : "Launch my firm"}

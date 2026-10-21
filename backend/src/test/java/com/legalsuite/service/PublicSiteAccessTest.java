@@ -3,6 +3,7 @@ package com.legalsuite.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -65,6 +66,8 @@ class PublicSiteAccessTest {
 
         JsonNode smith = data(mvc.perform(get("/api/v1/public/sites/smith-associates")).andExpect(status().isOk()).andReturn());
         assertFalse(smith.get("published").asBoolean());
+        assertNotNull(smith.get("status"), "closed site reports its status for the holding page");
+        assertTrue(java.util.Set.of("draft", "in_review", "updating").contains(smith.get("status").asText()));
         assertEquals("Smith & Associates", smith.get("firmName").asText());
         assertNull(smith.get("features"));
         assertNull(smith.get("people"));

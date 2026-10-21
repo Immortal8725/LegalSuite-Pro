@@ -56,7 +56,16 @@ export function FirmView({ view }: { view: FirmPage }) {
       <div className="mx-auto max-w-xl px-6 py-24">
         <p className="ps-kicker text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--ps-meta)]">Public site</p>
         <h1 className="mt-3 text-4xl" style={{ fontFamily: "var(--font-public-serif), Georgia, serif" }}>{site.firmName}</h1>
-        <p className="mt-4 text-[var(--ps-body)]">This public site is not live yet.</p>
+        <p className="mt-4 text-[var(--ps-body)]">
+          {site.status === "in_review"
+            ? "This firm's public site is waiting for Owlaw approval. Please check back soon."
+            : site.status === "updating"
+              ? "This firm's public site is being updated. Please check back soon."
+              : "This public site is not live yet."}
+        </p>
+        <p className="mt-6 text-sm text-[var(--ps-meta)]">
+          Work at this firm? <Link href="/website" className="font-semibold underline">Set up and submit your site</Link> in Owlaw.
+        </p>
       </div>
     );
   }
