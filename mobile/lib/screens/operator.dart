@@ -274,7 +274,7 @@ String _label(String key) => _cap(key.replaceAllMapped(RegExp(r'([a-z])([A-Z])')
 
 Color _statusColour(String s) => switch (s) {
       'active' || 'verified' => Colors.green.shade700,
-      'suspended' || 'rejected' || 'cancelled' => Colors.red.shade700,
+      'suspended' || 'rejected' || 'cancelled' || 'deleted' => Colors.red.shade700,
       _ => Colors.blueGrey,
     };
 
@@ -343,17 +343,25 @@ class _FirmsScreenState extends State<FirmsScreen> {
 
   Future<void> _actions(Map<String, dynamic> f) async {
     final suspended = f['status'] == 'suspended';
+    final deleted = f['status'] == 'deleted' || f['status'] == 'purged';
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           ListTile(title: Text('${f['firmName']}', style: const TextStyle(fontWeight: FontWeight.bold))),
+          if (f['status'] == 'deleted')
+            ListTile(key: const Key('restore'), leading: const Icon(Icons.restore), title: const Text('Restore firm'), onTap: () => Navigator.pop(c, 'restore')),
+          if (deleted)
+            const ListTile(subtitle: Text('Deleted firms can be purged for good on the website, 30 days after deletion.'))
+          else ...[
           if (suspended)
             ListTile(key: const Key('reactivate'), leading: const Icon(Icons.play_circle_outline), title: const Text('Reactivate'), onTap: () => Navigator.pop(c, 'reactivate'))
           else
             ListTile(key: const Key('suspend'), leading: const Icon(Icons.block), title: const Text('Suspend'), onTap: () => Navigator.pop(c, 'suspend')),
           if (f['status'] == 'trial') ListTile(key: const Key('extendTrial'), leading: const Icon(Icons.more_time), title: const Text('Extend trial'), onTap: () => Navigator.pop(c, 'extend')),
           ListTile(key: const Key('changePlan'), leading: const Icon(Icons.swap_horiz), title: const Text('Change plan'), onTap: () => Navigator.pop(c, 'plan')),
+          ListTile(key: const Key('deleteFirm'), leading: Icon(Icons.delete_forever, color: Colors.red.shade700), title: Text('Delete firm', style: TextStyle(color: Colors.red.shade700)), onTap: () => Navigator.pop(c, 'delete')),
+          ],
         ]),
       ),
     );
@@ -362,6 +370,20 @@ class _FirmsScreenState extends State<FirmsScreen> {
       case 'suspend':
         final r = await askReason(context, title: 'Suspend ${f['firmName']}', action: 'Suspend', note: 'Everyone at the firm is signed out and cannot sign in. Their client portal closes too.');
         if (r != null) await _act(f, 'suspend', {'reason': r['reason']}, 'Firm suspended');
+      case 'delete':
+        final name = '${f['firmName']}'.trim();
+        final r = await askReason(context, title: 'Delete $name', action: 'Delete firm',
+            note: 'Everyone at the firm is signed out and blocked, and it leaves the directory and public site at once. You can restore it. Its data can be purged for good after 30 days.',
+            extra: (set) => TextField(key: const Key('confirmName'), decoration: InputDecoration(labelText: 'Type "$name" to confirm'), onChanged: set));
+        if (r == null) return;
+        if ((r['extra'] ?? '').trim() != name) {
+          if (mounted) snack(context, 'The firm name did not match, so nothing was deleted.', error: true);
+          return;
+        }
+        await _act(f, 'delete', {'reason': r['reason'], 'confirmName': r['extra']!.trim()}, 'Firm deleted');
+      case 'restore':
+        final r = await askReason(context, title: 'Restore ${f['firmName']}', action: 'Restore');
+        if (r != null) await _act(f, 'restore', {'reason': r['reason']}, 'Firm restored');
       case 'reactivate':
         final r = await askReason(context, title: 'Reactivate ${f['firmName']}', action: 'Reactivate');
         if (r != null) await _act(f, 'reactivate', {'reason': r['reason']}, 'Firm reactivated');
@@ -431,6 +453,7 @@ class _FirmsScreenState extends State<FirmsScreen> {
                       'Created ${niceDate(f['createdAt'])}${f['trialEndsAt'] != null && f['status'] == 'trial' ? ' · trial ends ${niceDate(f['trialEndsAt'])}' : ''}',
                       'Last activity: ${f['lastActivityAt'] == null ? 'none' : niceDate(f['lastActivityAt'], withTime: true)}',
                       if (f['suspendedReason'] != null && f['status'] == 'suspended') 'Suspended: ${f['suspendedReason']}',
+                      if (f['status'] == 'deleted') 'Deleted: ${f['deletedReason'] ?? ''} · purge from ${niceDate(f['purgeAvailableAt'])}',
                     ].join('\n')),
                     isThreeLine: true,
                   ),

@@ -93,6 +93,21 @@ public class PlatformController {
         return ApiResponse.ok(firms.extendTrial(id, body), "Trial extended");
     }
 
+    @PostMapping("/api/v1/platform/firms/{id}/delete")
+    public ApiResponse<?> delete(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(firms.softDelete(id, body), "Firm deleted. Its data can be purged after 30 days.");
+    }
+
+    @PostMapping("/api/v1/platform/firms/{id}/restore")
+    public ApiResponse<?> restore(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(firms.restore(id, body), "Firm restored");
+    }
+
+    @PostMapping("/api/v1/platform/firms/{id}/purge")
+    public ApiResponse<?> purge(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(firms.purge(id, body), "Firm data purged");
+    }
+
     @PostMapping("/api/v1/platform/firms/{id}/plan")
     public ApiResponse<?> plan(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return ApiResponse.ok(firms.changePlan(id, body), "Plan changed");

@@ -73,6 +73,10 @@ public class Tenant {
     private Instant suspendedAt;
     @Column(length = 32)
     private String statusBeforeSuspend;
+    /** Soft delete by the Owlaw operator. Everything is blocked at once; data can be purged 30 days later. */
+    private Instant deletedAt;
+    @Column(length = 500)
+    private String deletedReason;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }

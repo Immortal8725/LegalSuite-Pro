@@ -26,11 +26,14 @@ type Firm = {
   lastActivityAt?: string;
   suspendedReason?: string;
   suspendedAt?: string;
+  deletedAt?: string;
+  deletedReason?: string;
+  purgeAvailableAt?: string;
 };
 type PlanOption = { slug: string; name: string; priceMonthly: number };
-type Action = "suspend" | "reactivate" | "extend-trial" | "plan";
+type Action = "suspend" | "reactivate" | "extend-trial" | "plan" | "delete" | "restore" | "purge";
 
-const tone = (s: string) => (s === "active" ? "green" : s === "trial" ? "blue" : s === "suspended" ? "red" : "slate");
+const tone = (s: string) => (s === "active" ? "green" : s === "trial" ? "blue" : s === "suspended" || s === "deleted" ? "red" : "slate");
 
 export default function PlatformFirmsPage() {
   const { user } = useAuth();
@@ -41,6 +44,7 @@ export default function PlatformFirmsPage() {
   const [open, setOpen] = useState<{ id: string; action: Action } | null>(null);
   const [reason, setReason] = useState("");
   const [days, setDays] = useState("14");
+  const [confirmName, setConfirmName] = useState("");
   const [planSlug, setPlanSlug] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -69,11 +73,13 @@ export default function PlatformFirmsPage() {
     const body: Record<string, unknown> = { reason };
     if (open.action === "extend-trial") body.days = Number(days);
     if (open.action === "plan") body.planSlug = planSlug;
+    if (open.action === "delete" || open.action === "purge") body.confirmName = confirmName;
     try {
       await apiPost(`/api/v1/platform/firms/${firm.id}/${open.action}`, body);
       setNotice(`${firm.firmName}: saved.`);
       setOpen(null);
       setReason("");
+      setConfirmName("");
       load();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Could not save.");
@@ -107,6 +113,7 @@ export default function PlatformFirmsPage() {
             <option value="active">Active</option>
             <option value="trial">Trial</option>
             <option value="suspended">Suspended</option>
+            <option value="deleted">Deleted</option>
           </Select>
         </div>
         <p className="text-sm text-slate-600">{rows.length} of {firms.length} firms</p>
@@ -135,6 +142,11 @@ export default function PlatformFirmsPage() {
                     {f.slug}
                     {f.city ? ` · ${f.city}` : ""}
                   </div>
+                  {f.deletedAt ? (
+                    <div className="mt-1 text-xs text-red-700">
+                      Deleted {fmtDate(f.deletedAt)}: {f.deletedReason}. Purge from {fmtDate(f.purgeAvailableAt)}.
+                    </div>
+                  ) : null}
                   {f.suspendedReason ? <div className="mt-1 text-xs text-red-700">Suspended: {f.suspendedReason}</div> : null}
                 </td>
                 <td className="p-3">{f.planName}</td>
@@ -147,6 +159,20 @@ export default function PlatformFirmsPage() {
                 <td className="p-3">{f.status === "trial" ? fmtDate(f.trialEndsAt) : "-"}</td>
                 <td className="p-3">{fmtDate(f.lastActivityAt, true)}</td>
                 <td className="p-3">
+                  {f.status === "deleted" || f.status === "purged" ? (
+                    <div className="flex flex-wrap gap-1">
+                      {f.status === "deleted" ? (
+                        <Button variant="outline" onClick={() => setOpen({ id: f.id, action: "restore" })}>
+                          Restore
+                        </Button>
+                      ) : null}
+                      {f.status === "deleted" && f.purgeAvailableAt && new Date(f.purgeAvailableAt) <= new Date() ? (
+                        <Button variant="outline" onClick={() => { setConfirmName(""); setOpen({ id: f.id, action: "purge" }); }}>
+                          Purge data
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : (
                   <div className="flex flex-wrap gap-1">
                     {f.status === "suspended" ? (
                       <Button variant="outline" onClick={() => setOpen({ id: f.id, action: "reactivate" })}>
@@ -171,7 +197,11 @@ export default function PlatformFirmsPage() {
                     >
                       Change plan
                     </Button>
+                    <Button variant="outline" className="text-red-700" onClick={() => { setConfirmName(""); setOpen({ id: f.id, action: "delete" }); }}>
+                      Delete firm
+                    </Button>
                   </div>
+                  )}
                   {open?.id === f.id ? (
                     <form
                       className="mt-2 space-y-2 rounded-lg border bg-slate-50 p-3"
@@ -183,6 +213,12 @@ export default function PlatformFirmsPage() {
                       <p className="font-semibold">
                         {open.action === "suspend"
                           ? "Suspend this firm. Staff and the client portal are blocked until you reactivate it."
+                          : open.action === "delete"
+                            ? "Delete this firm. All its users are signed out and blocked, and it leaves the directory and public site at once. You can restore it, and its data can be purged for good after 30 days."
+                          : open.action === "restore"
+                            ? "Restore this firm and let its users sign in again."
+                          : open.action === "purge"
+                            ? "Purge this firm's data for good. Matters, clients, document records and users are removed. This cannot be undone."
                           : open.action === "reactivate"
                             ? "Reactivate this firm."
                             : open.action === "extend-trial"
@@ -201,9 +237,12 @@ export default function PlatformFirmsPage() {
                           ))}
                         </Select>
                       ) : null}
+                      {open.action === "delete" || open.action === "purge" ? (
+                        <Input aria-label="Type the firm name to confirm" placeholder={`Type "${f.firmName}" to confirm`} required value={confirmName} onChange={(e) => setConfirmName(e.target.value)} />
+                      ) : null}
                       <Input aria-label="Reason" placeholder="Reason (required, kept in the audit log)" required minLength={5} value={reason} onChange={(e) => setReason(e.target.value)} />
                       <div className="flex gap-2">
-                        <Button type="submit">Confirm</Button>
+                        <Button type="submit" disabled={(open.action === "delete" || open.action === "purge") && confirmName.trim() !== f.firmName.trim()}>Confirm</Button>
                         <Button type="button" variant="outline" onClick={() => setOpen(null)}>
                           Cancel
                         </Button>

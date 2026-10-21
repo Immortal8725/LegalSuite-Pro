@@ -66,6 +66,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     boolean superadmin = "superadmin".equalsIgnoreCase(role);
                     if (!superadmin && !path.equals("/api/v1/auth/logout")) {
                         String status = tenants.findById(tenantId).map(com.legalsuite.domain.Tenant::getStatus).orElse("missing");
+                        if ("deleted".equals(status) || "purged".equals(status)) {
+                            deny(response, "firm_deleted", DELETED_MESSAGE);
+                            return;
+                        }
                         if ("suspended".equals(status) || "cancelled".equals(status) || "missing".equals(status)) {
                             deny(response, "firm_suspended", SUSPENDED_MESSAGE);
                             return;
@@ -92,6 +96,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
     }
+
+    public static final String DELETED_MESSAGE =
+            "This firm's Owlaw account has been deleted. Contact Owlaw at support@owlaw.co.za if you think this is a mistake.";
 
     public static final String SUSPENDED_MESSAGE =
             "This firm's Owlaw account is suspended. The firm's owner can contact Owlaw at support@owlaw.co.za to restore it.";

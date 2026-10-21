@@ -57,6 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, []);
 
+  // A signed-in visitor opening the marketing home goes to their own workspace.
+  useEffect(() => {
+    if (!ready || pathname !== "/" || !user) return;
+    router.replace(user.role === "superadmin" ? "/platform/firms" : user.role === "client" ? "/portal" : "/dashboard");
+  }, [ready, pathname, user, router]);
+
   const apply = useCallback((data: { accessToken: string; refreshToken?: string; user: User; tenant: Tenant }) => {
     setSession(data);
     setUser(data.user);
