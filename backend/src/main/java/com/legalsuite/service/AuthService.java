@@ -77,9 +77,7 @@ public class AuthService {
     public Map<String, Object> login(LoginRequest req) {
         Tenant tenant = tenants.findBySlug(req.firmSlug().toLowerCase(Locale.ROOT).trim())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
-        if (!List.of("active", "trial").contains(tenant.getStatus())) {
-            throw ApiException.forbidden("Firm account is " + tenant.getStatus());
-        }
+        requireOpen(tenant);
         AppUser user = users.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid email or password"));
         if (!encoder.matches(req.password(), user.getPasswordHash())) {
@@ -260,7 +258,19 @@ public class AuthService {
         }
         Tenant tenant = tenants.findById(user.getTenantId())
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if (!"superadmin".equalsIgnoreCase(user.getRole())) requireOpen(tenant);
         return tokens(user, tenant);
+    }
+
+    /** Suspended or closed firms cannot sign in, staff or clients. */
+    static void requireOpen(Tenant tenant) {
+        String status = tenant.getStatus() == null ? "" : tenant.getStatus();
+        if ("suspended".equals(status)) {
+            throw ApiException.forbidden(com.legalsuite.security.JwtAuthFilter.SUSPENDED_MESSAGE);
+        }
+        if (!List.of("active", "trial").contains(status)) {
+            throw ApiException.forbidden("This firm's Owlaw account is " + status + ". Contact Owlaw at support@owlaw.co.za.");
+        }
     }
 
     @Transactional
@@ -318,6 +328,9 @@ public class AuthService {
     public Map<String, Object> portalLogin(PortalLoginRequest req) {
         Tenant tenant = tenants.findBySlug(slugify(req.firmSlug()))
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if ("suspended".equals(tenant.getStatus())) {
+            throw ApiException.forbidden("This firm's client portal is unavailable at the moment. Please contact the firm directly.");
+        }
         Client client = clients.findByTenantIdAndEmailIgnoreCase(tenant.getId(), req.email())
                 .orElseThrow(() -> ApiException.unauthorized("Invalid portal credentials"));
         if (!client.isPortalEnabled() || client.getPortalPasswordHash() == null

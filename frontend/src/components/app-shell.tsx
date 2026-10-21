@@ -115,6 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       items.splice(items.length - 1, 0, { href: "/directory-listing", label: "Find a Lawyer listing", icon: Globe });
     }
     if (superadmin) {
+      items.push({ href: "/platform/firms", label: "Firms", icon: ShieldAlert });
       items.push({ href: "/platform/sites", label: "Site approvals", icon: ShieldAlert });
       items.push({ href: "/platform/directory", label: "LPC verification", icon: ShieldAlert });
       items.push({ href: "/platform/directory/listings", label: "Directory listings", icon: ShieldAlert });

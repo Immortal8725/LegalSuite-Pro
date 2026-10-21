@@ -68,6 +68,11 @@ public class Tenant {
     /** Uploaded letterhead logo on disk, served only to this firm's signed-in staff. */
     private String logoPath;
     private String logoMime;
+    @Column(length = 500)
+    private String suspendedReason;
+    private Instant suspendedAt;
+    @Column(length = 32)
+    private String statusBeforeSuspend;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }

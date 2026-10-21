@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const dest = data.user.mustChangePassword
         ? "/change-password"
         : data.user.role === "superadmin"
-          ? "/platform/sites"
+          ? "/platform/firms"
           : data.tenant.onboardingCompleted === false
             ? "/onboarding"
             : "/dashboard";
