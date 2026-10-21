@@ -1,0 +1,44 @@
+# Nightly encrypted database backup, free.
+# Runs at 17:40 SAST (15:40 UTC) Monday to Saturday, inside the keep-alive window, so it never wakes
+# the free Render service outside the hours budget. The API returns an AES-256-GCM encrypted file;
+# the key is only on Render (BACKUP_ENCRYPTION_KEY), so GitHub only ever holds ciphertext.
+# Files are kept as workflow artifacts for 14 days. Restore: docs/backup-restore.md.
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: "40 15 * * 1-6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Pull encrypted export
+        env:
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_TOKEN}" ]; then echo "BACKUP_TOKEN secret is not set"; exit 1; fi
+          name="owlaw-$(date -u +%Y-%m-%d).owlb"
+          curl -sS --fail --max-time 240 --retry 3 --retry-delay 20 --retry-all-errors \
+            -X POST -H "X-Backup-Token: ${BACKUP_TOKEN}" \
+            -o "$name" https://owlaw-api.onrender.com/api/v1/ops/backup
+          head -c 5 "$name" | grep -q OWLB1
+          ls -l "$name"
+          sha256sum "$name"
+          echo "FILE=$name" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 14
+          if-no-files-found: error
