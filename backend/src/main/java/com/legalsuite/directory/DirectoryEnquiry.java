@@ -38,6 +38,9 @@ public class DirectoryEnquiry {
     @Column(length = 32)
     private String conflictStatus;
 
+    @Column(length = 64)
+    private String practiceArea;
+
     private Instant consentAt;
 
     @Column(length = 32)

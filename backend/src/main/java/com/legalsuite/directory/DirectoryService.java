@@ -110,6 +110,9 @@ public class DirectoryService {
         if (!switchedOn(tenant.getId())) reasons.add("Turn on the Find a Lawyer listing.");
         if (!activePlan(tenant, clock.instant())) reasons.add("Your Owlaw plan is not active.");
         DirectoryProfile profile = profiles.findByTenantId(tenant.getId()).orElse(null);
+        if (profile != null && profile.isOperatorHidden()) {
+            reasons.add("Owlaw has hidden this listing" + (profile.getHiddenReason() == null ? "." : ": " + profile.getHiddenReason()));
+        }
         if (profile == null || JsonLists.strings(profile.getPracticeAreasJson()).isEmpty()) {
             reasons.add("Choose at least one practice area.");
         }
@@ -338,6 +341,8 @@ public class DirectoryService {
         m.put("fixedConsultFee", p.getFixedConsultFee());
         m.put("responseTime", p.getResponseTime());
         m.put("bio", p.getBio() == null ? "" : p.getBio());
+        m.put("operatorHidden", p.isOperatorHidden());
+        m.put("hiddenReason", p.getHiddenReason());
         return m;
     }
 

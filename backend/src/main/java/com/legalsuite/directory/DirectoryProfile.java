@@ -53,6 +53,15 @@ public class DirectoryProfile {
     @Column(length = 600)
     private String bio;
 
+    /** Set by the Owlaw operator. A hidden firm is not listed, whatever else is true. */
+    @Column(nullable = false)
+    private boolean operatorHidden = false;
+
+    @Column(length = 500)
+    private String hiddenReason;
+
+    private Instant hiddenAt;
+
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }
