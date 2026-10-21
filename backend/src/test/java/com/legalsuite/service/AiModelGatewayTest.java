@@ -94,7 +94,7 @@ class AiModelGatewayTest {
     void geminiSendsKeyInHeaderAndParsesParts() {
         RestClient.Builder builder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent"))
                 .andExpect(header("x-goog-api-key", "test-gemini-key"))
                 .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content()
                         .string(org.hamcrest.Matchers.containsString("systemInstruction")))

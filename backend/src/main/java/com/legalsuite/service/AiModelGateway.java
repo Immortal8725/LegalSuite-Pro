@@ -199,7 +199,7 @@ public class AiModelGateway {
     /** Key goes in the x-goog-api-key header, never in the URL, so it cannot appear in access logs. */
     private String gemini(String system, String userPrompt) throws Exception {
         String base = trimSlash(props.getGeminiBaseUrl());
-        String model = blank(props.getGeminiModel()) ? "gemini-2.5-flash" : props.getGeminiModel().trim();
+        String model = blank(props.getGeminiModel()) ? "gemini-flash-lite-latest" : props.getGeminiModel().trim();
         Map<String, Object> body = Map.of(
                 "systemInstruction", Map.of("parts", List.of(Map.of("text", system))),
                 "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", userPrompt)))),
