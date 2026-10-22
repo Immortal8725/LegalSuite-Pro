@@ -55,7 +55,8 @@ class TriageTest {
                 .andExpect(jsonPath("$.data.areas[0].slug").value("labour-and-employment"))
                 .andExpect(jsonPath("$.data.timeLimits[0]", containsString("30 days")))
                 .andExpect(jsonPath("$.data.place.city").value("durban"))
-                .andExpect(jsonPath("$.data.place.province").value("kwazulu-natal"));
+                .andExpect(jsonPath("$.data.place.province").value("kwazulu-natal"))
+                .andExpect(jsonPath("$.data.allAreas.length()").value(14));
         ArgumentCaptor<String> system = ArgumentCaptor.forClass(String.class);
         Mockito.verify(gateway).complete(system.capture(), anyString());
         assertTrue(system.getValue().contains("Never judge the merits"));

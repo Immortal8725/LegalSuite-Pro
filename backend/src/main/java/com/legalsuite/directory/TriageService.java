@@ -65,6 +65,7 @@ public class TriageService {
 
     public record Result(List<Map<String, String>> areas, String explanation, List<String> timeLimits, String source,
             Map<String, String> place, boolean redacted) {
+        @com.fasterxml.jackson.annotation.JsonProperty("allAreas")
         public List<DirectoryCatalog.Option> allAreas() {
             return DirectoryCatalog.PRACTICE_AREAS;
         }
