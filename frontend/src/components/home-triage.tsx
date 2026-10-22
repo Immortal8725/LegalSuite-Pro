@@ -125,7 +125,7 @@ export function HomeTriage() {
     router.push(`/find-a-lawyer?${q.toString()}`);
   }
 
-  const chips = result ? (showAll ? result.allAreas : result.areas) : [];
+  const chips = result ? (showAll && result.allAreas?.length ? result.allAreas : result.areas) : [];
 
   return (
     <div className="mx-auto mt-8 max-w-2xl rounded-2xl border-2 border-gold bg-white p-5 text-left shadow-lift sm:p-6" data-testid="triage">
