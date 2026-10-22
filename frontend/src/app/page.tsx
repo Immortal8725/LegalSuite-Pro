@@ -3,6 +3,7 @@ import { Check, Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
 import { ADD_ONS, PLANS, PRICE_NOTE } from "@/lib/pricing";
 import { DEMO_MODE } from "@/lib/demo";
+import { HomeTriage } from "@/components/home-triage";
 
 const FEATURES = [
   ["Hire in one motion", "Website consult, conflict check, mandate, and e-sign stay on the same tenant."],
@@ -56,6 +57,7 @@ export default function MarketingPage() {
             {DEMO_MODE ? "Demo: ndlovu-partners" : "Sign in"}
           </Link>
         </div>
+        <HomeTriage />
       </section>
 
       <section className="bg-slate-50 py-16">

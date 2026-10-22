@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/pay/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/public/pay/*/itn").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/public/directory/firms/*/enquiries").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/public/triage").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/intake/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/sign/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sign/**").permitAll()

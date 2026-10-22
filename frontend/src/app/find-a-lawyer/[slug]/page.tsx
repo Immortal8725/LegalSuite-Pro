@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { FirmPage, publicFetch } from "@/lib/directory";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TRIAGE_STORAGE_KEY } from "@/components/home-triage";
 
 export default function FirmListingPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -22,6 +23,19 @@ export default function FirmListingPage() {
       .then(setFirm)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Could not load this firm."));
   }, [slug]);
+
+  // Pre-fill from the home page "Tell us what happened" box (kept only in this browser tab).
+  useEffect(() => {
+    if (!firm) return;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(TRIAGE_STORAGE_KEY) || "null") as { text?: string; area?: string } | null;
+      if (!saved?.text) return;
+      const area = firm.practiceAreaOptions.some((o) => o.slug === saved.area) ? saved.area || "" : "";
+      setForm((f) => ({ ...f, message: f.message || saved.text!.slice(0, 2000), practiceArea: f.practiceArea || area }));
+    } catch {
+      /* ignore */
+    }
+  }, [firm]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
