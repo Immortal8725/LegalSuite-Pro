@@ -3,8 +3,10 @@ import { Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
 
 export const metadata = {
-  title: "Find a Lawyer | Owlaw",
+  title: "Find a Lawyer",
   description: "Find a South African law firm by type of lawyer, province, city and language. Every listed firm has an LPC-verified practitioner.",
+  alternates: { canonical: "/find-a-lawyer" },
+  openGraph: { title: "Find a Lawyer | Owlaw", description: "Find a South African law firm by type of lawyer, province, city and language.", url: "/find-a-lawyer" },
 };
 
 export default function FindLayout({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Help centre | Owlaw", description: "How to use Owlaw practice management for South African law firms." };
+export const metadata = { title: "Help centre", alternates: { canonical: "/help" }, description: "How to use Owlaw practice management for South African law firms." };
 
 const TOPICS: { id: string; title: string; body: string[] }[] = [
   { id: "start", title: "Getting started", body: ["Register your firm, verify your email and sign in. Add your attorneys and staff under Users, then set your firm details and VAT number under Settings.", "Turn modules on or off under Modules so your team only sees what you use."] },

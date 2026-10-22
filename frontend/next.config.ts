@@ -35,7 +35,17 @@ const nextConfig: NextConfig = {
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // Signed-in app, portal and one-time links: never indexed, even if linked from elsewhere.
+    const noindex = [
+      "dashboard", "cases", "clients", "contacts", "calendar", "tasks", "time", "billing", "trust", "documents", "esign", "expenses",
+      "fica", "conflicts", "leads", "messages", "reports", "settings", "team", "templates", "voice", "website", "usage", "modules",
+      "integrations", "import", "audit", "ai", "bundles", "fitness", "staff-activity", "support-access", "directory-listing",
+      "product-billing", "platform", "portal", "onboarding", "change-password", "set-password", "two-factor", "pay", "sign", "login",
+    ].flatMap((p) => [`/${p}`, `/${p}/:path*`]);
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      ...noindex.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] })),
+    ];
   },
   async rewrites() {
     return [
