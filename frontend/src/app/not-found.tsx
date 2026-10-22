@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Scale } from "lucide-react";
 
-export const metadata = { title: "Page not found | Owlaw" };
+export const metadata = { title: "Page not found" };
 
 export default function NotFound() {
   return (

@@ -4,6 +4,25 @@ import { LegalFooter } from "@/components/legal-footer";
 import { ADD_ONS, PLANS, PRICE_NOTE } from "@/lib/pricing";
 import { DEMO_MODE } from "@/lib/demo";
 import { HomeTriage } from "@/components/home-triage";
+import { JsonLd } from "@/components/json-ld";
+import { SITE_URL } from "@/lib/seo";
+
+export const metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
+
+const HOME_LD = [
+  { "@context": "https://schema.org", "@type": "Organization", name: "Owlaw", url: SITE_URL, areaServed: "ZA" },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Owlaw",
+    url: SITE_URL,
+    inLanguage: "en-ZA",
+    potentialAction: { "@type": "SearchAction", target: `${SITE_URL}/find-a-lawyer?area={area}`, "query-input": "required name=area" },
+  },
+];
 
 const FEATURES = [
   ["Hire in one motion", "Website consult, conflict check, mandate, and e-sign stay on the same tenant."],
@@ -17,6 +36,7 @@ const FEATURES = [
 export default function MarketingPage() {
   return (
     <div className="min-h-screen bg-white">
+      <JsonLd data={HOME_LD} />
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2 font-extrabold text-navy">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold text-navy-dark">

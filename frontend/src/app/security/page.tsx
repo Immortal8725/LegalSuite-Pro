@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Security and POPIA | Owlaw", description: "How Owlaw protects law firm and client data under POPIA." };
+export const metadata = { title: "Security and POPIA", alternates: { canonical: "/security" }, description: "How Owlaw protects law firm and client data under POPIA." };
 
 const ITEMS: [string, string][] = [
   ["Your data stays separate", "Every firm's records are isolated by tenant on every request. Staff only see what their role allows, and administrators control access."],
