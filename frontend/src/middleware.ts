@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { RESERVED_SLUGS } from "@/lib/reserved-slugs";
 
 const MARKETING = [
   "/expertise",
@@ -14,7 +15,7 @@ const MARKETING = [
 ];
 
 /** Subdomains Owlaw keeps for itself; they never resolve to a firm site. Keep in step with AuthService.RESERVED_SLUGS. */
-export const RESERVED = new Set(["www", "api", "mail", "smtp", "pop", "imap", "ftp", "app", "admin", "platform", "owlaw", "support", "status"]);
+export const RESERVED = RESERVED_SLUGS;
 const DNS_LABEL = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
 function rootDomain(): string {
