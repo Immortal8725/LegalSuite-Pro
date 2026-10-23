@@ -252,9 +252,9 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> register(RegisterRequest req) {
-        String slug = req.firmSlug() == null || req.firmSlug().isBlank()
-                ? newFirmSlug(req.firmName())
-                : newFirmSlug(req.firmSlug());
+        boolean typed = req.firmSlug() != null && !req.firmSlug().isBlank();
+        if (typed) requireAllowedSlug(req.firmSlug());
+        String slug = typed ? newFirmSlug(req.firmSlug()) : newFirmSlug(req.firmName());
         if (tenants.existsBySlug(slug)) {
             throw ApiException.conflict("Firm slug '" + slug + "' is already taken");
         }
@@ -367,7 +367,8 @@ public class AuthService {
     }
 
     public boolean slugAvailable(String slug) {
-        return !tenants.existsBySlug(slugify(slug));
+        String s = slugify(slug);
+        return !RESERVED_SLUGS.contains(s) && !tenants.existsBySlug(s);
     }
 
     /**
@@ -542,8 +543,28 @@ public class AuthService {
     }
 
     /** Subdomains Owlaw keeps for itself. A firm can never take one of these as its slug. */
-    public static final java.util.Set<String> RESERVED_SLUGS = java.util.Set.of(
-            "www", "api", "mail", "smtp", "pop", "imap", "ftp", "app", "admin", "platform", "owlaw", "support", "status");
+    public static final java.util.Set<String> SYSTEM_SLUGS = java.util.Set.of(
+            "www", "api", "mail", "smtp", "pop", "imap", "ftp", "app", "admin", "platform", "owlaw", "support", "status",
+            "find-a-lawyer", "firm", "login", "register", "portal", "legal", "help", "security", "dashboard", "static", "assets",
+            "cdn", "docs", "blog", "billing", "pay", "sign", "webmail", "ns1", "ns2", "dev", "staging", "test");
+
+    /**
+     * Practice-area slugs share /find-a-lawyer/<slug> with firm listings, so a firm may not take one.
+     * City slugs live one level down (/find-a-lawyer/<area>/<city>) and do not clash.
+     */
+    public static final java.util.Set<String> RESERVED_SLUGS = java.util.stream.Stream.concat(
+                    SYSTEM_SLUGS.stream(),
+                    com.legalsuite.directory.DirectoryCatalog.PRACTICE_AREAS.stream().map(com.legalsuite.directory.DirectoryCatalog.Option::slug))
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+
+    public static final String RESERVED_MESSAGE =
+            "That web address is reserved by Owlaw because it is a system word or a type of lawyer on Find a Lawyer. Please choose another, for example add your surname or town.";
+
+    /** Rejects a slug the firm typed itself. A slug made from the firm name is suffixed instead (see newFirmSlug). */
+    static void requireAllowedSlug(String typed) {
+        String s = slugify(typed);
+        if (RESERVED_SLUGS.contains(s)) throw ApiException.badRequest(RESERVED_MESSAGE);
+    }
 
     public static boolean validSlug(String s) {
         return s != null && s.matches("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$") && !RESERVED_SLUGS.contains(s);

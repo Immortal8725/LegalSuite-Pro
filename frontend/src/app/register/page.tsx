@@ -1,5 +1,6 @@
 "use client";
 
+import { isReservedSlug, RESERVED_MESSAGE } from "@/lib/reserved-slugs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
@@ -95,6 +96,11 @@ export default function RegisterPage() {
         <div>
           <Label>Firm name</Label>
               <Input aria-label="Firm name" required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
+          {form.firmName && isReservedSlug(form.firmName) ? (
+            <p className="mt-1 text-xs text-amber-700" role="status">
+              {RESERVED_MESSAGE} If you keep this name, your web address will end in &quot;-law&quot;.
+            </p>
+          ) : null}
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
