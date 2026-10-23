@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: { default: "Owlaw | Practice software for South African attorneys", template: "%s | Owlaw" },
   description: "Practice software for South African attorneys. Solo R899, Firm R1,199 and Practice R1,599 per attorney a month, ex VAT. Trust accounting included.",
   applicationName: "Owlaw",
+  verification: { google: "4iE58SHJaXEWB7K9G5g8tJRsrwxoYBQJ_RlTCMeVb-8" },
   openGraph: {
     type: "website",
     siteName: "Owlaw",
