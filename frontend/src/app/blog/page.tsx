@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOG_DISCLAIMER, formatDate, getBlogPage } from "@/lib/blog";
 import { getCatalog } from "@/lib/seo";
+import { BlogAd } from "@/components/blog-ads";
 
 export const revalidate = 300;
 
@@ -61,6 +62,8 @@ export default async function BlogIndex({ searchParams }: Props) {
           </article>
         ))}
       </div>
+
+      <BlogAd slot="list" />
 
       {pages > 1 && (
         <nav className="mt-8 flex justify-between text-sm font-semibold" aria-label="Pages">

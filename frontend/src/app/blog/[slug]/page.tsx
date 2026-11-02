@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/json-ld";
+import { BlogAd } from "@/components/blog-ads";
 import { BLOG_DISCLAIMER, coverPath, formatDate, getBlogPost, plainText, renderMarkdown } from "@/lib/blog";
 import { SITE_URL } from "@/lib/seo";
 
@@ -82,6 +83,8 @@ export default async function BlogPostPage({ params }: Props) {
         <img src={coverPath(post.slug)} alt="" className="mt-6 w-full rounded-2xl object-cover" />
       )}
       <div className="blog-body mt-6" dangerouslySetInnerHTML={{ __html: renderMarkdown(post.body || "") }} />
+
+      <BlogAd slot="post" />
 
       <aside className="mt-10 rounded-2xl border bg-white p-6">
         <h2 className="text-lg font-bold text-navy">Need help with your own matter?</h2>

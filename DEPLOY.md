@@ -139,3 +139,13 @@ Owlaw holds personal information of clients, opposing parties and staff, some of
 ## Render (free tier)
 
 `render.yaml` at the repo root defines `owlaw-db` (free Postgres), `owlaw-api` (Docker, free) and `owlaw-web` (Node, free), all in Frankfurt. Free limits: services sleep after 15 minutes idle and take about a minute to wake; 512 MB RAM and 0.1 CPU; no persistent disk, so set `LEGALSUITE_STORAGE_TYPE=s3`; the free database expires 30 days after it is created unless upgraded. Values marked `sync: false` are entered in the Render dashboard.
+
+## Google AdSense (blog only)
+
+Ads show only on `/blog` and `/blog/<slug>` on the main domain, and only when these are set on the web service (they are read at build time, so redeploy after changing them):
+
+- `NEXT_PUBLIC_ADSENSE_CLIENT`: the AdSense client id, `ca-pub-` followed by digits.
+- `NEXT_PUBLIC_ADSENSE_SLOT_POST`: the ad unit id shown below each post (after the disclaimer and the article).
+- `NEXT_PUBLIC_ADSENSE_SLOT_LIST`: the ad unit id shown below the blog list.
+
+With the client id set, `/ads.txt` serves the Google line and the blog pages get a cookie notice. Ads are non-personalised unless the reader chooses interest-based ads, and "No ads" turns them off. With it unset, nothing loads and `/ads.txt` returns 404.
