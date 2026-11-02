@@ -227,7 +227,7 @@ public class ImportService {
                 b.put("title", v(r, "title"));
                 b.put("practiceArea", v(r, "practice_area"));
                 b.put("caseType", v(r, "case_type"));
-                b.put("status", blank(r, "status") ? "open" : v(r, "status"));
+                b.put("status", com.legalsuite.service.CaseStatusRules.lenient(blank(r, "status") ? null : v(r, "status")));
                 b.put("courtName", v(r, "court_name"));
                 b.put("opposingParty", v(r, "opposing_party"));
                 b.put("billingType", blank(r, "billing_type") ? "hourly" : v(r, "billing_type"));
