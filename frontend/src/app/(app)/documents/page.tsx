@@ -5,6 +5,7 @@ import { apiBlob, apiGet, apiPost, saveBlob } from "@/lib/api";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
 import { EmptyState, ErrorBanner } from "@/components/ui/dialog";
+import { MatterDocUpload } from "@/components/matter-doc-upload";
 import type { Doc, Matter } from "@/lib/types";
 
 export default function DocumentsPage() {
@@ -53,7 +54,7 @@ export default function DocumentsPage() {
           }
         }}
       >
-        <input name="file" type="file" className="text-sm" aria-label="Choose a file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.csv,.jpg,.jpeg,.png,.heic,.heif,.eml,.msg,.zip" />
+        <input name="file" type="file" className="text-sm" aria-label="Choose a file" required accept="image/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.csv,.jpg,.jpeg,.png,.heic,.heif,.eml,.msg,.zip" />
         <span className="text-xs text-slate-500">Files can be up to 50 MB.</span>
         <select className="h-10 rounded-lg border px-3 text-sm" aria-label="Matter for the upload" value={caseId} onChange={(e) => setCaseId(e.target.value)}>
           <option value="">No matter</option>
@@ -65,6 +66,10 @@ export default function DocumentsPage() {
         </select>
         <Button disabled={busy}>{busy ? "Uploading…" : "Upload"}</Button>
       </form>
+      <div className="mb-6 rounded-xl bg-white p-4 shadow-card">
+        <p className="mb-2 text-sm font-semibold">On your phone? Scan paper pages straight into one PDF.</p>
+        <MatterDocUpload caseId={caseId || undefined} onDone={load} />
+      </div>
       {rows.length === 0 ? (
         <EmptyState title="Empty cabinet" body="Drop a pleading, demand letter, or signed fee agreement." />
       ) : (

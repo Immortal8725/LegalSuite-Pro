@@ -15,6 +15,7 @@ import { MatterAssistant } from "@/components/matter-assistant";
 import { GenerateDocument } from "@/components/generate-document";
 import Link from "next/link";
 import { LitigationPanel } from "@/components/litigation-panel";
+import { MatterDocUpload } from "@/components/matter-doc-upload";
 import { MatterClientPanels } from "@/components/matter-inbox";
 
 const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
@@ -419,6 +420,7 @@ export default function CaseDetailPage() {
                 onDone={load}
                 clientEmail={c.clientEmail || ""}
               />
+              <MatterDocUpload caseId={c.id} onDone={load} />
               {(c.documents || []).length === 0 && <p className="text-slate-600">No files on this matter yet.</p>}
               {(c.documents || []).map((d) => (
                 <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
