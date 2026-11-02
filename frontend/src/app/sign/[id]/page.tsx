@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Scale } from "lucide-react";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiBlob, apiGet, apiPost, saveBlob } from "@/lib/api";
 import { Button, StatusBadge } from "@/components/page";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
@@ -17,6 +17,10 @@ export default function PublicSignPage() {
   const [name, setName] = useState("");
   const [identity, setIdentity] = useState("");
   const [busy, setBusy] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState<string | null>(null);
+  const [agree, setAgree] = useState(false);
+  const [drawn, setDrawn] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
 
@@ -55,6 +59,12 @@ export default function PublicSignPage() {
               </div>
               <StatusBadge status={doc.status} />
             </div>
+            {doc.hasFile && (
+              <Button variant="outline" size="sm" className="mb-4"
+                onClick={() => apiBlob(`/api/v1/sign/${params.id}/document`).then((b) => saveBlob(b, doc.title)).catch((e) => setError(e.message))}>
+                Open the document to read it
+              </Button>
+            )}
             <pre className="mb-6 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed">{doc.documentBody}</pre>
             {doc.documentHash && (
               <p className="mb-4 font-mono text-[11px] text-slate-600">Document hash {doc.documentHash}</p>
@@ -71,6 +81,12 @@ export default function PublicSignPage() {
                     Standard {doc.signatureStandard}
                     {doc.identityCaptured ? " · identity number included in the hash" : ""}
                   </p>
+                )}
+                {doc.signedDocumentId && (
+                  <Button size="sm" variant="outline" className="mb-3"
+                    onClick={() => apiBlob(`/api/v1/sign/${params.id}/pdf`).then((b) => saveBlob(b, `${doc.title} (signed).pdf`)).catch((e) => setError(e.message))}>
+                    Download the signed PDF
+                  </Button>
                 )}
                 {doc.signatureDataUrl && (
                   <Image
@@ -123,10 +139,32 @@ export default function PublicSignPage() {
                   }}
                   onPointerUp={() => {
                     drawing.current = false;
+                    setDrawn(true);
                   }}
                 />
+                <button type="button" className="text-xs text-slate-500 underline" onClick={() => {
+                  const c = canvasRef.current; c?.getContext("2d")?.clearRect(0, 0, c.width, c.height); setDrawn(false);
+                }}>Clear signature</button>
+                {doc.otpRequired && (
+                  <div className="space-y-2 rounded-lg border p-3">
+                    <p className="text-sm">We email a 6-digit code to confirm it is you.</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="button" size="sm" variant="outline" disabled={busy} onClick={async () => {
+                        setError(null);
+                        try { const r = await apiPost<{ to: string }>(`/api/v1/sign/${params.id}/otp`); setOtpSent(r.to); }
+                        catch (e) { setError(e instanceof Error ? e.message : "Could not send the code"); }
+                      }}>{otpSent ? "Send a new code" : "Email me a code"}</Button>
+                      {otpSent && <span className="text-xs text-slate-600">Sent to {otpSent}. It expires in 10 minutes.</span>}
+                    </div>
+                    <Input aria-label="Email code" inputMode="numeric" maxLength={6} placeholder="6-digit code" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />
+                  </div>
+                )}
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+                  <span>I have read the document and I intend my typed name and drawn signature to be my electronic signature on it (ECT Act 25 of 2002, s 13). My IP address, device and the time are recorded.</span>
+                </label>
                 <Button
-                  disabled={busy}
+                  disabled={busy || !agree || !drawn || !name.trim() || (Boolean(doc.otpRequired) && otp.length !== 6)}
                   onClick={async () => {
                     const dataUrl = canvasRef.current?.toDataURL("image/png");
                     if (!dataUrl) return;
@@ -135,8 +173,10 @@ export default function PublicSignPage() {
                     try {
                       const next = await apiPost<SignReq>(`/api/v1/sign/${params.id}`, {
                         signerName: name,
+                        typedName: name,
                         signerIdentityNumber: identity,
                         signatureDataUrl: dataUrl,
+                        otp: otp || undefined,
                       });
                       setDoc(next);
                     } catch (e) {

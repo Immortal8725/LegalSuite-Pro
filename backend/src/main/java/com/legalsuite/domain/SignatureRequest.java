@@ -36,6 +36,19 @@ public class SignatureRequest {
     private String signatureHash;
     private String signerIdentityNumber;
     private String signatureStandard;
+    private UUID documentId;
+    private UUID signedDocumentId;
+    private String typedName;
+    @Column(length = 64)
+    private String signerIp;
+    @Column(length = 500)
+    private String signerUserAgent;
+    @Column(length = 128)
+    private String otpHash;
+    private Instant otpExpiresAt;
+    @Column(nullable = false)
+    private int otpAttempts;
+    private Instant emailVerifiedAt;
 
     @PrePersist
     void persist() {
@@ -83,4 +96,22 @@ public class SignatureRequest {
     public void setSignerIdentityNumber(String signerIdentityNumber) { this.signerIdentityNumber = signerIdentityNumber; }
     public String getSignatureStandard() { return signatureStandard; }
     public void setSignatureStandard(String signatureStandard) { this.signatureStandard = signatureStandard; }
+    public UUID getDocumentId() { return documentId; }
+    public void setDocumentId(UUID documentId) { this.documentId = documentId; }
+    public UUID getSignedDocumentId() { return signedDocumentId; }
+    public void setSignedDocumentId(UUID signedDocumentId) { this.signedDocumentId = signedDocumentId; }
+    public String getTypedName() { return typedName; }
+    public void setTypedName(String typedName) { this.typedName = typedName; }
+    public String getSignerIp() { return signerIp; }
+    public void setSignerIp(String signerIp) { this.signerIp = signerIp; }
+    public String getSignerUserAgent() { return signerUserAgent; }
+    public void setSignerUserAgent(String signerUserAgent) { this.signerUserAgent = signerUserAgent; }
+    public String getOtpHash() { return otpHash; }
+    public void setOtpHash(String otpHash) { this.otpHash = otpHash; }
+    public Instant getOtpExpiresAt() { return otpExpiresAt; }
+    public void setOtpExpiresAt(Instant otpExpiresAt) { this.otpExpiresAt = otpExpiresAt; }
+    public int getOtpAttempts() { return otpAttempts; }
+    public void setOtpAttempts(int otpAttempts) { this.otpAttempts = otpAttempts; }
+    public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
+    public void setEmailVerifiedAt(Instant emailVerifiedAt) { this.emailVerifiedAt = emailVerifiedAt; }
 }

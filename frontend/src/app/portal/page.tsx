@@ -10,7 +10,7 @@ import { PushOptIn } from "@/components/push-opt-in";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Invoice, Matter } from "@/lib/types";
+import type { Invoice, Matter, SignReq } from "@/lib/types";
 import { Input, Label } from "@/components/ui/input";
 import { money, moneyExact } from "@/lib/utils";
 import { MyPrivacyCard } from "@/components/privacy-panel";
@@ -19,6 +19,7 @@ export default function PortalHome() {
   const { user, tenant, logout } = useAuth();
   const [cases, setCases] = useState<Matter[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [signatures, setSignatures] = useState<SignReq[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [proofFor, setProofFor] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function PortalHome() {
         setInvoices(inv);
       })
       .catch((e) => setError(e.message));
+    apiGet<SignReq[]>("/api/v1/portal/signatures").then(setSignatures).catch(() => setSignatures([]));
   }, []);
 
   return (
@@ -60,6 +62,24 @@ export default function PortalHome() {
           <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
           <CardBody><PushOptIn audience="portal" /></CardBody>
         </Card>
+        {signatures.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle>Documents to sign</CardTitle></CardHeader>
+            <CardBody className="space-y-2">
+              {signatures.map((s) => (
+                <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm">
+                  <span className="font-semibold">{s.title}</span>
+                  <span className="flex items-center gap-3">
+                    <StatusBadge status={s.status} />
+                    <Link className="font-semibold text-navy underline" href={`/sign/${s.id}`}>
+                      {s.status === "signed" ? "View" : s.status === "void" ? "Details" : "Read and sign"}
+                    </Link>
+                  </span>
+                </div>
+              ))}
+            </CardBody>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>Your matters</CardTitle>
