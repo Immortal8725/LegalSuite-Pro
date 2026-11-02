@@ -16,6 +16,7 @@ import { GenerateDocument } from "@/components/generate-document";
 import Link from "next/link";
 import { LitigationPanel } from "@/components/litigation-panel";
 import { MatterDocUpload } from "@/components/matter-doc-upload";
+import { RequestSignature } from "@/components/request-signature";
 import { MatterClientPanels } from "@/components/matter-inbox";
 
 const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
@@ -423,7 +424,7 @@ export default function CaseDetailPage() {
               <MatterDocUpload caseId={c.id} onDone={load} />
               {(c.documents || []).length === 0 && <p className="text-slate-600">No files on this matter yet.</p>}
               {(c.documents || []).map((d) => (
-                <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
                   <div className="min-w-0">
                     <p className="break-all font-semibold">{d.name}</p>
                     <p className="text-xs text-slate-600">{d.category}</p>
@@ -436,6 +437,7 @@ export default function CaseDetailPage() {
                   >
                     Download
                   </button>
+                  {d.category !== "signed" && <RequestSignature documentId={d.id} name={d.name} onDone={load} />}
                 </div>
               ))}
             </CardBody>

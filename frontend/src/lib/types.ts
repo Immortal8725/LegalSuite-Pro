@@ -522,6 +522,13 @@ export type SignReq = {
   unlocked?: boolean;
   signatureStandard?: string;
   identityCaptured?: boolean;
+  typedName?: string | null;
+  documentId?: Id | null;
+  signedDocumentId?: Id | null;
+  hasFile?: boolean;
+  emailConfirmed?: boolean;
+  otpRequired?: boolean;
+  signerIp?: string | null;
 };
 
 export type Integration = {

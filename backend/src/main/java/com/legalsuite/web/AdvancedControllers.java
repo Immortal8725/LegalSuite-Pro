@@ -94,8 +94,50 @@ public class AdvancedControllers {
     }
 
     @PostMapping("/api/v1/sign/{id}")
-    public ApiResponse<?> applySign(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        return ApiResponse.ok(signatures.sign(id, body));
+    public ApiResponse<?> applySign(@PathVariable UUID id, @RequestBody Map<String, Object> body,
+                                    jakarta.servlet.http.HttpServletRequest req) {
+        return ApiResponse.ok(signatures.sign(id, body, clientIp(req), req.getHeader("User-Agent")));
+    }
+
+    @PostMapping("/api/v1/sign/{id}/otp")
+    public ApiResponse<?> signOtp(@PathVariable UUID id) {
+        return ApiResponse.ok(signatures.sendOtp(id));
+    }
+
+    @GetMapping("/api/v1/sign/{id}/pdf")
+    public org.springframework.http.ResponseEntity<byte[]> signedPdf(@PathVariable UUID id) {
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"signed.pdf\"")
+                .header("Cache-Control", "no-store")
+                .body(signatures.signedPdf(id));
+    }
+
+    @GetMapping("/api/v1/sign/{id}/document")
+    public org.springframework.http.ResponseEntity<byte[]> signOriginal(@PathVariable UUID id) {
+        Map<String, Object> f = signatures.originalFile(id);
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(String.valueOf(f.get("mime"))))
+                .header("Content-Disposition", "attachment; filename=\"document\"")
+                .header("Cache-Control", "no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .body((byte[]) f.get("bytes"));
+    }
+
+    @PostMapping("/api/v1/documents/{id}/signature-request")
+    public ApiResponse<?> requestDocumentSignature(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return ApiResponse.ok(signatures.requestForDocument(id, body == null ? Map.of() : body));
+    }
+
+    @GetMapping("/api/v1/portal/signatures")
+    public ApiResponse<?> portalSignatures() {
+        return ApiResponse.ok(signatures.forClient(com.legalsuite.common.TenantContext.requireUser()));
+    }
+
+    static String clientIp(jakarta.servlet.http.HttpServletRequest req) {
+        String xff = req.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) return xff.split(",")[0].trim();
+        return req.getRemoteAddr();
     }
 
     @PostMapping("/api/v1/ai/chat")
