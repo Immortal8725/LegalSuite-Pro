@@ -36,6 +36,14 @@ export function slugFromHost(host: string, root = rootDomain()): string | null {
 }
 
 export function middleware(req: NextRequest) {
+  // Only oversized uploads reach middleware on /api (see config.matcher). Answer here: the API's early 413
+  // makes the rewrite proxy drop the connection mid-upload, which shows as a bare 502.
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { success: false, message: "The file is too large. Files can be up to 50 MB." },
+      { status: 413, headers: { Connection: "close" } },
+    );
+  }
   const host = (req.headers.get("host") || "").split(":")[0].toLowerCase();
   const { pathname, search } = req.nextUrl;
   const root = rootDomain();
@@ -73,5 +81,12 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   // /api and /ws skip middleware so uploads stream straight through the rewrite to the API.
-  matcher: ["/((?!api/|ws/|_next/static|_next/image|favicon.ico|manifest.json|icons/).*)"],
+  matcher: [
+    "/((?!api/|ws/|_next/static|_next/image|favicon.ico|manifest.json|icons/).*)",
+    // Bodies over ~50 MB (52,430,000 bytes or more), so the browser gets a clean 413.
+    {
+      source: "/api/:path*",
+      has: [{ type: "header", key: "content-length", value: "(524[3-9]\\d{4}|52[5-9]\\d{5}|5[3-9]\\d{6}|[6-9]\\d{7}|[1-9]\\d{8,})" }],
+    },
+  ],
 };
