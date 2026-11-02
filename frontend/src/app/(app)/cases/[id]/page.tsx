@@ -17,6 +17,7 @@ import Link from "next/link";
 import { LitigationPanel } from "@/components/litigation-panel";
 import { MatterDocUpload } from "@/components/matter-doc-upload";
 import { RequestSignature } from "@/components/request-signature";
+import { FeePlan } from "@/components/fee-plan";
 import { MatterClientPanels } from "@/components/matter-inbox";
 
 const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
@@ -316,6 +317,14 @@ export default function CaseDetailPage() {
                 );
               })}
               {c.solReason && (c.docketClocks || []).length === 0 && <p className="text-xs text-slate-600">{c.solReason}</p>}
+            </CardBody>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Fee plan and deposits</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <FeePlan caseId={String(c.id)} />
             </CardBody>
           </Card>
           <Card>
