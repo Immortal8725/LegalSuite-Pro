@@ -19,6 +19,7 @@ import { MatterDocUpload } from "@/components/matter-doc-upload";
 import { RequestSignature } from "@/components/request-signature";
 import { FeePlan } from "@/components/fee-plan";
 import { MatterClientPanels } from "@/components/matter-inbox";
+import { ChangeClient } from "@/components/change-client";
 
 const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
 const FINISHED = ["settled", "closed", "archived", "declined"];
@@ -213,6 +214,7 @@ export default function CaseDetailPage() {
         <div className="rounded-xl border bg-white p-4">
           <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Client</p>
           <p className="mt-1 text-lg font-semibold text-navy">{c.clientName || "Client not named"}</p>
+          {c.clientId && <ChangeClient caseId={String(c.id)} currentClientId={String(c.clientId)} leadAttorneyId={c.leadAttorneyId ? String(c.leadAttorneyId) : undefined} onChanged={load} />}
         </div>
         <div className="rounded-xl border bg-white p-4">
           <p className="text-[11px] font-bold uppercase tracking-wide text-slate-600">Other side</p>

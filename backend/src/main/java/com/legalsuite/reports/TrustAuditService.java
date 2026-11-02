@@ -352,7 +352,7 @@ public class TrustAuditService {
         return m;
     }
 
-    static boolean out(String type) { return "withdrawal".equals(type) || "fee_transfer".equals(type); }
+    static boolean out(String type) { return "withdrawal".equals(type) || "fee_transfer".equals(type) || "client_transfer_out".equals(type); }
     private static String c(Object v) { return v == null ? "" : Csv.escape(v); }
     private static String r(Object v) { return v == null ? "" : new BigDecimal(String.valueOf(v)).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString(); }
     private static String s(Object v) { if (v == null) return null; String x = String.valueOf(v).trim(); return x.isEmpty() ? null : x; }

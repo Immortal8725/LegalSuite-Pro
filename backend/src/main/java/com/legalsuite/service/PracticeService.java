@@ -115,6 +115,11 @@ public class PracticeService {
         c.setCity(str(body, "city", c.getCity()));
         c.setState(str(body, "state", c.getState()));
         c.setAddressLine1(str(body, "addressLine1", c.getAddressLine1()));
+        if (body.containsKey("idNumber")) {
+            String idn = body.get("idNumber") == null ? "" : String.valueOf(body.get("idNumber")).replaceAll("\\s+", "").trim();
+            if (idn.length() > 40) throw ApiException.badRequest("The ID or registration number is too long.");
+            c.setIdNumber(idn.isEmpty() ? null : idn);
+        }
         c.setSource(str(body, "source", c.getSource()));
         c.setNotes(str(body, "notes", c.getNotes()));
         if (body.get("portalEnabled") != null) {
@@ -502,6 +507,8 @@ public class PracticeService {
         m.put("source", c.getSource());
         m.put("portalEnabled", c.isPortalEnabled());
         m.put("notes", c.getNotes());
+        m.put("idNumber", c.getIdNumber());
+        m.put("addressLine1", c.getAddressLine1());
         m.put("createdAt", c.getCreatedAt());
         return m;
     }

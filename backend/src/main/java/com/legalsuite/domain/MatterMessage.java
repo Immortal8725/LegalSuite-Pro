@@ -41,6 +41,9 @@ public class MatterMessage {
     private String attachmentName;
     private Long attachmentSize;
     private Instant readByClientAt;
+    /** Earlier history kept from the client after a Change client. Staff still see it. */
+    @Column(name = "hidden_from_client", nullable = false)
+    private boolean hiddenFromClient;
     private Instant readByStaffAt;
     private UUID readByStaffId;
     private Instant createdAt = Instant.now();

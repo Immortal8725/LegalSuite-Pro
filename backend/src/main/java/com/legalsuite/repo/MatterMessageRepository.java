@@ -11,5 +11,7 @@ public interface MatterMessageRepository extends JpaRepository<MatterMessage, UU
     Optional<MatterMessage> findByIdAndTenantIdAndCaseId(UUID id, UUID tenantId, UUID caseId);
     List<MatterMessage> findByTenantIdAndSenderTypeAndReadByStaffAtIsNull(UUID tenantId, String senderType);
     long countByTenantIdAndCaseIdAndSenderTypeAndReadByStaffAtIsNull(UUID tenantId, UUID caseId, String senderType);
+    long countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNullAndHiddenFromClientFalse(UUID tenantId, UUID caseId, String senderType);
+    List<MatterMessage> findByTenantIdAndClientId(UUID tenantId, UUID clientId);
     long countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNull(UUID tenantId, UUID caseId, String senderType);
 }
