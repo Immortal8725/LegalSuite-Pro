@@ -32,7 +32,7 @@ import {
   FileSignature,
   Plug,
   ScrollText,
-  PenLine, Upload, BookOpen, LifeBuoy } from "lucide-react";
+  PenLine, Upload, BookOpen, LifeBuoy, Columns3 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useTimer } from "@/components/timer-provider";
 import { apiGet, apiPatch } from "@/lib/api";
@@ -48,6 +48,7 @@ const NAV = [
     section: "Practice",
     items: [
       { href: "/cases", label: "Cases & Matters", icon: Briefcase, module: "cases" },
+      { href: "/pipeline", label: "Pipeline", icon: Columns3, module: "cases" },
       { href: "/clients", label: "Clients", icon: Users, module: "clients" },
       { href: "/contacts", label: "Contacts", icon: Users, module: "contacts" },
       { href: "/documents", label: "Documents", icon: FileText, module: "documents" },

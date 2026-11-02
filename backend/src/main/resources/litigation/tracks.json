@@ -1,0 +1,1248 @@
+{
+ "version": 1,
+ "courtLevels": {
+  "high": "High Court",
+  "district": "Magistrates' Court (District)",
+  "regional": "Magistrates' Court (Regional)",
+  "ccma": "CCMA or bargaining council",
+  "labour_court": "Labour Court",
+  "sca": "Supreme Court of Appeal",
+  "constitutional": "Constitutional Court",
+  "master": "Master of the High Court",
+  "none": "Not in court"
+ },
+ "disclaimer": "Owlaw works these dates out from the rule periods in this table. Check every period against the current rules and any court order before you rely on it. This is not legal advice.",
+ "tracks": [
+  {
+   "id": "high_court_action",
+   "label": "High Court action",
+   "courtLevels": [
+    "high"
+   ],
+   "stages": [
+    {
+     "id": "letter_of_demand",
+     "label": "Letter of demand"
+    },
+    {
+     "id": "summons_issued",
+     "label": "Summons issued"
+    },
+    {
+     "id": "summons_served",
+     "label": "Summons served"
+    },
+    {
+     "id": "appearance_to_defend",
+     "label": "Appearance to defend (notice of intention to defend)"
+    },
+    {
+     "id": "plea",
+     "label": "Plea or exception"
+    },
+    {
+     "id": "replication",
+     "label": "Replication"
+    },
+    {
+     "id": "close_of_pleadings",
+     "label": "Close of pleadings"
+    },
+    {
+     "id": "discovery",
+     "label": "Discovery"
+    },
+    {
+     "id": "pre_trial",
+     "label": "Rule 37 pre-trial conference"
+    },
+    {
+     "id": "trial_date_set",
+     "label": "Trial date set"
+    },
+    {
+     "id": "trial",
+     "label": "Trial"
+    },
+    {
+     "id": "judgment",
+     "label": "Judgment"
+    },
+    {
+     "id": "taxation",
+     "label": "Taxation of costs"
+    },
+    {
+     "id": "execution",
+     "label": "Execution (writ)"
+    },
+    {
+     "id": "appeal",
+     "label": "Appeal"
+    },
+    {
+     "id": "default_judgment",
+     "label": "Default judgment",
+     "side": true,
+     "after": "summons_served"
+    },
+    {
+     "id": "summary_judgment",
+     "label": "Summary judgment",
+     "side": true,
+     "after": "plea"
+    },
+    {
+     "id": "settled",
+     "label": "Settled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "hc_demand_expiry",
+     "trigger": "letter_of_demand",
+     "title": "Letter of demand period ends (follow up or issue)",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Firm practice, not a rule. Adjust to the period stated in the letter (NCA s 129 letters: 10 business days).",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "hc_nid",
+     "trigger": "summons_served",
+     "title": "Defendant's notice of intention to defend due",
+     "amount": 10,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 19(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "hc_plea",
+     "trigger": "appearance_to_defend",
+     "title": "Plea, exception or application to strike out due",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 22(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "hc_sj",
+     "trigger": "plea",
+     "title": "Last day for plaintiff to apply for summary judgment",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 32(2)(a) (as amended 1 July 2019)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "hc_replication",
+     "trigger": "plea",
+     "title": "Replication or plea to counterclaim due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 25(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "hc_discovery",
+     "trigger": "discovery",
+     "title": "Discovery affidavit due after notice under r 35(1)",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 35(2)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "hc_rescission",
+     "trigger": "default_judgment",
+     "title": "Last day to apply to rescind default judgment (from knowledge of it)",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 31(2)(b)",
+     "needsReview": true,
+     "diesNon": true,
+     "note": "Runs from when the defendant knew of the judgment, not the stage date."
+    },
+    {
+     "id": "hc_leave",
+     "trigger": "judgment",
+     "title": "Application for leave to appeal due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(1)(b)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "hc_writ",
+     "trigger": "execution",
+     "title": "Judgment debt prescribes",
+     "amount": 30,
+     "unit": "years",
+     "source": "Prescription Act 68 of 1969 s 11(a)(ii)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "magistrates_action",
+   "label": "Magistrates' Court action",
+   "courtLevels": [
+    "district",
+    "regional"
+   ],
+   "stages": [
+    {
+     "id": "letter_of_demand",
+     "label": "Letter of demand"
+    },
+    {
+     "id": "summons_issued",
+     "label": "Summons issued"
+    },
+    {
+     "id": "summons_served",
+     "label": "Summons served"
+    },
+    {
+     "id": "appearance_to_defend",
+     "label": "Appearance to defend (notice of intention to defend)"
+    },
+    {
+     "id": "plea",
+     "label": "Plea or exception"
+    },
+    {
+     "id": "replication",
+     "label": "Replication"
+    },
+    {
+     "id": "close_of_pleadings",
+     "label": "Close of pleadings"
+    },
+    {
+     "id": "discovery",
+     "label": "Discovery"
+    },
+    {
+     "id": "pre_trial",
+     "label": "Rule 25 pre-trial conference"
+    },
+    {
+     "id": "trial_date_set",
+     "label": "Trial date set"
+    },
+    {
+     "id": "trial",
+     "label": "Trial"
+    },
+    {
+     "id": "judgment",
+     "label": "Judgment"
+    },
+    {
+     "id": "taxation",
+     "label": "Taxation of costs"
+    },
+    {
+     "id": "execution",
+     "label": "Execution (warrant)"
+    },
+    {
+     "id": "appeal",
+     "label": "Appeal"
+    },
+    {
+     "id": "default_judgment",
+     "label": "Default judgment",
+     "side": true,
+     "after": "summons_served"
+    },
+    {
+     "id": "summary_judgment",
+     "label": "Summary judgment",
+     "side": true,
+     "after": "plea"
+    },
+    {
+     "id": "settled",
+     "label": "Settled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "mc_demand_expiry",
+     "trigger": "letter_of_demand",
+     "title": "Letter of demand period ends (follow up or issue)",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Firm practice, not a rule. Magistrates' Courts Act 32 of 1944 s 56 letters allow 10 days.",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "mc_nid",
+     "trigger": "summons_served",
+     "title": "Defendant's notice of intention to defend due",
+     "amount": 10,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 13(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "mc_plea",
+     "trigger": "appearance_to_defend",
+     "title": "Plea, exception or application to strike out due",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 17(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "mc_sj",
+     "trigger": "plea",
+     "title": "Last day for plaintiff to apply for summary judgment",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 14(2)(a)",
+     "needsReview": true,
+     "diesNon": true
+    },
+    {
+     "id": "mc_replication",
+     "trigger": "plea",
+     "title": "Replication or plea to counterclaim due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 21(1)",
+     "needsReview": true,
+     "diesNon": true
+    },
+    {
+     "id": "mc_discovery",
+     "trigger": "discovery",
+     "title": "Discovery affidavit due after notice",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 23(1)",
+     "needsReview": true,
+     "diesNon": true
+    },
+    {
+     "id": "mc_rescission",
+     "trigger": "default_judgment",
+     "title": "Last day to apply to rescind default judgment (from knowledge of it)",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 49(1)",
+     "needsReview": true,
+     "diesNon": true,
+     "note": "Runs from when the defendant knew of the judgment."
+    },
+    {
+     "id": "mc_appeal",
+     "trigger": "judgment",
+     "title": "Notice of appeal due",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Magistrates' Courts Rules r 51(3)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "mc_writ",
+     "trigger": "execution",
+     "title": "Judgment debt prescribes",
+     "amount": 30,
+     "unit": "years",
+     "source": "Prescription Act 68 of 1969 s 11(a)(ii)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "motion",
+   "label": "Application (motion) proceedings",
+   "courtLevels": [
+    "high",
+    "district",
+    "regional"
+   ],
+   "stages": [
+    {
+     "id": "notice_of_motion_issued",
+     "label": "Notice of motion issued"
+    },
+    {
+     "id": "notice_of_motion_served",
+     "label": "Notice of motion served"
+    },
+    {
+     "id": "notice_to_oppose",
+     "label": "Notice to oppose"
+    },
+    {
+     "id": "answering_affidavit",
+     "label": "Answering affidavit"
+    },
+    {
+     "id": "replying_affidavit",
+     "label": "Replying affidavit"
+    },
+    {
+     "id": "set_down",
+     "label": "Set down"
+    },
+    {
+     "id": "hearing",
+     "label": "Hearing"
+    },
+    {
+     "id": "judgment",
+     "label": "Judgment"
+    },
+    {
+     "id": "appeal",
+     "label": "Appeal"
+    },
+    {
+     "id": "unopposed_order",
+     "label": "Unopposed order",
+     "side": true,
+     "terminal": true,
+     "after": "notice_of_motion_served"
+    },
+    {
+     "id": "settled",
+     "label": "Settled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "mo_oppose",
+     "trigger": "notice_of_motion_served",
+     "title": "Respondent's notice to oppose due (or the longer period in the notice of motion)",
+     "amount": 5,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 6(5)(b)(iii)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "mo_answer",
+     "trigger": "notice_to_oppose",
+     "title": "Answering affidavit due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 6(5)(d)(ii)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "mo_reply",
+     "trigger": "answering_affidavit",
+     "title": "Replying affidavit due",
+     "amount": 10,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 6(5)(e)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "mo_setdown",
+     "trigger": "replying_affidavit",
+     "title": "Applicant to apply for set down (then respondent may)",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 6(5)(f): 10 days for reply plus 5 days to apply for set down",
+     "needsReview": true,
+     "diesNon": true
+    },
+    {
+     "id": "mo_leave",
+     "trigger": "judgment",
+     "title": "Application for leave to appeal due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(1)(b)",
+     "needsReview": false,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "urgent_application",
+   "label": "Urgent application",
+   "courtLevels": [
+    "high",
+    "district",
+    "regional"
+   ],
+   "stages": [
+    {
+     "id": "launched",
+     "label": "Urgent application launched"
+    },
+    {
+     "id": "served",
+     "label": "Served"
+    },
+    {
+     "id": "heard",
+     "label": "Heard"
+    },
+    {
+     "id": "interim_order",
+     "label": "Interim order (rule nisi)"
+    },
+    {
+     "id": "return_date",
+     "label": "Return date"
+    },
+    {
+     "id": "final_order",
+     "label": "Final order"
+    },
+    {
+     "id": "discharged",
+     "label": "Rule discharged",
+     "side": true,
+     "terminal": true,
+     "after": "interim_order"
+    },
+    {
+     "id": "struck_off",
+     "label": "Struck off for lack of urgency",
+     "side": true,
+     "terminal": true,
+     "after": "heard"
+    },
+    {
+     "id": "settled",
+     "label": "Settled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "ur_leave",
+     "trigger": "final_order",
+     "title": "Application for leave to appeal due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(1)(b)",
+     "needsReview": false,
+     "diesNon": false
+    }
+   ],
+   "note": "Urgent periods are set by the applicant under Uniform Rules of Court r 6(12). Enter them as tasks by hand."
+  },
+  {
+   "id": "divorce",
+   "label": "Divorce",
+   "courtLevels": [
+    "high",
+    "regional"
+   ],
+   "stages": [
+    {
+     "id": "summons_issued",
+     "label": "Summons issued"
+    },
+    {
+     "id": "summons_served",
+     "label": "Summons served"
+    },
+    {
+     "id": "appearance_to_defend",
+     "label": "Appearance to defend"
+    },
+    {
+     "id": "plea_counterclaim",
+     "label": "Plea and counterclaim"
+    },
+    {
+     "id": "family_advocate",
+     "label": "Family Advocate enquiry (children)",
+     "side": true,
+     "after": "summons_issued"
+    },
+    {
+     "id": "settlement_agreement",
+     "label": "Settlement agreement signed"
+    },
+    {
+     "id": "trial",
+     "label": "Trial"
+    },
+    {
+     "id": "decree",
+     "label": "Decree of divorce"
+    },
+    {
+     "id": "reconciled",
+     "label": "Reconciled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "dv_nid",
+     "trigger": "summons_served",
+     "title": "Notice of intention to defend due",
+     "amount": 10,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 19(1) / Magistrates' Courts Rules r 13(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "dv_plea",
+     "trigger": "appearance_to_defend",
+     "title": "Plea and counterclaim due",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 22(1) / Magistrates' Courts Rules r 17(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "dv_counter",
+     "trigger": "plea_counterclaim",
+     "title": "Plea to counterclaim due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 25(1)",
+     "needsReview": true,
+     "diesNon": true
+    }
+   ],
+   "note": "Where there are minor children, the court must be satisfied about their welfare (Divorce Act 70 of 1979 s 6; Mediation in Certain Divorce Matters Act 24 of 1987)."
+  },
+  {
+   "id": "labour",
+   "label": "Labour dispute (CCMA and Labour Court)",
+   "courtLevels": [
+    "ccma",
+    "labour_court"
+   ],
+   "stages": [
+    {
+     "id": "dismissal",
+     "label": "Dismissal"
+    },
+    {
+     "id": "unfair_labour_practice",
+     "label": "Unfair labour practice",
+     "side": true
+    },
+    {
+     "id": "ccma_referral",
+     "label": "Referral to CCMA or bargaining council"
+    },
+    {
+     "id": "conciliation",
+     "label": "Conciliation"
+    },
+    {
+     "id": "certificate",
+     "label": "Certificate of outcome (not resolved)"
+    },
+    {
+     "id": "arbitration_requested",
+     "label": "Arbitration requested"
+    },
+    {
+     "id": "arbitration",
+     "label": "Arbitration"
+    },
+    {
+     "id": "award",
+     "label": "Award"
+    },
+    {
+     "id": "review_application",
+     "label": "Review in Labour Court"
+    },
+    {
+     "id": "enforcement",
+     "label": "Enforcement of award"
+    },
+    {
+     "id": "condonation",
+     "label": "Condonation application",
+     "side": true
+    },
+    {
+     "id": "settled",
+     "label": "Settled",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "lb_dismissal",
+     "trigger": "dismissal",
+     "title": "Refer dismissal dispute to CCMA",
+     "amount": 30,
+     "unit": "calendar_days",
+     "source": "Labour Relations Act 66 of 1995 s 191(1)(b)(i)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "lb_ulp",
+     "trigger": "unfair_labour_practice",
+     "title": "Refer unfair labour practice dispute to CCMA",
+     "amount": 90,
+     "unit": "calendar_days",
+     "source": "Labour Relations Act 66 of 1995 s 191(1)(b)(ii)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "lb_concil",
+     "trigger": "ccma_referral",
+     "title": "Commissioner to finish conciliation (unless parties agree to extend)",
+     "amount": 30,
+     "unit": "calendar_days",
+     "source": "Labour Relations Act 66 of 1995 s 135(2)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "lb_arb",
+     "trigger": "certificate",
+     "title": "Request arbitration",
+     "amount": 90,
+     "unit": "calendar_days",
+     "source": "Labour Relations Act 66 of 1995 s 136(1)(a)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "lb_award",
+     "trigger": "arbitration",
+     "title": "Commissioner's award due",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Labour Relations Act 66 of 1995 s 138(7)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "lb_review",
+     "trigger": "award",
+     "title": "Review application in Labour Court due",
+     "amount": 6,
+     "unit": "weeks",
+     "source": "Labour Relations Act 66 of 1995 s 145(1)(a)",
+     "needsReview": false,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "criminal",
+   "label": "Criminal matter",
+   "courtLevels": [
+    "district",
+    "regional",
+    "high"
+   ],
+   "stages": [
+    {
+     "id": "arrest",
+     "label": "Arrest"
+    },
+    {
+     "id": "first_appearance",
+     "label": "First appearance"
+    },
+    {
+     "id": "bail",
+     "label": "Bail application"
+    },
+    {
+     "id": "postponement",
+     "label": "Further postponement"
+    },
+    {
+     "id": "plea",
+     "label": "Plea"
+    },
+    {
+     "id": "trial",
+     "label": "Trial"
+    },
+    {
+     "id": "conviction",
+     "label": "Conviction"
+    },
+    {
+     "id": "sentencing",
+     "label": "Sentencing"
+    },
+    {
+     "id": "appeal",
+     "label": "Appeal"
+    },
+    {
+     "id": "acquittal",
+     "label": "Acquittal",
+     "side": true,
+     "terminal": true,
+     "after": "trial"
+    },
+    {
+     "id": "withdrawn",
+     "label": "Charges withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "cr_48h",
+     "trigger": "arrest",
+     "title": "First court appearance (48 hours, extended to the next court day if it ends outside court hours or on a non-court day)",
+     "amount": 48,
+     "unit": "hours",
+     "source": "Constitution s 35(1)(d); Criminal Procedure Act 51 of 1977 s 50(1)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "cr_leave",
+     "trigger": "sentencing",
+     "title": "Application for leave to appeal due",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Criminal Procedure Act 51 of 1977 s 309B(2)(a) (lower courts) and s 316(1) (High Court)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ],
+   "note": "Postponements in custody are generally limited to 7 days at a time (Criminal Procedure Act s 50(6)(d)). Add each one as a stage."
+  },
+  {
+   "id": "raf_claim",
+   "label": "Road Accident Fund claim",
+   "courtLevels": [
+    "high",
+    "regional"
+   ],
+   "stages": [
+    {
+     "id": "accident",
+     "label": "Accident"
+    },
+    {
+     "id": "lodgement",
+     "label": "Claim lodged with RAF"
+    },
+    {
+     "id": "raf_response",
+     "label": "RAF response or 120 days lapsed"
+    },
+    {
+     "id": "summons_issued",
+     "label": "Summons issued"
+    },
+    {
+     "id": "summons_served",
+     "label": "Summons served"
+    },
+    {
+     "id": "plea",
+     "label": "RAF plea"
+    },
+    {
+     "id": "pre_trial",
+     "label": "Pre-trial"
+    },
+    {
+     "id": "trial",
+     "label": "Trial"
+    },
+    {
+     "id": "judgment",
+     "label": "Judgment"
+    },
+    {
+     "id": "payment",
+     "label": "Payment"
+    },
+    {
+     "id": "settlement",
+     "label": "Settlement",
+     "side": true,
+     "after": "lodgement"
+    },
+    {
+     "id": "prescribed",
+     "label": "Prescribed",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "raf_lodge",
+     "trigger": "accident",
+     "title": "Lodge RAF 1 claim (identified vehicle; 2 years for hit-and-run under the regulations)",
+     "amount": 3,
+     "unit": "years",
+     "source": "Road Accident Fund Act 56 of 1996 s 23(1); RAF Regulations reg 2(3)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "raf_summons5",
+     "trigger": "accident",
+     "title": "Summons must be served within 5 years of the accident",
+     "amount": 5,
+     "unit": "years",
+     "source": "Road Accident Fund Act 56 of 1996 s 23(3)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "raf_120",
+     "trigger": "lodgement",
+     "title": "Earliest date to serve summons (120 days after lodgement)",
+     "amount": 120,
+     "unit": "calendar_days",
+     "source": "Road Accident Fund Act 56 of 1996 s 24(6)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "raf_nid",
+     "trigger": "summons_served",
+     "title": "RAF notice of intention to defend due",
+     "amount": 10,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 19(1)",
+     "needsReview": false,
+     "diesNon": true
+    },
+    {
+     "id": "raf_interest",
+     "trigger": "judgment",
+     "title": "Interest on the award starts if unpaid",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Road Accident Fund Act 56 of 1996 s 17(3)(a)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "raf_interest_s",
+     "trigger": "settlement",
+     "title": "Interest on the settlement starts if unpaid",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Road Accident Fund Act 56 of 1996 s 17(3)(a)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "appeal",
+   "label": "Civil appeal",
+   "courtLevels": [
+    "high",
+    "sca",
+    "constitutional"
+   ],
+   "stages": [
+    {
+     "id": "judgment_a_quo",
+     "label": "Judgment of the court below"
+    },
+    {
+     "id": "leave_applied",
+     "label": "Leave to appeal applied for"
+    },
+    {
+     "id": "leave_granted",
+     "label": "Leave to appeal granted"
+    },
+    {
+     "id": "notice_of_appeal",
+     "label": "Notice of appeal"
+    },
+    {
+     "id": "date_applied",
+     "label": "Date applied for"
+    },
+    {
+     "id": "record_lodged",
+     "label": "Record lodged"
+    },
+    {
+     "id": "heads_filed",
+     "label": "Heads of argument filed"
+    },
+    {
+     "id": "set_down",
+     "label": "Set down"
+    },
+    {
+     "id": "hearing",
+     "label": "Hearing"
+    },
+    {
+     "id": "judgment",
+     "label": "Appeal judgment"
+    },
+    {
+     "id": "leave_refused",
+     "label": "Leave refused",
+     "side": true,
+     "after": "leave_applied"
+    },
+    {
+     "id": "petition_sca",
+     "label": "Petition to SCA",
+     "side": true,
+     "after": "leave_refused"
+    },
+    {
+     "id": "lapsed",
+     "label": "Appeal lapsed",
+     "side": true,
+     "terminal": true
+    },
+    {
+     "id": "withdrawn",
+     "label": "Withdrawn",
+     "side": true,
+     "terminal": true
+    }
+   ],
+   "rules": [
+    {
+     "id": "ap_leave",
+     "trigger": "judgment_a_quo",
+     "title": "Application for leave to appeal due",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(1)(b)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "ap_notice",
+     "trigger": "leave_granted",
+     "title": "Notice of appeal due (full court or SCA)",
+     "amount": 20,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(2); SCA Rules r 7(1) for SCA appeals is one month",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "ap_date",
+     "trigger": "notice_of_appeal",
+     "title": "Apply for a hearing date, or the appeal lapses",
+     "amount": 60,
+     "unit": "court_days",
+     "source": "Uniform Rules of Court r 49(6)(a)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "ap_petition",
+     "trigger": "leave_refused",
+     "title": "Petition the SCA for leave to appeal",
+     "amount": 1,
+     "unit": "months",
+     "source": "Superior Courts Act 10 of 2013 s 17(2)(b); SCA Rules r 6",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "ap_heads",
+     "trigger": "set_down",
+     "title": "Heads of argument: check the division's practice directive",
+     "amount": 15,
+     "unit": "court_days",
+     "source": "Division practice directives (periods differ by division)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ]
+  },
+  {
+   "id": "deceased_estate",
+   "label": "Deceased estate",
+   "courtLevels": [
+    "master"
+   ],
+   "stages": [
+    {
+     "id": "death",
+     "label": "Death"
+    },
+    {
+     "id": "reported_to_master",
+     "label": "Reported to the Master"
+    },
+    {
+     "id": "letters_of_executorship",
+     "label": "Letters of executorship issued"
+    },
+    {
+     "id": "creditors_advertised",
+     "label": "Creditors advertised (s 29 notice)"
+    },
+    {
+     "id": "inventory_lodged",
+     "label": "Inventory lodged"
+    },
+    {
+     "id": "ld_account_lodged",
+     "label": "Liquidation and distribution account lodged"
+    },
+    {
+     "id": "account_lies_for_inspection",
+     "label": "Account lies for inspection"
+    },
+    {
+     "id": "distribution",
+     "label": "Distribution"
+    },
+    {
+     "id": "filing",
+     "label": "Receipts and vouchers filed"
+    },
+    {
+     "id": "discharge",
+     "label": "Executor discharged"
+    },
+    {
+     "id": "objection",
+     "label": "Objection to account",
+     "side": true,
+     "after": "account_lies_for_inspection"
+    }
+   ],
+   "rules": [
+    {
+     "id": "de_report",
+     "trigger": "death",
+     "title": "Report the estate to the Master",
+     "amount": 14,
+     "unit": "calendar_days",
+     "source": "Administration of Estates Act 66 of 1965 s 7(1)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "de_creditors",
+     "trigger": "creditors_advertised",
+     "title": "Creditors' claims period ends (at least 30 days in the notice)",
+     "amount": 30,
+     "unit": "calendar_days",
+     "source": "Administration of Estates Act 66 of 1965 s 29(1)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "de_ld",
+     "trigger": "letters_of_executorship",
+     "title": "Lodge liquidation and distribution account (or ask the Master for more time)",
+     "amount": 6,
+     "unit": "months",
+     "source": "Administration of Estates Act 66 of 1965 s 35(1)",
+     "needsReview": true,
+     "diesNon": false
+    },
+    {
+     "id": "de_inspect",
+     "trigger": "account_lies_for_inspection",
+     "title": "Inspection period ends",
+     "amount": 21,
+     "unit": "calendar_days",
+     "source": "Administration of Estates Act 66 of 1965 s 35(4) and (5)",
+     "needsReview": false,
+     "diesNon": false
+    },
+    {
+     "id": "de_distribute",
+     "trigger": "distribution",
+     "title": "Lodge receipts and proof of payment with the Master",
+     "amount": 2,
+     "unit": "months",
+     "source": "Administration of Estates Act 66 of 1965 s 35(12)",
+     "needsReview": true,
+     "diesNon": false
+    }
+   ]
+  }
+ ]
+}

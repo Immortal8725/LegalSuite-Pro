@@ -43,6 +43,12 @@ public class LegalCase {
     private BigDecimal billingRate;
     private BigDecimal budget;
     private LocalDate dateOpened = LocalDate.now();
+    /** Litigation track id from litigation/tracks.json, e.g. high_court_action. */
+    private String litigationTrack;
+    /** high, district, regional, ccma, labour_court, sca, constitutional, master or none. */
+    private String courtLevel;
+    /** Latest stage reached on the track. History is in matter_stage_events. */
+    private String litigationStage;
     private LocalDate dateClosed;
     private LocalDate statuteOfLimitations;
     private LocalDate accrualDate;
