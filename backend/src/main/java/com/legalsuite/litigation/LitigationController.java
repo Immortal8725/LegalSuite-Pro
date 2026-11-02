@@ -8,10 +8,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class LitigationController {
     private final LitigationService service;
+    private final CaseCreationService creation;
 
-    public LitigationController(LitigationService service) {
+    public LitigationController(LitigationService service, CaseCreationService creation) {
         this.service = service;
+        this.creation = creation;
     }
+
+    @PostMapping("/api/v1/cases")
+    public ApiResponse<?> createCase(@RequestBody Map<String, Object> body) { return ApiResponse.ok(creation.create(body)); }
 
     @GetMapping("/api/v1/litigation/tracks")
     public ApiResponse<?> tracks() { return ApiResponse.ok(service.catalogView()); }

@@ -53,6 +53,35 @@ class LitigationFlowTest {
         assertEquals(10, data(expect(mvc.perform(get("/api/v1/litigation/tracks").header("Authorization", "Bearer " + t)).andReturn(), 200)).get("tracks").size());
     }
 
+    @Test
+    void createMatterWithTrackAndFirstStage() throws Exception {
+        String t = token();
+        String clientId = data(mvc.perform(get("/api/v1/clients").header("Authorization", "Bearer " + t))
+                .andExpect(status().isOk()).andReturn()).get(0).get("id").asText();
+        String base = "{\"clientId\":\"" + clientId + "\",\"title\":\"Create with track\"";
+        int before = data(expect(mvc.perform(get("/api/v1/cases").header("Authorization", "Bearer " + t)).andReturn(), 200)).size();
+        assertEquals(400, send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"nope\"}").getResponse().getStatus());
+        assertEquals(400, send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"divorce\",\"courtLevel\":\"ccma\"}").getResponse().getStatus());
+        assertEquals(400, send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"divorce\",\"initialStage\":\"banana\"}").getResponse().getStatus());
+        assertEquals(400, send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"divorce\",\"initialStage\":\"summons_issued\",\"initialStageDate\":\"2099-01-01\"}").getResponse().getStatus());
+        assertEquals(400, send(post("/api/v1/cases"), t, base + ",\"initialStage\":\"summons_issued\"}").getResponse().getStatus());
+        assertEquals(before, data(expect(mvc.perform(get("/api/v1/cases").header("Authorization", "Bearer " + t)).andReturn(), 200)).size(), "failed creates leave nothing behind");
+        JsonNode c = data(expect(send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"divorce\",\"courtLevel\":\"regional\",\"initialStage\":\"summons_issued\",\"initialStageDate\":\"2026-11-02\"}"), 200));
+        assertEquals("divorce", c.get("litigationTrack").asText());
+        assertEquals("regional", c.get("courtLevel").asText());
+        assertEquals("summons_issued", c.get("litigationStage").asText());
+        assertEquals("Divorce", c.get("litigationTrackLabel").asText());
+        assertTrue(c.hasNonNull("litigationStageLabel"));
+        JsonNode m = data(expect(mvc.perform(get("/api/v1/cases/" + c.get("id").asText() + "/litigation").header("Authorization", "Bearer " + t)).andReturn(), 200));
+        assertEquals(1, m.get("timeline").size());
+        assertEquals(c.get("createdDeadlines").size(), m.get("deadlines").size());
+        JsonNode plain = data(expect(send(post("/api/v1/cases"), t, base + ",\"litigationTrack\":\"labour\"}"), 200));
+        assertEquals("ccma", plain.get("courtLevel").asText());
+        assertTrue(plain.get("litigationStage").isNull());
+        JsonNode none = data(expect(send(post("/api/v1/cases"), t, base + "}"), 200));
+        assertTrue(none.get("litigationTrack").isNull());
+    }
+
     private MvcResult send(MockHttpServletRequestBuilder req, String token, String body) throws Exception {
         return mvc.perform(req.header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON).content(body)).andReturn();
     }

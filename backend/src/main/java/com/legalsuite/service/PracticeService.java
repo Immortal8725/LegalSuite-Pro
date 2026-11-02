@@ -497,6 +497,11 @@ public class PracticeService {
         return m;
     }
 
+    private com.legalsuite.litigation.LitigationCatalog litigationCatalog;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setLitigationCatalog(com.legalsuite.litigation.LitigationCatalog catalog) { this.litigationCatalog = catalog; }
+
     public Map<String, Object> caseView(LegalCase c) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", c.getId());
@@ -539,6 +544,10 @@ public class PracticeService {
         m.put("litigationTrack", c.getLitigationTrack());
         m.put("courtLevel", c.getCourtLevel());
         m.put("litigationStage", c.getLitigationStage());
+        var lt = litigationCatalog == null ? null : litigationCatalog.track(c.getLitigationTrack());
+        m.put("litigationTrackLabel", lt == null ? null : lt.label());
+        var ls = lt == null || c.getLitigationStage() == null ? null : lt.stage(c.getLitigationStage());
+        m.put("litigationStageLabel", ls == null ? null : ls.label());
         m.put("engagementStatus", c.getEngagementStatus());
         m.put("appearanceAuthorized", c.isAppearanceAuthorized());
         m.put("engagementSignatureId", c.getEngagementSignatureId());
