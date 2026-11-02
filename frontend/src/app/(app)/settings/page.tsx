@@ -12,6 +12,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { Tenant } from "@/lib/api";
 import { LetterheadSettings } from "@/components/letterhead-settings";
 import { publicSiteUrl } from "@/lib/site-url";
+import { PushOptIn } from "@/components/push-opt-in";
 
 export default function SettingsPage() {
   const { tenant, user, refreshTenant, reloadMe } = useAuth();
@@ -94,6 +95,14 @@ export default function SettingsPage() {
       <ErrorBanner error={error} />
       {saved && <p className="mb-4 text-sm text-emerald-700">Saved.</p>}
       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Phone notifications</CardTitle>
+          </CardHeader>
+          <CardBody>
+            <PushOptIn audience="staff" />
+          </CardBody>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Profile</CardTitle>

@@ -22,6 +22,12 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: postgres
+      - key: VAPID_PUBLIC_KEY      # Web Push (free). Generated once, set in the dashboard.
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
       - key: DB_HOST
         fromDatabase: { name: owlaw-db, property: host }
       - key: DB_PORT

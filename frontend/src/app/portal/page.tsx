@@ -6,6 +6,7 @@ import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { InvoiceLines } from "@/components/invoice-lines";
 import { StatusBadge, TableWrap, Td, Th } from "@/components/page";
+import { PushOptIn } from "@/components/push-opt-in";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,10 @@ export default function PortalHome() {
       </header>
       <main className="mx-auto max-w-5xl space-y-6 p-6">
         <ErrorBanner error={error} />
+        <Card>
+          <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
+          <CardBody><PushOptIn audience="portal" /></CardBody>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Your matters</CardTitle>
