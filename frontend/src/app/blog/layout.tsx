@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Scale } from "lucide-react";
 import { LegalFooter } from "@/components/legal-footer";
+import { BlogAdsProvider } from "@/components/blog-ads";
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
+    <BlogAdsProvider>
     <div className="min-h-screen bg-slate-50">
       <nav className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -24,5 +26,6 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
       <main className="mx-auto max-w-4xl px-6 py-8">{children}</main>
       <LegalFooter />
     </div>
+    </BlogAdsProvider>
   );
 }
