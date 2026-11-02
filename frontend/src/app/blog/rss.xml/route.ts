@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export async function GET() {
-  const posts = await allBlogPosts(5);
+  const posts = await allBlogPosts();
   const items = posts
     .map((p) => {
       const url = `${SITE_URL}/blog/${p.slug}`;
