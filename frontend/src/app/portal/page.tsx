@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { InvoiceLines } from "@/components/invoice-lines";
@@ -66,6 +67,7 @@ export default function PortalHome() {
                   <Th>Title</Th>
                   <Th>Status</Th>
                   <Th>Area</Th>
+                  <Th>Updates and messages</Th>
                 </tr>
               </thead>
               <tbody>
@@ -77,6 +79,16 @@ export default function PortalHome() {
                       <StatusBadge status={c.status} />
                     </Td>
                     <Td>{c.practiceArea}</Td>
+                    <Td>
+                      <Link href={`/portal/cases/${c.id}`} className="font-medium text-navy hover:underline">
+                        Open
+                      </Link>
+                      {Number((c as Matter & { unreadMessages?: number }).unreadMessages ?? 0) > 0 && (
+                        <span className="ml-2 rounded-full bg-gold px-2 py-0.5 text-xs font-semibold text-navy">
+                          {(c as Matter & { unreadMessages?: number }).unreadMessages} new
+                        </span>
+                      )}
+                    </Td>
                   </tr>
                 ))}
               </tbody>

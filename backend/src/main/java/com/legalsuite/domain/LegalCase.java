@@ -49,6 +49,9 @@ public class LegalCase {
     private String courtLevel;
     /** Latest stage reached on the track. History is in matter_stage_events. */
     private String litigationStage;
+    /** Optional firm note shown to the client with the plain-language stage summary. */
+    @jakarta.persistence.Column(length = 2000)
+    private String clientNote;
     private LocalDate dateClosed;
     private LocalDate statuteOfLimitations;
     private LocalDate accrualDate;

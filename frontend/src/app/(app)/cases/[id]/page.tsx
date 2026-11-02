@@ -15,6 +15,7 @@ import { MatterAssistant } from "@/components/matter-assistant";
 import { GenerateDocument } from "@/components/generate-document";
 import Link from "next/link";
 import { LitigationPanel } from "@/components/litigation-panel";
+import { MatterClientPanels } from "@/components/matter-inbox";
 
 const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
 const FINISHED = ["settled", "closed", "archived", "declined"];
@@ -244,6 +245,7 @@ export default function CaseDetailPage() {
         </div>
       )}
       <LitigationPanel caseId={params.id} />
+      <MatterClientPanels caseId={params.id} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>

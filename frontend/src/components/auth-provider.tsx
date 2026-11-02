@@ -41,7 +41,7 @@ const Ctx = createContext<AuthCtx | null>(null);
 // Pages a signed-out visitor may open. /set-password is the invite link from the email.
 const PUBLIC = new Set(["/status", "/help", "/security", "/", "/login", "/register", "/portal/login", "/set-password"]);
 /** Signed-in areas. Any other path is public, so a mistyped address shows the Owlaw "page not found" page. */
-const PROTECTED = ["/ai", "/audit", "/billing", "/calendar", "/cases", "/clients", "/conflicts", "/contacts", "/dashboard", "/documents", "/esign", "/expenses", "/fitness", "/integrations", "/leads", "/messages", "/modules", "/pipeline", "/platform", "/product-billing", "/reports", "/settings", "/tasks", "/team", "/templates", "/time", "/trust", "/usage", "/voice", "/website", "/onboarding", "/change-password", "/portal"];
+const PROTECTED = ["/ai", "/audit", "/billing", "/calendar", "/cases", "/client-inbox", "/clients", "/conflicts", "/contacts", "/dashboard", "/documents", "/esign", "/expenses", "/fitness", "/integrations", "/leads", "/messages", "/modules", "/pipeline", "/platform", "/product-billing", "/reports", "/settings", "/tasks", "/team", "/templates", "/time", "/trust", "/usage", "/voice", "/website", "/onboarding", "/change-password", "/portal"];
 const isProtected = (path: string) => PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

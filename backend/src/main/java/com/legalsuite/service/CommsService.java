@@ -46,6 +46,12 @@ public class CommsService {
     private final AppUserRepository users;
     private final PracticeService practice;
     private final SignatureRequestRepository signatures;
+    private com.legalsuite.repo.MatterMessageRepository matterMessages;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setMatterMessages(com.legalsuite.repo.MatterMessageRepository matterMessages) {
+        this.matterMessages = matterMessages;
+    }
 
     public CommsService(
             ConversationRepository conversations,
@@ -350,6 +356,11 @@ public class CommsService {
 
     public Map<String, Object> portalCases(UUID clientId, UUID tenantId) {
         return Map.of("client", practice.clientView(clients.findByIdAndTenantId(clientId, tenantId).orElseThrow()),
-                "cases", cases.findByTenantIdAndClientId(tenantId, clientId).stream().map(practice::caseView).toList());
+                "cases", cases.findByTenantIdAndClientId(tenantId, clientId).stream().map(c -> {
+                    Map<String, Object> v = new java.util.HashMap<>(practice.caseView(c));
+                    v.put("unreadMessages", matterMessages == null ? 0
+                            : matterMessages.countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNull(tenantId, c.getId(), "client"));
+                    return v;
+                }).toList());
     }
 }
