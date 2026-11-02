@@ -77,6 +77,11 @@ export type Matter = {
   accrualDate?: string;
   governmentalDefendant?: boolean;
   docketTrack?: string;
+  litigationTrack?: string | null;
+  litigationTrackLabel?: string | null;
+  litigationStage?: string | null;
+  litigationStageLabel?: string | null;
+  courtLevel?: string | null;
   jurisdiction?: string;
   solCitation?: string;
   solReason?: string;
