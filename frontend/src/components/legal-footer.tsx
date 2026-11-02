@@ -7,6 +7,10 @@ export function LegalFooter({ className }: { className?: string }) {
     <footer className={cn("border-t bg-white px-6 py-10", className)}>
       <div className="mx-auto max-w-6xl">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-600">OwLaw</p>
+        <nav className="mt-4 flex flex-wrap gap-4 text-sm" aria-label="Owlaw">
+          <Link href="/blog" className="font-semibold text-sky-700 hover:text-navy hover:underline">Blog</Link>
+          <Link href="/find-a-lawyer" className="font-semibold text-sky-700 hover:text-navy hover:underline">Find a Lawyer</Link>
+        </nav>
         <nav className="mt-4 flex flex-col gap-2 text-sm" aria-label="Legal">
           {LEGAL_DOCS.map((d) => (
             <Link

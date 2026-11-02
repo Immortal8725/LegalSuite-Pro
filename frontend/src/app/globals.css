@@ -248,3 +248,17 @@ input[type="date"] {
   table.rt-cards td[data-label=""] { justify-content: flex-end; }
   table.rt-cards tfoot { display: block; }
 }
+
+/* Blog post body (HTML from lib/blog renderMarkdown, escaped at source). */
+.blog-body { color: #1e293b; line-height: 1.75; }
+.blog-body h2 { margin-top: 2rem; font-size: 1.5rem; font-weight: 800; color: #0f2747; }
+.blog-body h3 { margin-top: 1.5rem; font-size: 1.2rem; font-weight: 700; color: #0f2747; }
+.blog-body h4 { margin-top: 1.25rem; font-weight: 700; }
+.blog-body p { margin-top: 1rem; }
+.blog-body ul { margin-top: 1rem; list-style: disc; padding-left: 1.5rem; }
+.blog-body ol { margin-top: 1rem; list-style: decimal; padding-left: 1.5rem; }
+.blog-body li { margin-top: 0.25rem; }
+.blog-body a { color: #0369a1; text-decoration: underline; }
+.blog-body blockquote { margin-top: 1rem; border-left: 4px solid #d4a017; padding-left: 1rem; color: #475569; }
+.blog-body code { background: #f1f5f9; padding: 0 0.25rem; border-radius: 0.25rem; }
+.blog-body hr { margin: 2rem 0; }
