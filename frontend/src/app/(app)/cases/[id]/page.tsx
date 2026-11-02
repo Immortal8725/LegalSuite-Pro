@@ -15,7 +15,13 @@ import { MatterAssistant } from "@/components/matter-assistant";
 import { GenerateDocument } from "@/components/generate-document";
 import Link from "next/link";
 
-const STATUSES = ["limited", "intake", "open", "pending", "discovery", "mediation", "trial", "settled", "closed"];
+const STATUSES = ["limited", "intake", "open", "pending", "on_hold", "discovery", "mediation", "trial", "settled", "closed", "archived"];
+const FINISHED = ["settled", "closed", "archived", "declined"];
+// Mirrors CaseStatusRules on the server: a finished matter only reopens to open (or is filed away).
+function statusAllowed(from: string | undefined, to: string) {
+  if (!from || from === to || !FINISHED.includes(from)) return true;
+  return to === "open" || to === "archived" || (from === "settled" && to === "closed");
+}
 
 function clockDays(clock: DocketClock) {
   if (typeof clock.daysLeft === "number") return clock.daysLeft;
@@ -176,10 +182,11 @@ export default function CaseDetailPage() {
                 aria-describedby={trialBlocked ? "trial-hold-reason" : undefined}
               >
                 {STATUSES.map((s) => {
-                  const blocked = s === "trial" && trialBlocked;
+                  const blocked = (s === "trial" && trialBlocked) || !statusAllowed(c.status, s);
+                  const label = s.replace("_", " ");
                   return (
                     <option key={s} value={s} disabled={blocked}>
-                      {blocked ? "trial (disabled)" : s}
+                      {s === "trial" && trialBlocked ? "trial (disabled)" : blocked ? `${label} (reopen first)` : label}
                     </option>
                   );
                 })}

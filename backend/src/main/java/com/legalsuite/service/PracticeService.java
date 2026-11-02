@@ -145,11 +145,19 @@ public class PracticeService {
                 : requireCase(id);
         c.setTenantId(tid());
         if (body.get("clientId") != null) c.setClientId(Ids.optUuid(body.get("clientId"), "client"));
+        if (c.getClientId() == null) {
+            throw ApiException.badRequest("Choose a client for this matter. Add the client first if they are new.");
+        }
+        if (body.get("clientId") != null && clients.findByIdAndTenantId(c.getClientId(), tid()).isEmpty()) {
+            throw ApiException.badRequest("That client was not found in your firm.");
+        }
+        String previousStatus = c.getStatus();
+        if (id == null) c.setStatus(null);
+        String requestedStatus = body.get("status") == null ? null : CaseStatusRules.normalise(body.get("status"));
         c.setTitle(str(body, "title", c.getTitle()));
         c.setDescription(str(body, "description", c.getDescription()));
         c.setCaseType(str(body, "caseType", c.getCaseType()));
         c.setPracticeArea(str(body, "practiceArea", c.getPracticeArea()));
-        c.setStatus(str(body, "status", c.getStatus() == null ? "open" : c.getStatus()));
         c.setPriority(str(body, "priority", c.getPriority() == null ? "medium" : c.getPriority()));
         c.setCourtName(str(body, "courtName", c.getCourtName()));
         c.setJudgeName(str(body, "judgeName", c.getJudgeName()));
@@ -197,6 +205,13 @@ public class PracticeService {
         Tenant tenant = tenants.findById(tid()).orElse(null);
         TexasDocketRules.Result docket = DocketEngine.compute(tenant, TexasDocketRules.factsFromCase(c));
         DocketEngine.stamp(c, docket);
+        if (id == null) {
+            String initial = requestedStatus != null ? requestedStatus
+                    : DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized()) ? "open" : "limited";
+            applyStatus(c, null, initial);
+        } else if (requestedStatus != null && !requestedStatus.equals(previousStatus)) {
+            applyStatus(c, previousStatus, requestedStatus);
+        }
         if (body.get("statuteOfLimitations") != null && !String.valueOf(body.get("statuteOfLimitations")).isBlank()) {
             c.setStatuteOfLimitations(LocalDate.parse(String.valueOf(body.get("statuteOfLimitations"))));
         }
@@ -215,21 +230,31 @@ public class PracticeService {
     @Transactional
     public Map<String, Object> changeCaseStatus(UUID id, String status) {
         LegalCase c = requireCase(id);
-        if (!DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())
-                && !DocumentHash.statusAllowedWhileLimited(status)) {
-            throw ApiException.badRequest("Limited file: no appearance until the engagement is signed. Status stays limited.");
-        }
-        if (docketHold(c) && List.of("trial", "hearing", "issued").contains(status == null ? "" : status.toLowerCase())) {
-            throw ApiException.badRequest("Docket hold: a prescription or statutory notice is overdue. Serve, lodge, or apply for condonation before you appear.");
-        }
-        c.setStatus(status);
-        if ("closed".equals(status) || "settled".equals(status) || "archived".equals(status)) {
-            c.setDateClosed(LocalDate.now());
-        }
+        String next = CaseStatusRules.normalise(status);
+        String from = c.getStatus();
+        applyStatus(c, from, next);
         c.setUpdatedAt(Instant.now());
         cases.save(c);
-        audit.record("case.status", "case", c.getId().toString(), c.getCaseNumber() + " -> " + status);
+        audit.record("case.status", "case", c.getId().toString(), c.getCaseNumber() + " " + from + " -> " + next);
         return caseView(c);
+    }
+
+    /** One place for every status change: allowed list, transitions, limited-file gate, docket hold, closing date. */
+    void applyStatus(LegalCase c, String from, String next) {
+        CaseStatusRules.checkTransition(from, next);
+        if (!DocumentHash.appearanceAuthorized(c.getEngagementStatus(), c.isAppearanceAuthorized())
+                && !DocumentHash.statusAllowedWhileLimited(next)) {
+            throw ApiException.badRequest("Limited file: no appearance until the engagement is signed. Status stays limited.");
+        }
+        if (docketHold(c) && CaseStatusRules.APPEARANCE.contains(next)) {
+            throw ApiException.badRequest("Docket hold: a prescription or statutory notice is overdue. Serve, lodge, or apply for condonation before you appear.");
+        }
+        c.setStatus(next);
+        if (CaseStatusRules.FINISHED.contains(next)) {
+            if (c.getDateClosed() == null || from == null || !CaseStatusRules.FINISHED.contains(from)) c.setDateClosed(LocalDate.now());
+        } else {
+            c.setDateClosed(null);
+        }
     }
 
     @Transactional
@@ -491,6 +516,7 @@ public class PracticeService {
         m.put("billingType", c.getBillingType());
         m.put("billingRate", c.getBillingRate());
         m.put("dateOpened", c.getDateOpened());
+        m.put("dateClosed", c.getDateClosed());
         m.put("statuteOfLimitations", c.getStatuteOfLimitations());
         m.put("accrualDate", c.getAccrualDate());
         m.put("discoveryDate", c.getDiscoveryDate());
