@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";
+import { ScanToPdf } from "@/components/scan-to-pdf";
 import { MAX_UPLOAD_BYTES, sizeLabel, when, type InboxMessage } from "@/lib/inbox";
 
 /** Message list and reply box. `me` is the side reading: staff or client. */
@@ -64,8 +65,10 @@ export function ThreadView({ messages, me, onSend, onOpenFile, disabled, placeho
         <div className="space-y-2">
           {err && <p className="text-xs text-red-700">{err}</p>}
           <Textarea rows={3} maxLength={4000} value={body} placeholder={placeholder ?? "Write a message"} onChange={(e) => setBody(e.target.value)} />
+          <ScanToPdf label="Scan pages with camera" onReady={(pdf) => { setFile(pdf); if (input.current) input.current.value = ""; }} />
+          {file && <p className="text-xs text-slate-600">Attached: {file.name} {sizeLabel(file.size)}</p>}
           <div className="flex flex-wrap items-center gap-2">
-            <input ref={input} type="file" className="text-xs" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input ref={input} type="file" className="text-xs" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.csv,.heic,.heif,.eml,.msg,.zip" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             <Button size="sm" className="ml-auto" disabled={busy || (!body.trim() && !file)} onClick={send}>
               {busy ? "Sending..." : "Send"}
             </Button>
