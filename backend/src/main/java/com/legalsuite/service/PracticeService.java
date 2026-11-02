@@ -144,7 +144,13 @@ public class PracticeService {
                 ? new LegalCase()
                 : requireCase(id);
         c.setTenantId(tid());
-        if (body.get("clientId") != null) c.setClientId(Ids.optUuid(body.get("clientId"), "client"));
+        if (body.get("clientId") != null) {
+            UUID requestedClient = Ids.optUuid(body.get("clientId"), "client");
+            if (id != null && c.getClientId() != null && !c.getClientId().equals(requestedClient)) {
+                throw ApiException.badRequest("The client on an open matter cannot be edited here. Use Change client on the matter page.");
+            }
+            c.setClientId(requestedClient);
+        }
         if (c.getClientId() == null) {
             throw ApiException.badRequest("Choose a client for this matter. Add the client first if they are new.");
         }
@@ -219,7 +225,10 @@ public class PracticeService {
             c.setCaseNumber("C-" + (1000 + cases.countByTenantId(tid()) + 1));
         }
         if (c.getDateOpened() == null) c.setDateOpened(LocalDate.now());
-        c.setConflictChecked(true);
+        if (id == null) {
+            // Only a real check (or a signed waiver from the retain flow) marks the matter as checked.
+            c.setConflictChecked(TexasDocketRules.bool(body.get("conflictChecked")) || c.getConflictWaiverSignatureId() != null);
+        }
         c.setUpdatedAt(Instant.now());
         cases.save(c);
         syncClockTasks(c, TenantContext.getUserId());
