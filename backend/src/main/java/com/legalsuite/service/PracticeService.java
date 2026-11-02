@@ -536,6 +536,9 @@ public class PracticeService {
         m.put("solCitation", c.getSolCitation());
         m.put("solReason", c.getSolReason());
         m.put("docketClocks", clocksWithDays(c.getDocketClocksJson()));
+        m.put("litigationTrack", c.getLitigationTrack());
+        m.put("courtLevel", c.getCourtLevel());
+        m.put("litigationStage", c.getLitigationStage());
         m.put("engagementStatus", c.getEngagementStatus());
         m.put("appearanceAuthorized", c.isAppearanceAuthorized());
         m.put("engagementSignatureId", c.getEngagementSignatureId());
