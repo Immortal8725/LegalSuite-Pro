@@ -73,6 +73,7 @@ const NAV = [
   {
     section: "Communication",
     items: [
+      { href: "/client-inbox", label: "Client inbox", icon: MessageSquare },
       { href: "/messages", label: "Messages", icon: MessageSquare, module: "messages" },
       { href: "/voice", label: "Voice Calls", icon: Phone, module: "voice" },
       { href: "/leads", label: "Hire pipeline", icon: Globe },
@@ -109,6 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<{ cases: Matter[]; clients: Party[] } | null>(null);
   const [notifs, setNotifs] = useState<Notice[]>([]);
+  const [clientUnread, setClientUnread] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
 
   const enabled = new Set(tenant?.enabledModules || []);
@@ -145,6 +147,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     return { ...section, items };
   });
+
+  useEffect(() => {
+    const loadUnread = () => apiGet<{ total: number }>("/api/v1/inbox/unread")
+      .then((r) => setClientUnread(r.total ?? 0))
+      .catch(() => undefined);
+    loadUnread();
+    const t = setInterval(loadUnread, 60_000);
+    window.addEventListener("owlaw:inbox-changed", loadUnread);
+    return () => { clearInterval(t); window.removeEventListener("owlaw:inbox-changed", loadUnread); };
+  }, [pathname]);
 
   useEffect(() => {
     apiGet<Notice[]>("/api/v1/notifications")
@@ -207,6 +219,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   >
                     <Icon className="h-4 w-4" />
                     <span className="flex-1">{item.label}</span>
+                    {item.href === "/client-inbox" && clientUnread > 0 && (
+                      <span className="rounded-full bg-gold px-1.5 text-[10px] font-semibold text-navy-dark" aria-label={`${clientUnread} unread`}>
+                        {clientUnread}
+                      </span>
+                    )}
                     {locked && <span className="text-[10px]">Locked</span>}
                   </Link>
                 );

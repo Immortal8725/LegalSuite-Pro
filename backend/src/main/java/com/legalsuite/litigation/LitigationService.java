@@ -45,10 +45,13 @@ public class LitigationService {
     private final TenantRepository tenants;
     private final AppNotificationRepository notifications;
     private final AuditService audit;
+    private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox;
 
     public LitigationService(LitigationCatalog catalog, LegalCaseRepository cases, MatterStageEventRepository events,
                              TaskItemRepository tasks, ClientRepository clients, TenantRepository tenants,
-                             AppNotificationRepository notifications, AuditService audit) {
+                             AppNotificationRepository notifications, AuditService audit,
+                             org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox) {
+        this.inbox = inbox;
         this.catalog = catalog;
         this.cases = cases;
         this.events = events;
@@ -153,6 +156,11 @@ public class LitigationService {
         audit.record("case.stage", "case", c.getId().toString(), c.getCaseNumber() + " -> " + t.id() + ":" + stage + " on " + on);
         Map<String, Object> out = view(c);
         out.put("createdDeadlines", made);
+        // Optional client update. Off unless the caller asks, so imports and matter creation stay quiet.
+        if (Boolean.parseBoolean(String.valueOf(body.get("notifyClient"))) && c.getClientId() != null) {
+            Object msg = body.get("clientMessage");
+            out.put("clientMessage", inbox.getObject().postStageUpdate(c, stage, msg == null ? null : String.valueOf(msg)));
+        }
         return out;
     }
 

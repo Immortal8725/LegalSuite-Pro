@@ -8,7 +8,7 @@ import { daysLeftLabel, daysUntil, todayIso } from "@/lib/docket";
 import { useAuth } from "@/components/auth-provider";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { ADMIN_ROLES, UNIT_LABEL, type LitCatalog, type MatterLitigation } from "@/lib/litigation";
 
 export function LitigationPanel({ caseId }: { caseId: string }) {
@@ -21,6 +21,8 @@ export function LitigationPanel({ caseId }: { caseId: string }) {
   const [date, setDate] = useState(todayIso());
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [notifyClient, setNotifyClient] = useState(true);
+  const [clientMessage, setClientMessage] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -36,6 +38,13 @@ export function LitigationPanel({ caseId }: { caseId: string }) {
     apiGet<LitCatalog>("/api/v1/litigation/tracks").then(setCat).catch((e) => setErr(e.message));
     load().catch((e) => setErr(e.message));
   }, [load]);
+
+  useEffect(() => {
+    if (!stage) { setClientMessage(""); return; }
+    apiGet<{ body: string }>(`/api/v1/cases/${caseId}/stage-message?stage=${encodeURIComponent(stage)}`)
+      .then((r) => setClientMessage(r.body))
+      .catch(() => setClientMessage(""));
+  }, [caseId, stage]);
 
   if (!cat || !m) return null;
   const t = cat.tracks.find((x) => x.id === track);
@@ -55,11 +64,15 @@ export function LitigationPanel({ caseId }: { caseId: string }) {
     if (!stage) return;
     setBusy(true); setErr(null); setMsg(null);
     try {
-      const r = await apiPost<MatterLitigation>(`/api/v1/cases/${caseId}/stages`, { stage, date, note });
+      const r = await apiPost<MatterLitigation>(`/api/v1/cases/${caseId}/stages`, {
+        stage, date, note, notifyClient, clientMessage: notifyClient ? clientMessage : undefined,
+      });
       await load();
       setNote("");
+      window.dispatchEvent(new Event("owlaw:stage-changed"));
       const n = r.createdDeadlines?.length ?? 0;
-      setMsg(n ? `Stage recorded. ${n} deadline task${n === 1 ? "" : "s"} added.` : "Stage recorded.");
+      const sent = (r as { clientMessage?: unknown }).clientMessage ? " Client update sent to their inbox." : "";
+      setMsg((n ? `Stage recorded. ${n} deadline task${n === 1 ? "" : "s"} added.` : "Stage recorded.") + sent);
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
 
@@ -109,6 +122,17 @@ export function LitigationPanel({ caseId }: { caseId: string }) {
               <Button size="sm" disabled={busy || !stage} onClick={addStage}>Record stage</Button>
             </div>
             <Input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} maxLength={250} />
+            {stage && (
+              <div className="space-y-1 rounded-md border border-slate-200 p-2">
+                <label className="flex items-center gap-2 text-xs text-slate-700">
+                  <input type="checkbox" checked={notifyClient} onChange={(e) => setNotifyClient(e.target.checked)} />
+                  Send the client a plain-language update in their inbox
+                </label>
+                {notifyClient && (
+                  <Textarea rows={6} maxLength={4000} value={clientMessage} onChange={(e) => setClientMessage(e.target.value)} />
+                )}
+              </div>
+            )}
             {stage && rulesFor(stage).length > 0 && (
               <ul className="space-y-1 text-xs text-slate-600">
                 {rulesFor(stage).map((r) => (

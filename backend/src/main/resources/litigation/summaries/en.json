@@ -1,0 +1,465 @@
+{
+ "locale": "en-ZA",
+ "version": 1,
+ "disclaimer": "This is general information, not legal advice. Your attorney will confirm what it means for your matter.",
+ "labels": {
+  "means": "What this means",
+  "next": "What happens next",
+  "needFromYou": "What we need from you",
+  "nextDate": "Next important date"
+ },
+ "common": {
+  "letter_of_demand": {
+   "means": "A formal letter has been sent to the other side setting out the claim and asking them to pay or act by a set date.",
+   "next": "We wait for a reply until the date in the letter. If they do not respond or refuse, the next step is usually to issue summons.",
+   "needFromYou": "Send us any reply, payment or message you get from the other side."
+  },
+  "summons_issued": {
+   "means": "The court has issued the summons. This is the official document that starts the court case.",
+   "next": "The sheriff delivers (serves) the summons on the other side. Their time to respond only starts once it has been served."
+  },
+  "summons_served": {
+   "means": "The sheriff has delivered the summons to the other side, so they now officially know about the case.",
+   "next": "The other side has a short time, usually 10 court days, to say whether they will defend the case. If they do not, we can ask the court for judgment."
+  },
+  "appearance_to_defend": {
+   "means": "The other side has told the court they will defend the case.",
+   "next": "They must now file their plea, which is their written answer to the claim. This is usually due within 20 court days."
+  },
+  "plea": {
+   "means": "The defending side has filed its written answer to the claim (or has raised a legal objection to it).",
+   "next": "We study the plea and decide on the reply. The case then moves towards the close of pleadings and the exchange of documents.",
+   "needFromYou": "Tell us if anything in their version is wrong or if you have documents that prove your side."
+  },
+  "replication": {
+   "means": "A reply to the plea has been filed, answering new points the other side raised.",
+   "next": "Once all written statements are in, the pleadings close and the case moves to the exchange of documents (discovery)."
+  },
+  "close_of_pleadings": {
+   "means": "Both sides have finished their written statements of the case. The issues the court must decide are now set.",
+   "next": "Next is discovery, where each side must list and share the documents it has that relate to the case."
+  },
+  "discovery": {
+   "means": "Each side must now list and share all documents that relate to the case, even ones that do not help them.",
+   "next": "We go through the other side's documents and prepare for the pre-trial meeting.",
+   "needFromYou": "Send us every document, message, photo or record that relates to the matter, including ones you think may hurt your case."
+  },
+  "pre_trial": {
+   "means": "The lawyers for both sides meet to narrow the issues, agree on facts where possible and get the case ready for trial.",
+   "next": "After the pre-trial meeting, a trial date can be set if the matter has not settled."
+  },
+  "trial_date_set": {
+   "means": "The court has given the case a date for trial.",
+   "next": "We prepare witnesses, documents and arguments for the trial. Settlement talks can still happen before the date.",
+   "needFromYou": "Keep the trial date free and let us know at once if you or a witness cannot attend."
+  },
+  "trial": {
+   "means": "The case is being heard in court. Each side presents evidence and witnesses, and the court hears argument.",
+   "next": "After the trial the court gives judgment. This can be on the day or some time later."
+  },
+  "judgment": {
+   "means": "The court has made its decision on the case.",
+   "next": "We explain the judgment to you. There is a short time to appeal, and if costs were awarded they may need to be taxed (checked and set by the court).",
+   "needFromYou": "Let us know quickly if you want to discuss an appeal, because the time limit is short."
+  },
+  "taxation": {
+   "means": "The legal costs the court awarded are being checked and set by an official of the court, called the taxing master.",
+   "next": "Once the costs are set, they can be claimed from the side that must pay them."
+  },
+  "execution": {
+   "means": "Steps are being taken to enforce the court order, for example by the sheriff attaching property to pay a debt.",
+   "next": "The sheriff carries out the order. This can take some time depending on what assets are found."
+  },
+  "appeal": {
+   "means": "The decision is being taken to a higher court to ask it to change the outcome.",
+   "next": "The appeal follows its own steps and time limits. We will keep you updated as each one is reached."
+  },
+  "default_judgment": {
+   "means": "Judgment has been given because the other side did not respond in time.",
+   "next": "The other side may still ask the court to cancel (rescind) the judgment within a set time. If not, the judgment can be enforced."
+  },
+  "summary_judgment": {
+   "means": "A quick judgment has been asked for because the defence appears not to raise a real issue for trial.",
+   "next": "The court decides whether to grant summary judgment or let the defending side go on to trial."
+  },
+  "settled": {
+   "means": "The matter has been settled. Both sides have agreed on how to end it.",
+   "next": "We make sure the settlement terms are carried out, such as payment or a court order recording the agreement.",
+   "needFromYou": "Keep to any steps or payments in the agreement and tell us if the other side does not."
+  },
+  "withdrawn": {
+   "means": "The matter has been withdrawn and will not go ahead.",
+   "next": "We will confirm any outstanding steps, such as costs, and then close the file."
+  }
+ },
+ "tracks": {
+  "magistrates_action": {
+   "execution": {
+    "means": "Steps are being taken to enforce the court order, usually through a warrant carried out by the sheriff.",
+    "next": "The sheriff carries out the warrant. This can take some time depending on what assets are found."
+   },
+   "pre_trial": {
+    "means": "The lawyers for both sides meet to narrow the issues and get the case ready for trial.",
+    "next": "After the pre-trial meeting a trial date can be set if the matter has not settled."
+   }
+  },
+  "motion": {
+   "notice_of_motion_issued": {
+    "means": "The application has been issued by the court. An application is decided mainly on sworn written statements (affidavits) rather than witnesses.",
+    "next": "The application is served on the other side, who then has a set time to say whether they oppose it."
+   },
+   "notice_of_motion_served": {
+    "means": "The application has been delivered to the other side.",
+    "next": "They have a short time, usually 5 court days or the period in the notice, to say if they will oppose it."
+   },
+   "notice_to_oppose": {
+    "means": "The other side has said they will oppose the application.",
+    "next": "They must file their answering affidavit, their sworn version of the facts, usually within 15 court days."
+   },
+   "answering_affidavit": {
+    "means": "The other side has filed its sworn answer to the application.",
+    "next": "We prepare a replying affidavit to answer new points they raised, usually within 10 court days.",
+    "needFromYou": "Read their version with us and tell us what is wrong in it, with any proof you have."
+   },
+   "replying_affidavit": {
+    "means": "The reply to the other side's answer has been filed. The written papers are now complete.",
+    "next": "The matter is set down, which means it is given a date to be argued in court."
+   },
+   "set_down": {
+    "means": "The application has been given a date for hearing.",
+    "next": "The lawyers prepare written arguments and the matter is argued in court on that date."
+   },
+   "hearing": {
+    "means": "The application is being argued in court.",
+    "next": "The court gives its decision, either on the day or later."
+   },
+   "unopposed_order": {
+    "means": "The court has granted the order because no one opposed it.",
+    "next": "We make sure the order is served and carried out."
+   }
+  },
+  "urgent_application": {
+   "launched": {
+    "means": "An urgent application has been brought because the matter cannot wait for the normal court timetable.",
+    "next": "The papers are served on the other side and the matter is heard on short notice."
+   },
+   "served": {
+    "means": "The urgent application has been delivered to the other side.",
+    "next": "The court hears the matter on the date set, often within days."
+   },
+   "heard": {
+    "means": "The urgent application has been argued in court.",
+    "next": "The court decides whether to grant an order now, a temporary order, or to refuse it."
+   },
+   "interim_order": {
+    "means": "The court has granted a temporary order (a rule nisi) that applies until a later return date.",
+    "next": "On the return date the court decides whether to make the order final.",
+    "needFromYou": "Follow the temporary order carefully and tell us at once if it is not being obeyed."
+   },
+   "return_date": {
+    "means": "The matter is back in court on the return date to decide whether the temporary order becomes final.",
+    "next": "The court makes the order final, extends it, or discharges (cancels) it."
+   },
+   "final_order": {
+    "means": "The court has made a final order.",
+    "next": "We make sure the order is served and obeyed. There is a short time to apply for leave to appeal."
+   },
+   "discharged": {
+    "means": "The court has cancelled the temporary order.",
+    "next": "We will explain the reasons and the options, if any, that remain."
+   },
+   "struck_off": {
+    "means": "The court removed the matter from the roll because it found it was not urgent enough.",
+    "next": "The matter can usually still go ahead on the normal timetable. We will advise on the best route."
+   }
+  },
+  "divorce": {
+   "summons_issued": {
+    "means": "The court has issued the divorce summons. This officially starts the divorce.",
+    "next": "The sheriff delivers the summons to your spouse (or yours to them, depending on who started it)."
+   },
+   "summons_served": {
+    "means": "The divorce summons has been delivered to the other spouse.",
+    "next": "They have 10 court days to say whether they will defend the divorce. If they do not, the divorce can go ahead as unopposed."
+   },
+   "appearance_to_defend": {
+    "means": "The other spouse has said they will defend the divorce.",
+    "next": "They must file a plea and possibly a counterclaim setting out what they want, usually within 20 court days."
+   },
+   "plea_counterclaim": {
+    "means": "The other spouse has filed their answer and their own claims, for example about property, maintenance or the children.",
+    "next": "Both sides now try to agree on the issues. If they cannot, the case moves towards trial.",
+    "needFromYou": "Gather proof of income, expenses, assets and debts, and tell us what you want for the children if there are any."
+   },
+   "family_advocate": {
+    "means": "The Office of the Family Advocate is looking into arrangements for the children to make sure they are in the children's best interests.",
+    "next": "The Family Advocate may meet each parent and the children, then gives a report or recommendation to the court.",
+    "needFromYou": "Attend the Family Advocate meetings and bring any documents they ask for."
+   },
+   "settlement_agreement": {
+    "means": "Both spouses have signed an agreement on how to divide property and deal with maintenance and the children.",
+    "next": "The agreement is handed to the court, which can make it part of the divorce order."
+   },
+   "trial": {
+    "means": "The divorce is being heard in court because the spouses could not agree on everything.",
+    "next": "The court decides the issues still in dispute and grants the decree of divorce."
+   },
+   "decree": {
+    "means": "The court has granted the divorce. You are now formally divorced.",
+    "next": "We make sure the divorce order and any settlement are carried out, for example transfers of property or pension sharing.",
+    "needFromYou": "Keep a certified copy of the decree safe. You may need it for Home Affairs, banks and pension funds."
+   },
+   "reconciled": {
+    "means": "The spouses have reconciled and the divorce will not go ahead.",
+    "next": "We will confirm any steps needed to formally end the court case."
+   }
+  },
+  "labour": {
+   "dismissal": {
+    "means": "The employer has ended the employment. If the dismissal was unfair, there are strict time limits to challenge it.",
+    "next": "The dispute must be referred to the CCMA or bargaining council within 30 days of the dismissal.",
+    "needFromYou": "Send us your contract, payslips, the dismissal letter and any notices or hearing papers."
+   },
+   "unfair_labour_practice": {
+    "means": "There is a dispute about unfair treatment at work, for example about promotion, suspension or benefits.",
+    "next": "The dispute must be referred to the CCMA or bargaining council within 90 days."
+   },
+   "ccma_referral": {
+    "means": "The dispute has been referred to the CCMA or bargaining council.",
+    "next": "A commissioner will try to help the parties settle at a conciliation meeting, usually within 30 days."
+   },
+   "conciliation": {
+    "means": "A conciliation meeting is being held, where a commissioner helps both sides try to settle.",
+    "next": "If the dispute is settled, the agreement is recorded. If not, a certificate of outcome is issued.",
+    "needFromYou": "Attend the meeting on time and bring your documents."
+   },
+   "certificate": {
+    "means": "Conciliation did not resolve the dispute, so a certificate saying it is unresolved has been issued.",
+    "next": "Arbitration (a hearing before a commissioner) can be requested, usually within 90 days."
+   },
+   "arbitration_requested": {
+    "means": "A request for arbitration has been made.",
+    "next": "The CCMA or bargaining council sets a date for the arbitration hearing."
+   },
+   "arbitration": {
+    "means": "The arbitration hearing is under way. A commissioner hears evidence from both sides and then decides the dispute.",
+    "next": "The commissioner must usually issue a written award within 14 days after the hearing.",
+    "needFromYou": "Make sure you and your witnesses attend and bring all your documents."
+   },
+   "award": {
+    "means": "The commissioner has made a decision, called an award.",
+    "next": "If the award is in your favour it must be complied with. If a party believes it is badly wrong, they can apply to the Labour Court for review within 6 weeks."
+   },
+   "review_application": {
+    "means": "A party has asked the Labour Court to review the award, saying the commissioner made a serious mistake.",
+    "next": "The Labour Court considers the record and argument, then confirms, changes or sets aside the award."
+   },
+   "enforcement": {
+    "means": "Steps are being taken to enforce the award because it has not been complied with.",
+    "next": "The award can be certified and enforced like a court order, for example through the sheriff."
+   },
+   "condonation": {
+    "means": "An application has been made asking for a late step to be allowed, because a time limit was missed.",
+    "next": "The commissioner or court decides whether to allow the late step, based on the reasons and the prospects of success."
+   }
+  },
+  "criminal": {
+   "arrest": {
+    "means": "The accused person has been arrested.",
+    "next": "They must be brought before a court within 48 hours, or on the next court day if that time ends after hours or on a weekend."
+   },
+   "first_appearance": {
+    "means": "The accused has appeared in court for the first time. The charges are put on record and the case is usually postponed.",
+    "next": "Bail is often dealt with at this stage or soon after, and the case is postponed for further investigation."
+   },
+   "bail": {
+    "means": "A bail application is being heard, asking the court to release the accused until the trial.",
+    "next": "The court decides whether to grant bail and on what conditions.",
+    "needFromYou": "We may need proof of address, work and family ties, and the names of people who can confirm them."
+   },
+   "postponement": {
+    "means": "The case has been postponed to a later date, often for investigation or to get documents.",
+    "next": "The case returns to court on the new date.",
+    "needFromYou": "Attend court on every date unless your attorney tells you otherwise. Missing a date can lead to a warrant of arrest."
+   },
+   "plea": {
+    "means": "The accused has pleaded guilty or not guilty to the charges.",
+    "next": "If not guilty, the trial goes ahead. If guilty, the court moves to conviction and sentencing."
+   },
+   "trial": {
+    "means": "The trial is under way. The prosecution and the defence present evidence and witnesses.",
+    "next": "The court decides whether the accused is guilty or not guilty."
+   },
+   "conviction": {
+    "means": "The court has found the accused guilty.",
+    "next": "The court moves to sentencing and may ask for reports before deciding.",
+    "needFromYou": "Tell us about your personal circumstances, work and family, as these matter for sentencing."
+   },
+   "sentencing": {
+    "means": "The court has passed sentence.",
+    "next": "There is a short time, usually 14 days, to apply for leave to appeal."
+   },
+   "appeal": {
+    "means": "An appeal has been brought to a higher court against the conviction or sentence.",
+    "next": "The higher court considers the record and argument and then gives its decision."
+   },
+   "acquittal": {
+    "means": "The court found the accused not guilty. The case is over.",
+    "next": "We will confirm any final steps, such as the return of bail money."
+   },
+   "withdrawn": {
+    "means": "The prosecution has withdrawn the charges.",
+    "next": "The case is no longer on the roll. Charges can sometimes be brought again later, and we will advise you on this."
+   }
+  },
+  "raf_claim": {
+   "accident": {
+    "means": "The road accident is the starting point for the claim. Strict time limits run from this date.",
+    "next": "The claim must be lodged with the Road Accident Fund, usually within 3 years (2 years where the driver is unknown).",
+    "needFromYou": "Send us the accident report and case number, medical records, hospital bills and proof of income."
+   },
+   "lodgement": {
+    "means": "The claim has been lodged with the Road Accident Fund.",
+    "next": "The RAF has 120 days to consider the claim before summons can be issued.",
+    "needFromYou": "Keep all medical appointments and send us new medical reports and bills as you get them."
+   },
+   "raf_response": {
+    "means": "The RAF has responded to the claim, or the 120 days have passed without a response.",
+    "next": "If the claim is not settled, summons can now be issued against the RAF."
+   },
+   "summons_issued": {
+    "means": "Summons against the RAF has been issued by the court.",
+    "next": "The summons is served on the RAF. It must be served within 5 years of the accident."
+   },
+   "summons_served": {
+    "means": "The summons has been delivered to the RAF.",
+    "next": "The RAF has 10 court days to say whether it will defend the case."
+   },
+   "plea": {
+    "means": "The RAF has filed its written answer to the claim.",
+    "next": "Expert reports are gathered and the case moves towards a pre-trial meeting and trial.",
+    "needFromYou": "Attend all expert appointments we arrange for you."
+   },
+   "pre_trial": {
+    "means": "The lawyers for both sides meet to narrow the issues and get the case ready for trial.",
+    "next": "If the matter is not settled, it goes to trial on the date set."
+   },
+   "payment": {
+    "means": "The RAF has paid the amount awarded or agreed.",
+    "next": "We account to you for the money received and close the file once everything is paid.",
+    "needFromYou": "Confirm your banking details with us by phone before any payment, and never act on banking changes sent only by email."
+   },
+   "settlement": {
+    "means": "The claim has been settled with the RAF.",
+    "next": "The RAF must pay within the agreed time. Interest may run if payment is late."
+   },
+   "prescribed": {
+    "means": "The time limit for the claim has passed, so the claim can no longer be brought in the normal way.",
+    "next": "We will explain what this means and whether any option remains."
+   }
+  },
+  "appeal": {
+   "judgment_a_quo": {
+    "means": "The first court has given its judgment, which is the decision that may be appealed.",
+    "next": "An application for leave (permission) to appeal must usually be made within 15 court days.",
+    "needFromYou": "Let us know quickly whether you want to appeal."
+   },
+   "leave_applied": {
+    "means": "We have asked for permission to appeal the decision.",
+    "next": "The court that gave the judgment decides whether to grant leave to appeal."
+   },
+   "leave_granted": {
+    "means": "Permission to appeal has been granted.",
+    "next": "A notice of appeal must be filed, usually within 20 court days."
+   },
+   "notice_of_appeal": {
+    "means": "The notice of appeal has been filed.",
+    "next": "A hearing date must be applied for within the time allowed, or the appeal lapses."
+   },
+   "date_applied": {
+    "means": "A date for the appeal hearing has been applied for.",
+    "next": "The court record is prepared and lodged."
+   },
+   "record_lodged": {
+    "means": "The full record of the case in the lower court has been lodged with the appeal court.",
+    "next": "Each side files written arguments, called heads of argument."
+   },
+   "heads_filed": {
+    "means": "The written arguments for the appeal have been filed.",
+    "next": "The appeal is set down and argued on the hearing date."
+   },
+   "set_down": {
+    "means": "The appeal has a hearing date.",
+    "next": "The appeal is argued in court on that date."
+   },
+   "hearing": {
+    "means": "The appeal has been argued in court.",
+    "next": "The appeal court gives its judgment, usually some time after the hearing."
+   },
+   "judgment": {
+    "means": "The appeal court has given its decision.",
+    "next": "We explain the outcome and any further steps."
+   },
+   "leave_refused": {
+    "means": "Permission to appeal was refused by the court that gave the judgment.",
+    "next": "A petition can be made to the Supreme Court of Appeal, usually within one month."
+   },
+   "petition_sca": {
+    "means": "A petition has been sent to the Supreme Court of Appeal asking for permission to appeal.",
+    "next": "Judges of that court consider the petition and decide whether to allow the appeal."
+   },
+   "lapsed": {
+    "means": "The appeal has lapsed because a required step was not taken in time.",
+    "next": "We will advise whether the appeal can be revived through a condonation application."
+   }
+  },
+  "deceased_estate": {
+   "death": {
+    "means": "The estate process starts from the date of death.",
+    "next": "The estate must be reported to the Master of the High Court, usually within 14 days.",
+    "needFromYou": "Send us the death certificate, the will if there is one, ID copies and details of assets, accounts and debts."
+   },
+   "reported_to_master": {
+    "means": "The estate has been reported to the Master of the High Court.",
+    "next": "The Master checks the documents and appoints the executor."
+   },
+   "letters_of_executorship": {
+    "means": "The Master has appointed the executor and issued letters of executorship.",
+    "next": "The executor advertises for creditors, opens an estate bank account and lists the assets."
+   },
+   "creditors_advertised": {
+    "means": "A notice has been placed in the Government Gazette and a local newspaper asking creditors to lodge claims.",
+    "next": "Creditors have at least 30 days to lodge their claims."
+   },
+   "inventory_lodged": {
+    "means": "A list of all the estate's assets has been lodged with the Master.",
+    "next": "The executor works out what the estate owes and prepares the liquidation and distribution account."
+   },
+   "ld_account_lodged": {
+    "means": "The account showing assets, debts and who will inherit what has been lodged with the Master.",
+    "next": "The Master checks the account. It then lies for inspection by heirs and creditors."
+   },
+   "account_lies_for_inspection": {
+    "means": "The account is open for inspection for 21 days so heirs and creditors can check it.",
+    "next": "If there are no objections, the executor can pay out the estate."
+   },
+   "distribution": {
+    "means": "The estate is being paid out to the heirs and creditors as set out in the account.",
+    "next": "Proof of payments must be filed with the Master.",
+    "needFromYou": "Give us your banking details in person or by a verified method, and confirm them with us by phone."
+   },
+   "filing": {
+    "means": "Receipts and proof of payment have been filed with the Master.",
+    "next": "The Master can then release the executor."
+   },
+   "discharge": {
+    "means": "The Master has released the executor. The estate is finalised.",
+    "next": "No further steps are needed. Keep your documents safe for your records."
+   },
+   "objection": {
+    "means": "Someone has objected to the account during the inspection period.",
+    "next": "The executor and the Master deal with the objection before the estate can be paid out."
+   }
+  }
+ }
+}
