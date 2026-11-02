@@ -54,6 +54,7 @@ export default function DocumentsPage() {
         }}
       >
         <input name="file" type="file" className="text-sm" aria-label="Choose a file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.csv,.jpg,.jpeg,.png,.heic,.heif,.eml,.msg,.zip" />
+        <span className="text-xs text-slate-500">Files can be up to 50 MB.</span>
         <select className="h-10 rounded-lg border px-3 text-sm" aria-label="Matter for the upload" value={caseId} onChange={(e) => setCaseId(e.target.value)}>
           <option value="">No matter</option>
           {cases.map((c) => (

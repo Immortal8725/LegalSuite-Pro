@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Void>> handleTooLarge(Exception ex) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                .body(ApiResponse.error("The file is too large. Files can be up to 25 MB."));
+                .body(ApiResponse.error("The file is too large. Files can be up to 50 MB."));
     }
 
     @ExceptionHandler({org.springframework.web.multipart.MultipartException.class,

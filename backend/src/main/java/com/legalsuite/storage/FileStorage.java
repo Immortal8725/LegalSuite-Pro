@@ -89,6 +89,25 @@ public class FileStorage {
         return dest.toString();
     }
 
+    /** Streams an upload to storage without holding the whole file in memory. */
+    public String put(String key, java.io.InputStream in, long length, String contentType) throws IOException {
+        String clean = key.replace('\\', '/');
+        if (clean.startsWith("/") || clean.contains("..")) throw new IOException("Invalid storage key");
+        try (in) {
+            if (s3 != null) {
+                s3.putObject(PutObjectRequest.builder().bucket(bucket).key(clean).contentLength(length)
+                                .contentType(contentType == null ? "application/octet-stream" : contentType).build(),
+                        RequestBody.fromInputStream(in, length));
+                return S3_PREFIX + bucket + "/" + clean;
+            }
+            Path dest = root.resolve(clean).normalize();
+            if (!dest.startsWith(root)) throw new IOException("Invalid storage key");
+            Files.createDirectories(dest.getParent());
+            Files.copy(in, dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return dest.toString();
+        }
+    }
+
     public byte[] read(String ref) throws IOException {
         if (ref == null) throw new IOException("No file");
         if (ref.startsWith(S3_PREFIX)) {

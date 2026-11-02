@@ -72,5 +72,6 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|icons/).*)"],
+  // /api and /ws skip middleware so uploads stream straight through the rewrite to the API.
+  matcher: ["/((?!api/|ws/|_next/static|_next/image|favicon.ico|manifest.json|icons/).*)"],
 };

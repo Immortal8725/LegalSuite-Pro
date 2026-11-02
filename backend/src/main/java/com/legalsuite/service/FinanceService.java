@@ -77,7 +77,7 @@ public class FinanceService {
     private static final Set<String> CLIENT_METHODS = Set.of("cash", "eft", "card", "other");
     private static final Set<String> PROOF_TYPES = Set.of("application/pdf", "image/jpeg", "image/png");
     private static final Set<String> PROOF_EXT = Set.of("pdf", "jpg", "jpeg", "png");
-    private static final long PROOF_MAX_BYTES = 10L * 1024 * 1024;
+    private static final long PROOF_MAX_BYTES = 50L * 1024 * 1024;
 
     public FinanceService(
             TimeEntryRepository timeEntries,
@@ -1070,7 +1070,7 @@ public class FinanceService {
         if (stored.contains("/") || stored.contains("\\") || stored.contains("..")) {
             throw ApiException.badRequest("Invalid file name.");
         }
-        String ref = storage.put(tid() + "/" + stored, file.getBytes(), file.getContentType());
+        String ref = storage.put(tid() + "/" + stored, file.getInputStream(), file.getSize(), file.getContentType());
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tid());
         doc.setCaseId(inv.getCaseId());
@@ -1091,7 +1091,7 @@ public class FinanceService {
             throw ApiException.badRequest("Choose a PDF, JPEG, or PNG to upload.");
         }
         if (file.getSize() > PROOF_MAX_BYTES) {
-            throw ApiException.badRequest("Proof of payment must be 10 MB or smaller.");
+            throw ApiException.badRequest("Proof of payment must be 50 MB or smaller.");
         }
         String ext = extension(file.getOriginalFilename());
         String mime = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT).trim();

@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
   // The Docker image sets NEXT_OUTPUT=standalone; local `next start` uses the normal build.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,
+  experimental: {
+    // Uploads go through the /api rewrite; let 50 MB files (plus form overhead) through and give slow lines time.
+    middlewareClientMaxBodySize: "52mb",
+    proxyTimeout: 300_000,
+  },
   async headers() {
     // Signed-in app, portal and one-time links: never indexed, even if linked from elsewhere.
     const noindex = [

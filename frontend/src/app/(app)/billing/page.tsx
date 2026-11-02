@@ -554,7 +554,7 @@ export default function BillingPage() {
         }
       >
         <p className="mb-3 text-sm text-slate-600">
-          Upload the deposit slip or EFT confirmation for {proofFor?.invoiceNumber}. It stays pending until a staff member accepts or rejects it. Accepting records the payment. PDF, JPEG, or PNG, up to 10 MB.
+          Upload the deposit slip or EFT confirmation for {proofFor?.invoiceNumber}. It stays pending until a staff member accepts or rejects it. Accepting records the payment. PDF, JPEG, or PNG, up to 50 MB.
         </p>
         <Label>File</Label>
         <Input aria-label="File"
