@@ -46,6 +46,8 @@ public class Client {
     private String notes;
     private BigDecimal defaultHourlyRate;
     private LocalDate dateOfBirth;
+    @jakarta.persistence.Column(name = "id_number", length = 40)
+    private String idNumber;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 

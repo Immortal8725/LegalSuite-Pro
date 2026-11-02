@@ -708,7 +708,73 @@ public class FinanceService {
     static final Set<String> TRUST_TYPES = Set.of("deposit", "withdrawal", "fee_transfer");
 
     static boolean isOutflow(String type) {
-        return "withdrawal".equals(type) || "fee_transfer".equals(type);
+        return "withdrawal".equals(type) || "fee_transfer".equals(type) || "client_transfer_out".equals(type);
+    }
+
+    /** What this client holds in one trust account for one matter (all matters when caseId is null). */
+    /** Matters (null for none) on which this client has trust entries in the account. */
+    public java.util.Set<UUID> clientTrustMatters(UUID accountId, UUID clientId) {
+        java.util.Set<UUID> out = new java.util.LinkedHashSet<>();
+        for (TrustTransaction tx : trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), accountId)) {
+            if (clientId != null && clientId.equals(tx.getClientId())) out.add(tx.getCaseId());
+        }
+        return out;
+    }
+
+    public BigDecimal clientMatterLedger(UUID accountId, UUID clientId, UUID caseId) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (TrustTransaction tx : trustTx.findByTenantIdAndTrustAccountIdOrderByCreatedAtDesc(tid(), accountId)) {
+            if (clientId == null || !clientId.equals(tx.getClientId())) continue;
+            if (caseId != null && !caseId.equals(tx.getCaseId())) continue;
+            sum = isOutflow(tx.getType()) ? sum.subtract(nz(tx.getAmount())) : sum.add(nz(tx.getAmount()));
+        }
+        return sum;
+    }
+
+    /**
+     * Trust-to-trust transfer between two client ledgers in the same account: one entry out of the first client's
+     * ledger and one into the second. The bank balance does not change. Earlier entries are never edited.
+     * Callers must already have the second approval.
+     */
+    @Transactional
+    public UUID[] postClientTransfer(UUID accountId, UUID fromClient, UUID toClient, UUID caseId, BigDecimal amount, String description) {
+        TrustAccount acct = trusts.findByIdAndTenantId(accountId, tid())
+                .orElseThrow(() -> ApiException.notFound("Trust account not found"));
+        Compliance.requireFfcForTrust(tenants.findById(tid()).orElse(null));
+        if (fromClient == null || toClient == null || fromClient.equals(toClient)) {
+            throw ApiException.badRequest("A client-to-client transfer needs two different clients.");
+        }
+        if (amount == null || amount.signum() <= 0) throw ApiException.badRequest("The amount must be more than zero.");
+        BigDecimal held = clientMatterLedger(accountId, fromClient, caseId);
+        if (held.compareTo(amount) < 0) {
+            throw ApiException.badRequest("The client ledger now holds only " + held.toPlainString() + " on this matter. Ask for a new transfer.");
+        }
+        TrustTransaction out = new TrustTransaction();
+        out.setTenantId(tid());
+        out.setTrustAccountId(acct.getId());
+        out.setType("client_transfer_out");
+        out.setAmount(amount);
+        out.setBalanceAfter(acct.getBalance());
+        out.setDescription(description);
+        out.setCreatedBy(TenantContext.getUserId());
+        out.setClientId(fromClient);
+        out.setCaseId(caseId);
+        trustTx.save(out);
+        TrustTransaction in = new TrustTransaction();
+        in.setTenantId(tid());
+        in.setTrustAccountId(acct.getId());
+        in.setType("client_transfer_in");
+        in.setAmount(amount);
+        in.setBalanceAfter(acct.getBalance());
+        in.setDescription(description);
+        in.setCreatedBy(TenantContext.getUserId());
+        in.setClientId(toClient);
+        in.setCaseId(caseId);
+        in.setReferenceNumber(out.getId().toString());
+        trustTx.save(in);
+        audit.record("trust.client_transfer", "trust_account", acct.getId().toString(),
+                amount.toPlainString() + " from client " + fromClient + " to client " + toClient);
+        return new UUID[] {out.getId(), in.getId()};
     }
 
     public List<Map<String, Object>> trustLedger(UUID accountId) {

@@ -291,13 +291,14 @@ public class MatterInboxService {
     // ---------- client (portal) side ----------
 
     public Map<String, Object> portalUnreadFor(UUID tenantId, UUID caseId) {
-        return Map.of("unread", messages.countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNull(tenantId, caseId, "client"));
+        return Map.of("unread", messages.countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNullAndHiddenFromClientFalse(tenantId, caseId, "client"));
     }
 
     @Transactional
     public Map<String, Object> portalMatter(UUID caseId) {
         LegalCase c = portalCase(caseId);
-        List<MatterMessage> all = messages.findByTenantIdAndCaseIdOrderByCreatedAtAsc(c.getTenantId(), c.getId());
+        List<MatterMessage> all = messages.findByTenantIdAndCaseIdOrderByCreatedAtAsc(c.getTenantId(), c.getId()).stream()
+                .filter(m -> !m.isHiddenFromClient()).toList();
         Instant now = Instant.now();
         for (MatterMessage m : all) {
             if (!"client".equals(m.getSenderType()) && m.getReadByClientAt() == null) {
@@ -328,6 +329,7 @@ public class MatterInboxService {
         LegalCase c = portalCase(caseId);
         MatterMessage m = messages.findByIdAndTenantIdAndCaseId(messageId, c.getTenantId(), c.getId())
                 .orElseThrow(() -> ApiException.notFound("Message not found"));
+        if (m.isHiddenFromClient()) throw ApiException.notFound("Message not found");
         if (m.getDocumentId() == null) throw ApiException.notFound("This message has no file.");
         return documents.findByIdAndTenantId(m.getDocumentId(), c.getTenantId()).orElseThrow(() -> ApiException.notFound("File not found"));
     }

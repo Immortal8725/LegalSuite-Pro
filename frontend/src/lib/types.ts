@@ -58,6 +58,7 @@ export type Dashboard = {
 export type Matter = {
   id: Id;
   clientId?: Id;
+  leadAttorneyId?: Id;
   clientName?: string;
   caseNumber: string;
   title: string;
@@ -118,6 +119,9 @@ export type Party = {
   source?: string;
   portalEnabled?: boolean;
   notes?: string;
+  idNumber?: string;
+  addressLine1?: string;
+  zip?: string;
 };
 
 export type Contact = {

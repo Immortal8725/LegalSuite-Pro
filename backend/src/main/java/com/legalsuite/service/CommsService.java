@@ -359,7 +359,7 @@ public class CommsService {
                 "cases", cases.findByTenantIdAndClientId(tenantId, clientId).stream().map(c -> {
                     Map<String, Object> v = new java.util.HashMap<>(practice.caseView(c));
                     v.put("unreadMessages", matterMessages == null ? 0
-                            : matterMessages.countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNull(tenantId, c.getId(), "client"));
+                            : matterMessages.countByTenantIdAndCaseIdAndSenderTypeNotAndReadByClientAtIsNullAndHiddenFromClientFalse(tenantId, c.getId(), "client"));
                     return v;
                 }).toList());
     }

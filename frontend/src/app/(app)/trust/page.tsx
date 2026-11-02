@@ -10,6 +10,7 @@ import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Invoice, Matter, TrustAcct, TrustRecon, TrustTx } from "@/lib/types";
 import { useLatest } from "@/lib/use-latest";
+import { ClientTransfers } from "@/components/client-transfers";
 
 const TENANT_ADMINS = new Set(["owner", "admin", "partner", "director"]);
 
@@ -501,6 +502,7 @@ export default function TrustPage() {
         <Label>CSV</Label>
         <Textarea aria-label="CSV" className="min-h-[180px] font-mono text-xs" value={csv} onChange={(e) => setCsv(e.target.value)} />
       </Dialog>
+      <ClientTransfers />
     </div>
   );
 }
