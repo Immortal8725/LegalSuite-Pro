@@ -46,11 +46,14 @@ public class LitigationService {
     private final AppNotificationRepository notifications;
     private final AuditService audit;
     private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox;
+    private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.push.PushService> push;
 
     public LitigationService(LitigationCatalog catalog, LegalCaseRepository cases, MatterStageEventRepository events,
                              TaskItemRepository tasks, ClientRepository clients, TenantRepository tenants,
                              AppNotificationRepository notifications, AuditService audit,
-                             org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox) {
+                             org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox,
+                             org.springframework.beans.factory.ObjectProvider<com.legalsuite.push.PushService> push) {
+        this.push = push;
         this.inbox = inbox;
         this.catalog = catalog;
         this.cases = cases;
@@ -307,6 +310,7 @@ public class LitigationService {
             n.setType("deadline");
             n.setLink(t.getCaseId() == null ? "/tasks" : "/cases/" + t.getCaseId());
             notifications.save(n);
+            push.ifAvailable(p -> p.toUser(tenantId, n.getUserId(), n.getTitle(), n.getBody(), n.getLink()));
             sent++;
         }
         return sent;

@@ -75,13 +75,16 @@ public class MatterInboxService {
     private final SmtpProperties smtp;
     private final org.springframework.security.crypto.password.PasswordEncoder encoder;
     private final String appUrl;
+    private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.push.PushService> push;
 
     public MatterInboxService(MatterMessageRepository messages, LegalCaseRepository cases, ClientRepository clients,
                               AppUserRepository users, TenantRepository tenants, DocumentFileRepository documents,
                               TaskItemRepository tasks, AppNotificationRepository notifications, PracticeService practice,
                               AuditService audit, ClientSummaries summaries, LitigationCatalog catalog, MailGateway mail,
                               SmtpProperties smtp, org.springframework.security.crypto.password.PasswordEncoder encoder,
-                              @Value("${legalsuite.app-url:http://localhost:3000}") String appUrl) {
+                              @Value("${legalsuite.app-url:http://localhost:3000}") String appUrl,
+                              org.springframework.beans.factory.ObjectProvider<com.legalsuite.push.PushService> push) {
+        this.push = push;
         this.messages = messages;
         this.cases = cases;
         this.clients = clients;
@@ -413,6 +416,7 @@ public class MatterInboxService {
             n.setType("client_message");
             n.setLink("/cases/" + c.getId() + "#inbox");
             notifications.save(n);
+            push.ifAvailable(p -> p.toUser(c.getTenantId(), uid, n.getTitle(), n.getBody(), n.getLink()));
             sendQuietly(u.getEmail(), "New client message on " + c.getCaseNumber(),
                     m.getSenderName() + " sent a message on " + c.getCaseNumber() + " " + c.getTitle() + ".\n\n"
                             + "Open it in Owlaw: " + appUrl + "/cases/" + c.getId() + "#inbox\n");
@@ -421,8 +425,12 @@ public class MatterInboxService {
 
     private void emailClient(LegalCase c) {
         Client client = clients.findByIdAndTenantId(c.getClientId(), c.getTenantId()).orElse(null);
-        if (client == null || client.getEmail() == null || !client.isPortalEnabled()) return;
+        if (client == null || !client.isPortalEnabled()) return;
         String firm = tenants.findById(c.getTenantId()).map(Tenant::getFirmName).orElse("Your attorneys");
+        // Push carries no message text either, only that there is something to read.
+        push.ifAvailable(p -> p.toClient(c.getTenantId(), client.getId(), "New message from " + firm,
+                "About your matter " + c.getCaseNumber() + ". Sign in to read it.", "/portal/cases/" + c.getId()));
+        if (client.getEmail() == null) return;
         // The email never carries the message itself: the client reads it after signing in.
         sendQuietly(client.getEmail(), "New message from " + firm + " about " + c.getCaseNumber(),
                 "Hello " + client.displayName() + ",\n\n" + firm + " has sent you a message about your matter " + c.getCaseNumber() + ".\n\n"

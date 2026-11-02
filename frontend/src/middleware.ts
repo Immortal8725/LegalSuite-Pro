@@ -82,7 +82,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   // /api and /ws skip middleware so uploads stream straight through the rewrite to the API.
   matcher: [
-    "/((?!api/|ws/|_next/static|_next/image|favicon.ico|manifest.json|icons/).*)",
+    "/((?!api/|ws/|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons/).*)",
     // Bodies over ~50 MB (52,430,000 bytes or more), so the browser gets a clean 413.
     {
       source: "/api/:path*",
