@@ -34,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LitigationService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.legalsuite.milestones.MilestoneService> milestones;
     static final ZoneId SAST = ZoneId.of("Africa/Johannesburg");
     static final Set<Long> REMIND_AT = Set.of(7L, 3L, 1L, 0L);
 
@@ -159,6 +161,10 @@ public class LitigationService {
         audit.record("case.stage", "case", c.getId().toString(), c.getCaseNumber() + " -> " + t.id() + ":" + stage + " on " + on);
         Map<String, Object> out = view(c);
         out.put("createdDeadlines", made);
+        if (milestones != null) {
+            com.legalsuite.milestones.MilestoneService ms = milestones.getIfAvailable();
+            if (ms != null) out.put("billedMilestones", ms.onStage(c, stage));
+        }
         // Optional client update. Off unless the caller asks, so imports and matter creation stay quiet.
         if (Boolean.parseBoolean(String.valueOf(body.get("notifyClient"))) && c.getClientId() != null) {
             Object msg = body.get("clientMessage");

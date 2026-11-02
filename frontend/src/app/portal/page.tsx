@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { InvoiceLines } from "@/components/invoice-lines";
 import { StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { PushOptIn } from "@/components/push-opt-in";
+import { milestoneStatus, type Milestone } from "@/components/fee-plan";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export default function PortalHome() {
   const [cases, setCases] = useState<Matter[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [signatures, setSignatures] = useState<SignReq[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [proofFor, setProofFor] = useState<string | null>(null);
@@ -39,6 +41,7 @@ export default function PortalHome() {
         setInvoices(inv);
       })
       .catch((e) => setError(e.message));
+    apiGet<Milestone[]>("/api/v1/portal/milestones").then(setMilestones).catch(() => setMilestones([]));
     apiGet<SignReq[]>("/api/v1/portal/signatures").then(setSignatures).catch(() => setSignatures([]));
   }, []);
 
@@ -62,6 +65,26 @@ export default function PortalHome() {
           <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
           <CardBody><PushOptIn audience="portal" /></CardBody>
         </Card>
+        {milestones.length > 0 && (
+          <Card>
+            <CardHeader><CardTitle>Fee milestones</CardTitle></CardHeader>
+            <CardBody className="space-y-2">
+              <p className="text-xs text-slate-600">A deposit is held in the firm&apos;s trust account for you until fees are earned (Legal Practice Act s 86).</p>
+              {milestones.map((m) => (
+                <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm">
+                  <span>
+                    <span className="font-semibold">{m.label}</span>
+                    <span className="text-slate-600"> · {m.caseTitle}{m.stageLabel ? ` · due at ${m.stageLabel}` : m.kind === "deposit" ? " · deposit into trust" : ""}</span>
+                  </span>
+                  <span className="flex items-center gap-3">
+                    R {Number(m.amount).toFixed(2)} · {milestoneStatus(m.status)}
+                    {m.payUrl && <a className="font-semibold text-navy underline" href={m.payUrl}>Pay now</a>}
+                  </span>
+                </div>
+              ))}
+            </CardBody>
+          </Card>
+        )}
         {signatures.length > 0 && (
           <Card>
             <CardHeader><CardTitle>Documents to sign</CardTitle></CardHeader>

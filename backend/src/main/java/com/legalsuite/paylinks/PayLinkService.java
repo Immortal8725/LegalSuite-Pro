@@ -42,6 +42,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class PayLinkService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.legalsuite.milestones.MilestoneService> milestones;
     private static final Logger log = LoggerFactory.getLogger(PayLinkService.class);
     // PayFast's published sandbox test merchant (https://developers.payfast.co.za/docs#step_1_form_fields).
     static final String SANDBOX_ID = "10000100", SANDBOX_KEY = "46f0cd694581a", SANDBOX_PASS = "jt7NOE43FZPn";
@@ -223,7 +225,13 @@ public class PayLinkService {
             body.put("method", "card");
             body.put("reference", "PayFast " + PayFastSignature.value(posted, "pf_payment_id"));
             body.put("note", "Paid online" + ("sandbox".equals(l.getMode()) ? " (PayFast sandbox test)" : ""));
-            finance.recordPayment(inv.getId(), body);
+            com.legalsuite.milestones.MilestoneService ms = milestones == null ? null : milestones.getIfAvailable();
+            if (ms != null && ms.isTrustDeposit(inv.getId())) {
+                // LPA s 86: a deposit on fees is trust money, so it goes to the client's trust ledger, not business income.
+                ms.depositPaid(inv.getId(), gross.min(due(inv)), "PayFast " + PayFastSignature.value(posted, "pf_payment_id"));
+            } else {
+                finance.recordPayment(inv.getId(), body);
+            }
         } finally {
             TenantContext.setTenantId(prevT);
         }
