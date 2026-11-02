@@ -128,7 +128,7 @@ export function HomeTriage() {
   const chips = result ? (showAll && result.allAreas?.length ? result.allAreas : result.areas) : [];
 
   return (
-    <div className="mx-auto mt-8 max-w-2xl rounded-2xl border-2 border-gold bg-white p-5 text-left shadow-lift sm:p-6" data-testid="triage">
+    <div className="mx-auto mt-8 max-w-2xl rounded-2xl border-2 border-gold bg-white p-5 text-left shadow-lift sm:p-6" id="ask" data-testid="triage">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-2xl font-extrabold text-navy">{t.title}</h2>
         <div className="flex gap-1 text-xs font-bold" role="group" aria-label="Language">

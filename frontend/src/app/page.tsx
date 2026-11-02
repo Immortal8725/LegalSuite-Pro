@@ -48,6 +48,9 @@ export default function MarketingPage() {
           <Link href="/find-a-lawyer" className="hidden text-sm font-semibold text-slate-600 hover:text-navy sm:inline">
             Find a Lawyer
           </Link>
+          <Link href="/blog" className="hidden text-sm font-semibold text-slate-600 hover:text-navy sm:inline">
+            Blog
+          </Link>
           <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-navy">
             Sign in
           </Link>

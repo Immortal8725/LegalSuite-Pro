@@ -1,6 +1,7 @@
 import { LEGAL_DOCS } from "@/lib/legal";
 import { apiRead, getCatalog, searchAll } from "@/lib/seo";
 import { requestSite } from "@/lib/seo-host";
+import { allBlogPosts } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ async function mainSite(origin: string): Promise<Entry[]> {
     { loc: `${origin}/`, changefreq: "weekly", priority: 1 },
     { loc: `${origin}/find-a-lawyer`, changefreq: "daily", priority: 0.9 },
     { loc: `${origin}/register`, changefreq: "monthly", priority: 0.6 },
+    { loc: `${origin}/blog`, changefreq: "weekly", priority: 0.7 },
     { loc: `${origin}/help`, changefreq: "monthly", priority: 0.5 },
     { loc: `${origin}/security`, changefreq: "monthly", priority: 0.4 },
     ...LEGAL_DOCS.map((d) => ({ loc: `${origin}/legal/${d.slug}`, changefreq: "yearly", priority: 0.2 })),
@@ -41,6 +43,7 @@ async function mainSite(origin: string): Promise<Entry[]> {
       }
     }
   }
+  for (const b of await allBlogPosts()) out.push({ loc: `${origin}/blog/${b.slug}`, changefreq: "monthly", priority: 0.6 });
   for (const f of firms) out.push({ loc: `${origin}/find-a-lawyer/${f.slug}`, changefreq: "weekly", priority: 0.5 });
   return out;
 }
