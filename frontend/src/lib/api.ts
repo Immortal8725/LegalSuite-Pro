@@ -183,7 +183,20 @@ async function authedFetch(path: string, init: RequestInit = {}): Promise<Respon
   return res;
 }
 
+/** Largest upload the API accepts. Keep in step with spring.servlet.multipart.max-file-size. */
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const MAX_UPLOAD_MESSAGE = "Files can be up to 50 MB.";
+
+/** Throws before sending when any file in the form is over the upload limit. */
+export function checkUploadSize(body: unknown) {
+  if (typeof FormData === "undefined" || !(body instanceof FormData)) return;
+  for (const [, v] of body.entries()) {
+    if (typeof v !== "string" && v.size > MAX_UPLOAD_BYTES) throw new Error(MAX_UPLOAD_MESSAGE);
+  }
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  checkUploadSize(init.body);
   const headers = new Headers(init.headers);
   if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");

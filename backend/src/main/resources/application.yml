@@ -34,8 +34,11 @@ spring:
     enabled: false
   servlet:
     multipart:
-      max-file-size: 25MB
-      max-request-size: 25MB
+      # Files go to a temp file on disk, not the heap (Render free has 512 MB).
+      file-size-threshold: 0
+      max-file-size: 50MB
+      # A little room above 50 MB for the other form fields and multipart framing.
+      max-request-size: 51MB
 
 legalsuite:
   secrets:

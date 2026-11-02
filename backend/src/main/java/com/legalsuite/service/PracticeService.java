@@ -302,7 +302,7 @@ public class PracticeService {
         String display = UploadPolicy.safeName(file == null ? null : file.getOriginalFilename(), "document");
         String mime = com.legalsuite.common.DocumentTypePolicy.check(file, display);
         if (virusScanner != null) virusScanner.scan(file);
-        String ref = storage.put(tenantId + "/" + UploadPolicy.storageName(display), file.getBytes(), mime);
+        String ref = storage.put(tenantId + "/" + UploadPolicy.storageName(display), file.getInputStream(), file.getSize(), mime);
         DocumentFile doc = new DocumentFile();
         doc.setTenantId(tenantId);
         doc.setCaseId(caseId);

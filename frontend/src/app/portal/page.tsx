@@ -128,7 +128,7 @@ export default function PortalHome() {
                             <div className="border-t border-slate-100 px-4 py-3">
                               <p className="text-sm font-semibold text-navy">Proof of payment</p>
                               <p className="mt-1 text-xs text-slate-600">
-                                Upload a bank deposit slip or EFT confirmation (PDF, JPEG, or PNG, up to 10 MB). The firm reviews it before the invoice is marked paid.
+                                Upload a bank deposit slip or EFT confirmation (PDF, JPEG, or PNG, up to 50 MB). The firm reviews it before the invoice is marked paid.
                               </p>
                               {(i.proofs || []).length > 0 && (
                                 <ul className="mt-2 space-y-1 text-sm">
