@@ -13,14 +13,19 @@ const ADS = {
   connect: "https://*.googlesyndication.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.google.com",
 };
 
-const buildCsp = (ads: boolean) => [
+// In-browser background removal on the website settings page: MediaPipe's WebAssembly from jsDelivr
+// and its portrait model from Google's model bucket. Allowed on that page only.
+const PHOTO_TOOL = { script: "'wasm-unsafe-eval' https://cdn.jsdelivr.net", connect: "https://cdn.jsdelivr.net https://storage.googleapis.com" };
+
+const buildCsp = (ads: boolean, photo = false) => [
   "default-src 'self'",
   // Next.js injects inline bootstrap scripts; dev mode also needs eval for fast refresh.
-  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}${ads ? ` ${ADS.script}` : ""}`,
+  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}${ads ? ` ${ADS.script}` : ""}${photo ? ` ${PHOTO_TOOL.script}` : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ws: wss: https://api.github.com${ads ? ` ${ADS.connect}` : ""}`,
+  `connect-src 'self' ws: wss: https://api.github.com${ads ? ` ${ADS.connect}` : ""}${photo ? ` ${PHOTO_TOOL.connect}` : ""}`,
+  "worker-src 'self' blob:",
   "media-src 'self' blob:",
   `frame-src 'self' blob:${ads ? ` ${ADS.frame}` : ""}`,
   "object-src 'none'",
@@ -62,6 +67,7 @@ const nextConfig: NextConfig = {
       ...(ADSENSE_ON
         ? ["/blog", "/blog/:slug"].map((source) => ({ source, headers: [{ key: "Content-Security-Policy", value: buildCsp(true) }] }))
         : []),
+      { source: "/website", headers: [{ key: "Content-Security-Policy", value: buildCsp(false, true) }] },
       ...noindex.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] })),
     ];
   },

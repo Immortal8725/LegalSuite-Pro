@@ -35,6 +35,7 @@ public class PublicSiteService {
     private final AppUserRepository users;
     private final NewsletterOptInRepository optIns;
     private final AuditService audit;
+    private final PublicSitePhotoService photos;
 
     public PublicSiteService(
             TenantRepository tenants,
@@ -42,8 +43,10 @@ public class PublicSiteService {
             PublicSiteFeatureRepository features,
             AppUserRepository users,
             NewsletterOptInRepository optIns,
-            AuditService audit) {
+            AuditService audit,
+            PublicSitePhotoService photos) {
         this.audit = audit;
+        this.photos = photos;
         this.tenants = tenants;
         this.sites = sites;
         this.features = features;
@@ -173,8 +176,14 @@ public class PublicSiteService {
         m.put("practices", practices);
         List<String> keys = live.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).toList();
         m.put("features", keys);
+        Map<String, String> photoUrls = photos.liveUrls(tenant.getId(), tenant.getSlug());
+        m.put("heroPhoto", photoUrls.get("hero"));
         if (live.get("people")) {
-            m.put("people", directory(tenant.getId()));
+            List<Map<String, Object>> people = directory(tenant.getId());
+            for (Map<String, Object> person : people) {
+                person.put("photo", photoUrls.get("person-" + person.get("id")));
+            }
+            m.put("people", people);
         }
         if (live.get("insights")) {
             m.put("insights", PublicSiteCatalog.insights(tenant.getCountry()).stream().map(this::article).toList());
@@ -192,6 +201,16 @@ public class PublicSiteService {
             m.put("recognition", recognition(site.getRecognitionJson()));
         }
         return m;
+    }
+
+    /** Tenant behind a published site, or 404: visitors never see drafts. */
+    public UUID publishedTenantId(String slug) {
+        Tenant tenant = tenants.findBySlug(normalizeSlug(slug))
+                .orElseThrow(() -> ApiException.notFound("Firm not found"));
+        if ("deleted".equals(tenant.getStatus()) || "purged".equals(tenant.getStatus())) throw ApiException.notFound("Firm not found");
+        TenantPublicSite site = sites.findByTenantId(tenant.getId()).orElse(null);
+        if (site == null || !"published".equals(site.getPublishStatus())) throw ApiException.notFound("Firm not found");
+        return tenant.getId();
     }
 
     public void requireBookingOpen(String slug) {
@@ -436,6 +455,12 @@ public class PublicSiteService {
             rows.add(item);
         }
         m.put("features", rows);
+        m.put("photos", photos.adminState(tenant.getId()));
+        List<Map<String, Object>> photoPeople = new ArrayList<>();
+        for (Map<String, Object> person : directory(tenant.getId())) {
+            photoPeople.add(Map.of("id", person.get("id"), "fullName", String.valueOf(person.get("fullName")), "title", String.valueOf(person.get("title"))));
+        }
+        m.put("photoPeople", photoPeople);
         return m;
     }
 
@@ -559,10 +584,12 @@ public class PublicSiteService {
                 || !same(site.getTagline(), site.getLiveTagline())
                 || !same(site.getAccent(), site.getLiveAccent())
                 || !same(blankTo(site.getTheme(), "light"), blankTo(site.getLiveTheme(), "light"))
-                || !same(site.getAboutText(), site.getLiveAboutText());
+                || !same(site.getAboutText(), site.getLiveAboutText())
+                || photos.anyPending(site.getTenantId());
     }
 
-    private static void copyBrandingLive(TenantPublicSite site) {
+    private void copyBrandingLive(TenantPublicSite site) {
+        photos.promote(site.getTenantId());
         site.setLiveFirmName(site.getFirmName());
         site.setLiveTagline(site.getTagline());
         site.setLiveAccent(site.getAccent());

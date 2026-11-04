@@ -552,6 +552,7 @@ export type PublicPerson = {
   id: string;
   fullName: string;
   initials: string;
+  photo?: string | null;
   title: string;
   phone?: string | null;
   email?: string | null;
@@ -578,6 +579,7 @@ export type PublicSite = {
   features?: string[];
   practices?: { name: string; slug: string }[];
   people?: PublicPerson[];
+  heroPhoto?: string | null;
   insights?: { slug: string; title: string; type: string; date: string; summary: string; body: string }[];
   situations?: { slug: string; title: string; summary: string }[];
   recognition?: { year: string; source: string; title: string }[];
@@ -597,7 +599,11 @@ export type PublicSiteFeatureState = {
   live: boolean;
 };
 
+export type PublicSitePhotoState = { slot: string; draft: boolean; draftVersion?: number | null; live: boolean; pending: boolean };
+
 export type PublicSiteAdmin = {
+  photos?: Record<string, PublicSitePhotoState>;
+  photoPeople?: { id: string; fullName: string; title: string }[];
   tenantId: string;
   slug: string;
   publishStatus: string;

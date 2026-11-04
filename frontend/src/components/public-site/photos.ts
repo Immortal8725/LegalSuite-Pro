@@ -16,3 +16,12 @@ export const DESK = "/marketing/desk.jpg";
 export function portraitSrc(name: string, index = 0) {
   return NAMED[name] || POOL[index % POOL.length];
 }
+
+/** A firm's own approved photograph wins over the placeholder. Uploaded files are served as-is. */
+export function personPhoto(person: { fullName: string; photo?: string | null }, index = 0) {
+  return person.photo || portraitSrc(person.fullName, index);
+}
+
+export function isUploaded(src: string) {
+  return src.startsWith("/api/");
+}
