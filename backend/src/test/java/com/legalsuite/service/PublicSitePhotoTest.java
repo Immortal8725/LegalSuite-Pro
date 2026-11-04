@@ -54,6 +54,14 @@ class PublicSitePhotoTest {
         mvc.perform(multipart("/api/v1/public-site/photos/hero").file(new MockMultipartFile("file", "x.png", "image/png", png))
                 .header("Authorization", "Bearer " + sipho)).andExpect(status().isForbidden());
 
+        // High-resolution files up to 15 MB are accepted; anything larger is refused.
+        byte[] big = java.util.Arrays.copyOf(png, 12 * 1024 * 1024);
+        mvc.perform(multipart("/api/v1/public-site/photos/hero").file(new MockMultipartFile("file", "big.png", "image/png", big))
+                .header("Authorization", "Bearer " + thabo)).andExpect(status().isOk());
+        byte[] tooBig = java.util.Arrays.copyOf(png, 15 * 1024 * 1024 + 1);
+        mvc.perform(multipart("/api/v1/public-site/photos/hero").file(new MockMultipartFile("file", "huge.png", "image/png", tooBig))
+                .header("Authorization", "Bearer " + thabo)).andExpect(status().isBadRequest());
+
         mvc.perform(multipart("/api/v1/public-site/photos/hero").file(new MockMultipartFile("file", "hero.png", "image/png", png))
                 .header("Authorization", "Bearer " + thabo)).andExpect(status().isOk());
         byte[] draft = mvc.perform(get("/api/v1/public-site/photos/hero").header("Authorization", "Bearer " + thabo))

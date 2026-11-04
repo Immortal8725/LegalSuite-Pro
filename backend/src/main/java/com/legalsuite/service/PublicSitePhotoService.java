@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 public class PublicSitePhotoService {
-    public static final long MAX_BYTES = 5L * 1024 * 1024;
+    public static final long MAX_BYTES = 15L * 1024 * 1024;
     private static final Set<String> TENANT_ADMINS = Set.of("owner", "partner", "director");
     private static final Pattern PERSON_SLOT = Pattern.compile("person-[0-9a-fA-F-]{36}");
 
@@ -47,7 +47,7 @@ public class PublicSitePhotoService {
         UUID tenantId = requireTenantAdmin();
         String clean = requireSlot(tenantId, slot);
         if (file == null || file.isEmpty()) throw ApiException.badRequest("Choose a photograph to upload");
-        if (file.getSize() > MAX_BYTES) throw ApiException.badRequest("Photographs can be up to 5 MB");
+        if (file.getSize() > MAX_BYTES) throw ApiException.badRequest("Photographs can be up to 15 MB");
         byte[] bytes;
         try {
             bytes = file.getBytes();
