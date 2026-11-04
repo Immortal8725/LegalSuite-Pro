@@ -45,6 +45,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Uploaded firm photos are stored at up to 3200 px; the optimiser serves 800, 1600 or 3200 px copies to suit the screen.
+  images: {
+    deviceSizes: [640, 800, 1080, 1600, 2048, 3200],
+    imageSizes: [96, 128, 256, 384],
+    qualities: [75, 90],
+    formats: ["image/webp"],
+    minimumCacheTTL: 2592000,
+  },
   // The Docker image sets NEXT_OUTPUT=standalone; local `next start` uses the normal build.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,

@@ -1,5 +1,6 @@
 "use client";
 
+import { MAX_SOURCE_BYTES } from "@/lib/photo-alpha";
 import { useEffect, useRef, useState } from "react";
 import { api, apiBlob } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -75,8 +76,8 @@ export function SitePhotoPicker({
       setError("Use a JPEG, PNG or WebP photograph.");
       return;
     }
-    if (file.size > 25 * 1024 * 1024) {
-      setError("That photograph is over 25 MB. Choose a smaller one.");
+    if (file.size > MAX_SOURCE_BYTES) {
+      setError("That photograph is over 40 MB. Choose a smaller one.");
       return;
     }
     const tools = await import("@/lib/remove-background");
