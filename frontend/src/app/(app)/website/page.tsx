@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import type { PublicSiteAdmin, PublicSiteFeatureState } from "@/lib/types";
 import { publicSiteUrl, publicSiteLabel } from "@/lib/site-url";
+import { SitePhotoPicker } from "@/components/site-photo-picker";
 
 function publishLabel(status: string) {
   if (status === "published") return "Published";
@@ -40,6 +41,13 @@ export default function WebsiteSettingsPage() {
   const [accent, setAccent] = useState("navy");
   const [theme, setTheme] = useState("light");
   const [requested, setRequested] = useState<Record<string, boolean>>({});
+
+  function reloadPhotos() {
+    apiGet<PublicSiteAdmin>("/api/v1/public-site")
+      .then((next) => setSite((prev) => (prev ? { ...prev, photos: next.photos, photoPeople: next.photoPeople, brandingStatus: next.brandingStatus } : next)))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not reload photographs."));
+    setSaved("Photograph saved to your draft. Submit for approval to put it on the public site.");
+  }
 
   useEffect(() => {
     apiGet<PublicSiteAdmin>("/api/v1/public-site")
@@ -173,6 +181,41 @@ export default function WebsiteSettingsPage() {
                 <p className="mt-2 text-xs text-slate-600">Light is the cool neutral site. Dark is a near-black navy field with cream type and gold rules. It goes live only after approval, same as the accent.</p>
               </div>
               <p className="text-xs text-slate-600">Invoices and letterhead still use Firm settings. This name is only for the public site, and only after approval.</p>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Photographs</CardTitle>
+            </CardHeader>
+            <CardBody className="space-y-5">
+              <p className="text-sm text-slate-600">
+                Use your own photographs instead of the placeholders. For portraits the background is cleared on this computer, so the
+                photograph never goes to an outside service. You see the result on the light and dark site before you save, and you can
+                keep the original instead. New photographs go live with your next branding approval.
+              </p>
+              <SitePhotoPicker
+                slot="hero"
+                label="Main photograph"
+                hint="The large picture at the top of your home page, for example your office or team. Landscape works best."
+                state={site.photos?.hero}
+                cutoutByDefault={false}
+                onSaved={reloadPhotos}
+              />
+              {(site.photoPeople || []).map((person) => (
+                <SitePhotoPicker
+                  key={person.id}
+                  slot={`person-${person.id}`}
+                  label={`${person.fullName}, ${person.title}`}
+                  hint="A head-and-shoulders portrait. Face the camera with good light; any background works."
+                  state={site.photos?.[`person-${person.id}`]}
+                  cutoutByDefault
+                  onSaved={reloadPhotos}
+                />
+              ))}
+              {(site.photoPeople || []).length === 0 ? (
+                <p className="text-xs text-slate-600">Portraits appear here for each lawyer listed on the People page (Team, public profile on).</p>
+              ) : null}
             </CardBody>
           </Card>
 

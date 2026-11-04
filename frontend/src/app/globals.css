@@ -194,9 +194,12 @@ input[type="date"] {
 
 .ps-photo {
   filter: none;
+  /* Shows behind portraits whose background the firm cleared; placeholders cover it. */
+  background: radial-gradient(120% 90% at 50% 20%, #f7f3ea 0%, #e6dfd1 100%);
 }
 
 .ps-site[data-theme="dark"] .ps-photo {
+  background: radial-gradient(120% 90% at 50% 20%, #24324a 0%, #111a2b 100%);
   outline: 1px solid rgba(247, 241, 230, 0.45);
   box-shadow: 0 28px 46px -18px rgba(0, 0, 0, 0.72);
   filter: none;

@@ -1,7 +1,15 @@
 package com.legalsuite.web;
 
 import com.legalsuite.common.ApiResponse;
+import com.legalsuite.service.PublicSitePhotoService;
 import com.legalsuite.service.PublicSiteService;
+import java.time.Duration;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +22,40 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PublicSiteController {
     private final PublicSiteService sites;
+    private final PublicSitePhotoService photos;
 
-    public PublicSiteController(PublicSiteService sites) {
+    public PublicSiteController(PublicSiteService sites, PublicSitePhotoService photos) {
         this.sites = sites;
+        this.photos = photos;
+    }
+
+    @GetMapping("/api/v1/public/sites/{slug}/photos/{slot}")
+    public ResponseEntity<byte[]> livePhoto(@PathVariable String slug, @PathVariable String slot) {
+        var photo = photos.live(sites.publishedTenantId(slug), slot);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(photo.getKey()))
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(photo.getValue());
+    }
+
+    @PostMapping("/api/v1/public-site/photos/{slot}")
+    public ApiResponse<?> uploadPhoto(@PathVariable String slot, @RequestParam("file") MultipartFile file) {
+        return ApiResponse.ok(photos.upload(slot, file), "Photograph saved. Submit for approval to put it on the site.");
+    }
+
+    @DeleteMapping("/api/v1/public-site/photos/{slot}")
+    public ApiResponse<?> removePhoto(@PathVariable String slot) {
+        return ApiResponse.ok(photos.remove(slot), "Photograph removed from the draft");
+    }
+
+    @GetMapping("/api/v1/public-site/photos/{slot}")
+    public ResponseEntity<byte[]> draftPhoto(@PathVariable String slot) {
+        var photo = photos.draft(slot);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(photo.getKey()))
+                .cacheControl(CacheControl.noStore())
+                .body(photo.getValue());
     }
 
     @GetMapping("/api/v1/public/sites/{slug}")

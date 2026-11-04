@@ -8,7 +8,7 @@ import type { PublicPerson, PublicSite } from "@/lib/types";
 import { apiPost } from "@/lib/api";
 import { usePublicSite } from "@/components/public-site/site-context";
 import { EnquiryForm } from "@/components/public-site/enquiry-form";
-import { DESK, READING_ROOM, portraitSrc } from "@/components/public-site/photos";
+import { DESK, READING_ROOM, personPhoto } from "@/components/public-site/photos";
 import { LANGS, useLang } from "@/lib/i18n";
 import { PageIntro, Portrait, SectionTitle, SiteFrame, href, serifStyle, useSiteBase } from "@/components/public-site/site-chrome";
 
@@ -137,7 +137,8 @@ function PersonCard({ person, base, index = 0 }: { person: PublicPerson; base: s
     <Link href={href(base, `/people/${person.id}`)} className="block">
       <div className={`ps-photo relative aspect-[3/4] w-full overflow-hidden ${floatShadow}`}>
         <Image
-          src={portraitSrc(person.fullName, index)}
+          src={personPhoto(person, index)}
+          unoptimized={Boolean(person.photo)}
           alt=""
           fill
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 45vw, 90vw"
@@ -163,7 +164,8 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
         style={{ transform: "rotate(-1.5deg)" }}
       >
         <Image
-          src={READING_ROOM}
+          src={site.heroPhoto || READING_ROOM}
+          unoptimized={Boolean(site.heroPhoto)}
           alt="People working together beside a sunlit window"
           fill
           priority
@@ -178,7 +180,7 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
           style={{ transform: "rotate(2.4deg)" }}
         >
           <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
-            <Image src={portraitSrc(lead.fullName, 0)} alt="" fill sizes="(min-width: 1024px) 245px, 48vw" className="object-cover object-[center_18%]" />
+            <Image src={personPhoto(lead, 0)} unoptimized={Boolean(lead.photo)} alt="" fill sizes="(min-width: 1024px) 245px, 48vw" className="object-cover object-[center_18%]" />
           </div>
           <p className="px-1.5 pb-0.5 pt-2 text-lg font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{lead.fullName}</p>
           <p className="px-1.5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{lead.title}</p>
@@ -191,7 +193,7 @@ function HeroCluster({ site, base }: { site: PublicSite; base: string }) {
           style={{ transform: "rotate(-2.5deg)" }}
         >
           <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
-            <Image src={portraitSrc(next.fullName, 1)} alt="" fill sizes="(min-width: 1024px) 205px, 40vw" className="object-cover object-[center_15%]" />
+            <Image src={personPhoto(next, 1)} unoptimized={Boolean(next.photo)} alt="" fill sizes="(min-width: 1024px) 205px, 40vw" className="object-cover object-[center_15%]" />
           </div>
           <p className="px-1 pb-0.5 pt-1.5 text-base font-semibold leading-tight text-[var(--ps-ink)]" style={serifStyle}>{next.fullName}</p>
           <p className="px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ps-meta)]">{next.title}</p>
@@ -449,7 +451,7 @@ function Person({ site, base }: { site: PublicSite; base: string }) {
       <div className="mx-auto grid grid-cols-1 max-w-6xl gap-10 px-6 py-16 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <div className={floatShadow} style={{ transform: "rotate(-1.25deg)" }}>
-            <Portrait initials={person.initials} name={person.fullName} src={portraitSrc(person.fullName)} />
+            <Portrait initials={person.initials} name={person.fullName} src={personPhoto(person)} />
           </div>
         </div>
         <div className="lg:col-span-8">

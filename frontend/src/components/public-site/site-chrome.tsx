@@ -203,7 +203,7 @@ export function Portrait({ initials, name, src }: { initials: string; name: stri
   if (src) {
     return (
       <div className="ps-photo relative aspect-[4/5] w-full overflow-hidden">
-        <Image src={src} alt={`Portrait of ${name}`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover object-[center_18%]" />
+        <Image src={src} unoptimized={src.startsWith("/api/")} alt={`Portrait of ${name}`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover object-[center_18%]" />
       </div>
     );
   }
