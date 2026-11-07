@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { PrivilegeStrip } from "@/components/privilege-strip";
 import { statutoryClockLabel } from "@/lib/docket";
@@ -38,6 +39,7 @@ export default function LeadsPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<RetainResult | null>(null);
+  const { confirm } = useConfirm();
 
   const load = () => apiGet<Lead[]>("/api/v1/intake/leads").then(setRows).catch((e) => setError(e.message));
   useEffect(() => {
@@ -62,6 +64,13 @@ export default function LeadsPage() {
   }
 
   async function issueWaiver(id: string) {
+    const yes = await confirm({
+      title: "Issue a conflict waiver?",
+      body: "The client will be asked to sign before you can retain them. This does not itself open a matter.",
+      confirmLabel: "Issue waiver",
+      danger: false,
+    });
+    if (!yes) return;
     setBusy(id);
     setError(null);
     try {

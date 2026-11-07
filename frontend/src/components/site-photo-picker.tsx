@@ -3,6 +3,7 @@
 import { MAX_SOURCE_BYTES } from "@/lib/photo-alpha";
 import { useEffect, useRef, useState } from "react";
 import { api, apiBlob } from "@/lib/api";
+import { useConfirm } from "@/components/confirm-provider";
 import { Button } from "@/components/ui/button";
 import type { PublicSitePhotoState } from "@/lib/types";
 
@@ -43,6 +44,8 @@ export function SitePhotoPicker({
   const [stage, setStage] = useState<Stage>({ kind: "idle" });
   const [current, setCurrent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [removed, setRemoved] = useState(false);
+  const { confirm, undoable } = useConfirm();
 
   useEffect(() => {
     let url: string | null = null;
@@ -141,20 +144,30 @@ export function SitePhotoPicker({
   }
 
   async function remove() {
+    const yes = await confirm({
+      title: `Remove the ${label.toLowerCase()} photograph?`,
+      body: "It leaves your draft. You can undo this for a few seconds.",
+      confirmLabel: "Remove",
+    });
+    if (!yes) return;
+    setRemoved(true);
     setError(null);
-    try {
-      await api(`/api/v1/public-site/photos/${slot}`, { method: "DELETE" });
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not remove the photograph.");
-    }
+    undoable("Photograph removed", async () => {
+      try {
+        await api(`/api/v1/public-site/photos/${slot}`, { method: "DELETE" });
+        onSaved();
+      } catch (err) {
+        setRemoved(false);
+        setError(err instanceof Error ? err.message : "Could not remove the photograph.");
+      }
+    }, () => setRemoved(false));
   }
 
   return (
     <div className="border-b border-slate-100 pb-5" data-testid={`photo-${slot}`}>
       <div className="flex flex-wrap items-start gap-4">
         <div className="relative h-28 w-24 shrink-0 overflow-hidden border border-slate-200" style={CHECKER}>
-          {current ? (
+          {current && !removed ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={current} alt={`Current ${label}`} className="h-full w-full object-cover object-top" />
           ) : (

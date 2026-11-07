@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiPost, apiPut, api } from "@/lib/api";
 import { PageHeader } from "@/components/page";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -50,6 +51,7 @@ export default function DirectoryListingSettings() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [np, setNp] = useState({ fullName: "", lpcNumber: "", fidelityExpiresOn: "" });
+  const { confirm, undoable } = useConfirm();
 
   const load = useCallback(() => {
     apiGet<Profile>("/api/v1/directory/profile")
@@ -92,12 +94,24 @@ export default function DirectoryListingSettings() {
   }
 
   async function remove(id: string) {
-    try {
-      await api(`/api/v1/directory/practitioners/${id}`, { method: "DELETE" });
-      load();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Could not remove.");
-    }
+    const person = p?.practitioners.find((x) => x.id === id);
+    if (!person || !p) return;
+    const yes = await confirm({
+      title: `Remove ${person.fullName}?`,
+      body: "They leave this Find a Lawyer listing. You can undo this for a few seconds.",
+      confirmLabel: "Remove",
+    });
+    if (!yes) return;
+    const previous = p;
+    setP({ ...p, practitioners: p.practitioners.filter((x) => x.id !== id) });
+    undoable("Practitioner removed", async () => {
+      try {
+        await api(`/api/v1/directory/practitioners/${id}`, { method: "DELETE" });
+      } catch (err: unknown) {
+        setP(previous);
+        setError(err instanceof Error ? err.message : "Could not remove.");
+      }
+    }, () => setP(previous));
   }
 
   if (!p) return error ? <ErrorBanner error={error} /> : <p className="text-sm text-slate-600">Loading…</p>;

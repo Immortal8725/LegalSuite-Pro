@@ -6,6 +6,7 @@ import { api, apiGet, apiPost, apiPut } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { PageHeader } from "@/components/page";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -53,6 +54,7 @@ export default function BlogAdminPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const operator = user?.role === "superadmin";
+  const { confirm, undoable } = useConfirm();
 
   const load = useCallback(() => {
     apiGet<BlogCard[]>("/api/v1/platform/blog/posts")
@@ -131,13 +133,31 @@ export default function BlogAdminPage() {
     run(() => apiPost<BlogCard>(`/api/v1/platform/blog/posts/${current!.id}/unpublish`), "Taken off the site and moved back to drafts.");
 
   async function remove() {
-    if (!current || !window.confirm(`Delete "${current.title}"? This cannot be undone.`)) return;
-    await run(async () => {
-      await api(`/api/v1/platform/blog/posts/${current.id}`, { method: "DELETE" });
-      setEditing(false);
-      setCurrent(null);
-      return null;
-    }, "Deleted.");
+    if (!current) return;
+    const post = current;
+    const yes = await confirm({
+      title: `Delete "${post.title}"?`,
+      body: "The post leaves the list. You can undo this for a few seconds. After that it is gone.",
+      confirmLabel: "Delete",
+    });
+    if (!yes) return;
+    const previousPosts = posts;
+    setPosts(posts.filter((row) => row.id !== post.id));
+    setEditing(false);
+    setCurrent(null);
+    undoable("Post deleted", async () => {
+      try {
+        await api(`/api/v1/platform/blog/posts/${post.id}`, { method: "DELETE" });
+      } catch (e) {
+        setPosts(previousPosts);
+        setCurrent(post);
+        setError(e instanceof Error ? e.message : "Could not delete the post");
+      }
+    }, () => {
+      setPosts(previousPosts);
+      setCurrent(post);
+      setEditing(true);
+    });
   }
 
   async function uploadCover(file: File | undefined) {
@@ -151,8 +171,25 @@ export default function BlogAdminPage() {
     await run(() => apiPost<BlogCard>(`/api/v1/platform/blog/posts/${current.id}/cover`, fd), "Cover image saved.");
   }
 
-  const removeCover = () =>
-    run(() => api<BlogCard>(`/api/v1/platform/blog/posts/${current!.id}/cover`, { method: "DELETE" }), "Cover image removed.");
+  async function removeCover() {
+    if (!current?.hasCover) return;
+    const post = current;
+    const yes = await confirm({
+      title: "Remove the cover image?",
+      body: "You can undo this for a few seconds.",
+      confirmLabel: "Remove cover",
+    });
+    if (!yes) return;
+    setCurrent({ ...post, hasCover: false });
+    undoable("Cover image removed", async () => {
+      try {
+        await api<BlogCard>(`/api/v1/platform/blog/posts/${post.id}/cover`, { method: "DELETE" });
+      } catch (e) {
+        setCurrent(post);
+        setError(e instanceof Error ? e.message : "Could not remove the cover");
+      }
+    }, () => setCurrent(post));
+  }
 
   if (!operator) {
     return (

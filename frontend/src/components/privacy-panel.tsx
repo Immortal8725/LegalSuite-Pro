@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiBlob, apiGet, apiPost, saveBlob } from "@/lib/api";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/input";
 
@@ -116,6 +117,7 @@ export function PrivacyRequestsAdmin() {
   const [requests, setRequests] = useState<PrivacyRequest[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const { confirm } = useConfirm();
   const load = useCallback(() => {
     apiGet<PrivacyRequest[]>("/api/v1/privacy/requests").then(setRequests).catch((e) => setError(e.message));
   }, []);
@@ -123,7 +125,11 @@ export function PrivacyRequestsAdmin() {
 
   async function decide(id: string, approve: boolean) {
     setError(null);
-    if (approve && !window.confirm("Anonymise this person? This cannot be undone.")) return;
+    if (approve && !await confirm({
+      title: "Anonymise this person?",
+      body: "This cannot be undone. Their name and contact details are replaced and cannot be put back.",
+      confirmLabel: "Anonymise",
+    })) return;
     try {
       await apiPost(`/api/v1/privacy/requests/${id}/${approve ? "approve" : "reject"}`, { note: notes[id] || "" });
       load();

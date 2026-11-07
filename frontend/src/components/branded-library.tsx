@@ -5,6 +5,7 @@ import { apiGet, apiPost, api } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import type { FieldReference, LibraryTemplate } from "@/lib/types";
@@ -20,6 +21,7 @@ export function BrandedLibrary() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const { confirm, undoable } = useConfirm();
 
   const load = () => apiGet<LibraryTemplate[]>("/api/v1/doc-templates").then(setRows).catch((e) => setError(e.message));
   useEffect(() => {
@@ -60,13 +62,23 @@ export function BrandedLibrary() {
                     variant="ghost"
                     aria-label={`Remove ${t.name}`}
                     onClick={async () => {
+                      const yes = await confirm({
+                        title: `Remove ${t.name}?`,
+                        body: "The template leaves the library. You can undo this for a few seconds.",
+                        confirmLabel: "Remove",
+                      });
+                      if (!yes) return;
+                      const previous = rows;
+                      setRows(rows.filter((row) => row.id !== t.id));
                       setError(null);
-                      try {
-                        await api(`/api/v1/doc-templates/${t.id}`, { method: "DELETE" });
-                        load();
-                      } catch (e) {
-                        setError(e instanceof Error ? e.message : "Could not remove the template");
-                      }
+                      undoable(`Removed ${t.name}`, async () => {
+                        try {
+                          await api(`/api/v1/doc-templates/${t.id}`, { method: "DELETE" });
+                        } catch (e) {
+                          setRows(previous);
+                          setError(e instanceof Error ? e.message : "Could not remove the template");
+                        }
+                      }, () => setRows(previous));
                     }}
                   >
                     Remove
