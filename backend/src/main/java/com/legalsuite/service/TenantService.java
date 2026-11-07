@@ -143,6 +143,23 @@ public class TenantService {
         if (body.get("popiaOperatorAcknowledged") != null) {
             tenant.setPopiaOperatorAcknowledged(Boolean.parseBoolean(String.valueOf(body.get("popiaOperatorAcknowledged"))));
         }
+        if (body.get("billingIncrementMinutes") != null || body.get("defaultRate") != null) {
+            Map<String, Object> settings = new HashMap<>(JsonLists.map(tenant.getSettingsJson()));
+            if (body.get("billingIncrementMinutes") != null) {
+                int minutes;
+                try {
+                    minutes = Integer.parseInt(String.valueOf(body.get("billingIncrementMinutes")));
+                } catch (NumberFormatException ex) {
+                    throw ApiException.badRequest("Billing increment is 6 or 15 minutes.");
+                }
+                if (minutes != 6 && minutes != 15) throw ApiException.badRequest("Billing increment is 6 or 15 minutes.");
+                settings.put("billingIncrementMinutes", minutes);
+            }
+            if (body.get("defaultRate") != null) {
+                settings.put("defaultHourlyRate", String.valueOf(body.get("defaultRate")));
+            }
+            tenant.setSettingsJson(JsonLists.toJson(settings));
+        }
         tenant.setUpdatedAt(Instant.now());
         tenants.save(tenant);
         if (body.get("template") != null || body.get("heroSubtitle") != null) {

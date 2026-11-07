@@ -7,6 +7,7 @@ import { useConfirm } from "@/components/confirm-provider";
 import { DataTable, downloadCsv } from "@/components/data-table";
 import { useDebouncedFilter } from "@/components/filter-bar";
 import { throttleClick } from "@/lib/throttle";
+import { FieldHint, requiredProblem } from "@/lib/fields";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function CasesPage() {
   const [open, setOpen] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [matterFields, setMatterFields] = useState<Record<string, string | null>>({});
   const [selected, setSelected] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const { text, setText, query } = useDebouncedFilter();
@@ -143,6 +145,9 @@ export default function CasesPage() {
           <Button
             disabled={saving}
             onClick={async () => {
+              const next = { title: requiredProblem(form.title, "a matter title"), clientId: form.clientId ? null : "Choose a client." };
+              setMatterFields(next);
+              if (next.title || next.clientId) return;
               setSaving(true);
               setDialogError(null);
               try {
@@ -174,6 +179,7 @@ export default function CasesPage() {
           <div>
             <Label>Title</Label>
             <Input aria-label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <FieldHint text={matterFields.title} />
           </div>
           <div>
             <Label>Client</Label>
@@ -185,6 +191,7 @@ export default function CasesPage() {
                 </option>
               ))}
             </Select>
+            <FieldHint text={matterFields.clientId} />
           </div>
           <div>
             <Label>Practice area</Label>

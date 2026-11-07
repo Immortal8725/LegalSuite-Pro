@@ -8,6 +8,7 @@ import { OutboundPanel } from "@/components/outbound-panel";
 import { useConfirm } from "@/components/confirm-provider";
 import { DataTable, downloadCsv } from "@/components/data-table";
 import { useDebouncedFilter } from "@/components/filter-bar";
+import { emailProblem, FieldHint, requiredProblem } from "@/lib/fields";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export default function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [clientFields, setClientFields] = useState<Record<string, string | null>>({});
   const [selected, setSelected] = useState<string[]>([]);
   const { text, setText, query } = useDebouncedFilter();
   const { confirm } = useConfirm();
@@ -142,6 +144,12 @@ export default function ClientsPage() {
           <Button
             disabled={saving}
             onClick={async () => {
+              const next = {
+                name: form.type === "company" ? requiredProblem(form.companyName, "the company name") : requiredProblem(form.firstName, "a first name"),
+                email: emailProblem(form.email, false),
+              };
+              setClientFields(next);
+              if (next.name || next.email) return;
               setSaving(true);
               setDialogError(null);
               try {
@@ -170,6 +178,7 @@ export default function ClientsPage() {
             <div>
               <Label>First name</Label>
               <Input aria-label="First name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+              {form.type !== "company" && <FieldHint text={clientFields.name} />}
             </div>
             <div>
               <Label>Last name</Label>
@@ -179,8 +188,10 @@ export default function ClientsPage() {
           <div>
             <Label>Company</Label>
             <Input aria-label="Company" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} />
+            {form.type === "company" && <FieldHint text={clientFields.name} />}
           </div>
           <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <FieldHint text={clientFields.email} />
           <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           <div>
             <Label>{form.type === "company" ? "Registration number" : "ID or passport number"}</Label>
