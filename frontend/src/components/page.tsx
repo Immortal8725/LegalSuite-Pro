@@ -106,7 +106,14 @@ export function Td({ children, className }: { children: ReactNode; className?: s
 }
 
 export function Loading() {
-  return <p className="py-16 text-center text-sm text-slate-600">Loading…</p>;
+  return (
+    <div className="space-y-3 py-6" aria-busy="true" aria-label="Loading">
+      <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
+      <div className="h-4 w-full max-w-xl animate-pulse rounded bg-slate-200" />
+      <div className="h-24 animate-pulse rounded-xl bg-slate-200" />
+      <div className="h-24 animate-pulse rounded-xl bg-slate-200" />
+    </div>
+  );
 }
 
 export { Button };

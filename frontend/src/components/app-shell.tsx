@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { throttle } from "@/lib/throttle";
 import {
   Scale,
   LayoutDashboard,
@@ -113,6 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [notifs, setNotifs] = useState<Notice[]>([]);
   const [clientUnread, setClientUnread] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [online, setOnline] = useState(true);
 
   const enabled = new Set(tenant?.enabledModules || []);
   const role = (user?.role || "").toLowerCase();
@@ -158,6 +160,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("owlaw:inbox-changed", loadUnread);
     return () => { clearInterval(t); window.removeEventListener("owlaw:inbox-changed", loadUnread); };
   }, [pathname]);
+
+  useEffect(() => {
+    const sync = () => setOnline(navigator.onLine);
+    sync();
+    const onScroll = throttle(() => setHits(null), 200);
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     apiGet<Notice[]>("/api/v1/notifications")
@@ -247,6 +265,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
+        {!online && (
+          <div className="bg-amber-100 px-4 py-2 text-sm text-amber-950" role="status">
+            You are offline. You can keep reading what is already open. New saves wait until the connection returns.
+          </div>
+        )}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-white px-4 sm:px-6">
           <button
             type="button"

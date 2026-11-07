@@ -90,7 +90,7 @@ export default function ClientsPage() {
   return (
     <div>
       <PageHeader title="Clients" subtitle="People and companies the firm represents. Portal access is a toggle." actions={<Button onClick={openDialog}>New client</Button>} />
-      <ErrorBanner error={error} />
+      <ErrorBanner error={error} onRetry={load} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <label className="text-sm">
           Search

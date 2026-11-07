@@ -9,6 +9,7 @@ import { Loading, PageHeader, StatusBadge } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { PrivilegeStrip } from "@/components/privilege-strip";
+import { ErrorBanner } from "@/components/ui/dialog";
 import type { Dashboard, DocketItem } from "@/lib/types";
 import { publicSiteUrl, publicSiteLabel } from "@/lib/site-url";
 
@@ -35,13 +36,20 @@ export default function DashboardPage() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
     apiGet<Dashboard>("/api/v1/dashboard")
-      .then(setData)
+      .then((next) => {
+        setData(next);
+        setError(null);
+      })
       .catch((e) => setError(e.message));
+  }
+
+  useEffect(() => {
+    load();
   }, []);
 
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (!data && error) return <p className="text-red-600">{error} <button type="button" className="font-semibold underline" onClick={load}>Try again</button></p>;
   if (!data) return <Loading />;
 
   const docket: DocketItem[] = data.docket || [];
@@ -52,6 +60,7 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <ErrorBanner error={error} onRetry={load} />
       <PageHeader
         title="Docket"
         subtitle={
