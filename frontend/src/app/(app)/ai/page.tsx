@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { apiGet, apiPost } from "@/lib/api";
 import { Button, PageHeader } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { MatterAssistant } from "@/components/matter-assistant";
 import type { Lead, Matter } from "@/lib/types";
 
 export default function AiPage() {
+  const { tenant } = useAuth();
   const [chatCaseId, setChatCaseId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cases, setCases] = useState<Matter[]>([]);
@@ -41,7 +43,7 @@ export default function AiPage() {
     <div>
       <PageHeader
         title="Draft help"
-        subtitle="Draft help for staff on this firm. The attorney remains responsible. A model vendor runs only if the firm configured one. Otherwise the answer stays on this tenant."
+        subtitle={`Draft help for staff on this firm. ${tenant?.planName || "Your"} plan includes ${tenant?.aiActionsPerAttorney ?? "the plan's"} assistant actions per attorney each month. The attorney remains responsible. A model vendor runs only if the firm configured one. Otherwise the answer stays on this tenant.`}
       />
       <PrivilegeStrip />
       <ErrorBanner error={error} />

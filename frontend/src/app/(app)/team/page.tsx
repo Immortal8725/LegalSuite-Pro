@@ -23,10 +23,10 @@ function grantable(myRole: string) {
 const EMPTY = { firstName: "", lastName: "", email: "", role: "associate", hourlyRate: "250" };
 
 export default function TeamPage() {
-  const { user } = useAuth();
+  const { user, tenant } = useAuth();
   const myRole = user?.role || "";
   const canManage = TENANT_ADMINS.has(myRole);
-  const roles = grantable(myRole);
+  const roles = grantable(myRole).filter((r) => tenant?.staffSeats !== false || RANK.indexOf(r) >= RANK.indexOf("associate"));
   const [rows, setRows] = useState<TeamMember[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);

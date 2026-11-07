@@ -43,6 +43,8 @@ public class AiService {
     private final AiModelGateway models;
     private final com.legalsuite.config.AiProperties aiProps;
     private final com.legalsuite.repo.AuditLogRepository auditLogs;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PlanAccess planAccess;
 
     /** Guardrails added to every prompt sent to a model vendor. */
     static final String GUARDRAILS = " Rules: assist a South African attorney only. Do not draft full legal documents"
@@ -84,10 +86,10 @@ public class AiService {
         UUID tid = TenantContext.requireTenant();
         java.time.Instant monthStart = java.time.LocalDate.now(java.time.ZoneOffset.UTC).withDayOfMonth(1)
                 .atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
-        int cap = aiProps.getMonthlyModelActions();
+        int cap = Math.min(aiProps.getMonthlyModelActions(), planAccess.assistantAllowance());
         if (auditLogs.countByTenantIdAndActionAndCreatedAtAfter(tid, "ai.model", monthStart) >= cap) {
             return new AiModelGateway.Completion(AiModelGateway.Status.LOCAL, "local", null,
-                    "Your firm has used its " + cap + " AI actions for this month. Showing the on-tenant draft instead.");
+                    "Your firm has used its " + cap + " assistant actions for this month. Showing the on-tenant draft instead.");
         }
         AiModelGateway.Completion c = models.complete(system + GUARDRAILS, prompt);
         if (ok(c)) audit.record("ai.model", "ai", c.provider(), c.provider());

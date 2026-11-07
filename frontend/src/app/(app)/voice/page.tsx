@@ -36,7 +36,8 @@ function kindLabel(kind?: string) {
 }
 
 export default function VoicePage() {
-  const { user } = useAuth();
+  const { user, tenant } = useAuth();
+  const canRecord = tenant?.callRecording === true;
   const { confirm } = useConfirm();
   const { startCall } = useCalls();
   const [rows, setRows] = useState<CallRow[]>([]);
@@ -158,10 +159,14 @@ export default function VoicePage() {
               </option>
             ))}
           </select>
-          <label className="flex items-center gap-2 text-xs text-slate-600">
-            <input type="checkbox" checked={record} onChange={(e) => setRecord(e.target.checked)} />
-            Record (opt-in)
-          </label>
+          {canRecord ? (
+            <label className="flex items-center gap-2 text-xs text-slate-600">
+              <input type="checkbox" checked={record} onChange={(e) => setRecord(e.target.checked)} />
+              Record (opt-in)
+            </label>
+          ) : (
+            <p className="text-xs text-slate-600">Call recording is included on the Practice plan.</p>
+          )}
           <Button
             disabled={!peer}
             onClick={async () => {
@@ -427,8 +432,14 @@ export default function VoicePage() {
                 Not on a matter
               </label>
               <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={pstnRecord} onChange={(e) => setPstnRecord(e.target.checked)} />
-                Record (opt-in)
+                {canRecord ? (
+                  <>
+                    <input type="checkbox" checked={pstnRecord} onChange={(e) => setPstnRecord(e.target.checked)} />
+                    Record (opt-in)
+                  </>
+                ) : (
+                  <span>Call recording is included on the Practice plan.</span>
+                )}
               </label>
               <Button
                 disabled={placing || !destination || !callback || (!matterId && !nonMatter)}

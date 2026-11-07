@@ -38,6 +38,7 @@ import { useTimer } from "@/components/timer-provider";
 import { apiGet, apiPatch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PhoneTables } from "@/components/phone-tables";
+import { planName } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Notice, Matter, Party } from "@/lib/types";
@@ -194,6 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div>
             <p className="text-sm font-bold">OwLaw</p>
             <p className="text-[11px] text-white/50">{tenant?.firmName}</p>
+            <p className="text-[11px] font-semibold text-gold">{planName(tenant?.planSlug)} plan</p>
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">

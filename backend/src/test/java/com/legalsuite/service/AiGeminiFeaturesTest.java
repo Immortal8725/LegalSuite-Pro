@@ -87,7 +87,7 @@ class AiGeminiFeaturesTest {
         props.setMonthlyModelActions(0);
         call("draft-email", "{\"kind\":\"status\"}")
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.mode").value("local-heuristic"))
-                .andExpect(jsonPath("$.data.notice", containsString("AI actions for this month")));
+                .andExpect(jsonPath("$.data.notice", containsString("assistant actions for this month")));
         Mockito.verify(gateway, Mockito.never()).complete(anyString(), anyString());
         props.setMonthlyModelActions(100);
     }

@@ -37,6 +37,8 @@ public class PublicSiteService {
     private final AuditService audit;
     private final PublicSitePhotoService photos;
     private final PublicContentCache cache;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PlanAccess planAccess;
 
     public PublicSiteService(
             TenantRepository tenants,
@@ -318,6 +320,7 @@ public class PublicSiteService {
     @Transactional
     public Map<String, Object> submit() {
         requireTenantAdmin();
+        planAccess.requireWebsite();
         Tenant tenant = currentTenant();
         TenantPublicSite site = ensureDraft(tenant);
         for (PublicSiteFeature row : features.findByTenantIdOrderByFeatureKeyAsc(tenant.getId())) {

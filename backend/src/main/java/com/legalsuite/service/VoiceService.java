@@ -53,6 +53,8 @@ public class VoiceService {
     private final TwilioGateway twilio;
     private final TwilioProperties twilioProps;
     private final AuditService audit;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PlanAccess planAccess;
     private final SecureRandom random = new SecureRandom();
     private final BigDecimal outboundPerMinute;
     private final BigDecimal inboundPerMinute;
@@ -103,6 +105,7 @@ public class VoiceService {
         if (rec.isRecordingEnabled() && !rec.isRecordingConsentGiven()) {
             throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
         }
+        if (rec.isRecordingEnabled()) planAccess.requireRecording();
         if (body.get("calleeUserId") != null) rec.setCalleeUserId(Ids.optUuid(body.get("calleeUserId"), "person called"));
         if (body.get("caseId") != null) rec.setCaseId(Ids.optUuid(body.get("caseId"), "matter"));
         if (body.get("clientId") != null) rec.setClientId(Ids.optUuid(body.get("clientId"), "client"));
@@ -248,6 +251,7 @@ public class VoiceService {
         if (record && !consent) {
             throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
         }
+        if (record) planAccess.requireRecording();
         FirmPhoneNumber line = firmNumbers.requireForDial(uuidOrNull(body.get("firmPhoneNumberId")));
         Tenant tenant = tenants.findById(tid()).orElseThrow(() -> ApiException.notFound("Firm not found"));
         String to = E164.normalize(toRaw, tenant.getCountry());
@@ -357,6 +361,7 @@ public class VoiceService {
         if (record && !consent) {
             throw ApiException.badRequest("Recording requires an explicit consent click. This product does not silently capture calls.");
         }
+        if (record) planAccess.requireRecording();
         FirmPhoneNumber line = firmNumbers.requireForDial(uuidOrNull(body.get("firmPhoneNumberId")));
         Tenant tenant = tenants.findById(tid()).orElseThrow(() -> ApiException.notFound("Firm not found"));
         String to = E164.normalize(toRaw, tenant.getCountry());
