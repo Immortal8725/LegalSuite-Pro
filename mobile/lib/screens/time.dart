@@ -170,7 +170,8 @@ class _TimeScreenState extends State<TimeScreen> {
     final entries = (results[0] as List).map((e) => (e as Map).cast<String, dynamic>()).toList()
       ..sort((a, b) => '${b['date']}'.compareTo('${a['date']}'));
     final names = {for (final m in results[2] as List<Map<String, dynamic>>) '${m['id']}': '${m['caseNumber']} ${m['title']}'};
-    return _TimeData(entries, (results[1] as Map).cast<String, dynamic>(), names, results[2] as List<Map<String, dynamic>>);
+    final waiting = (await OfflineDrafts.all()).length;
+    return _TimeData(entries, (results[1] as Map).cast<String, dynamic>(), names, results[2] as List<Map<String, dynamic>>, waiting);
   }
 
   Future<void> _start(_TimeData d) async {
@@ -242,6 +243,11 @@ class _TimeScreenState extends State<TimeScreen> {
           final running = d.timer['running'] == true;
           final total = d.entries.fold<int>(0, (a, e) => a + ((e['durationMinutes'] as num?)?.toInt() ?? 0));
           return ListView(padding: const EdgeInsets.only(bottom: 96), children: [
+            if (d.waiting > 0)
+              Material(
+                color: Colors.amber.shade100,
+                child: ListTile(dense: true, leading: const Icon(Icons.cloud_off), title: Text('${d.waiting} time ${d.waiting == 1 ? 'entry is' : 'entries are'} waiting to send.')),
+              ),
             Card(
               color: running ? navy : Colors.white,
               child: ListTile(
@@ -278,9 +284,10 @@ class _TimeScreenState extends State<TimeScreen> {
 }
 
 class _TimeData {
-  _TimeData(this.entries, this.timer, this.names, this.matters);
+  _TimeData(this.entries, this.timer, this.names, this.matters, this.waiting);
   final List<Map<String, dynamic>> entries;
   final Map<String, dynamic> timer;
   final Map<String, String> names;
   final List<Map<String, dynamic>> matters;
+  final int waiting;
 }
