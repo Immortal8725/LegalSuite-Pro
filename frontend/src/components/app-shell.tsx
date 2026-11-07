@@ -39,6 +39,7 @@ import { useTimer } from "@/components/timer-provider";
 import { apiGet, apiPatch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PhoneTables } from "@/components/phone-tables";
+import { CommandPalette, ShortcutHelp, type PaletteItem } from "@/components/command-palette";
 import { planName } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,6 +116,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [clientUnread, setClientUnread] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
   const [online, setOnline] = useState(true);
+  const [palette, setPalette] = useState(false);
+  const [help, setHelp] = useState(false);
 
   const enabled = new Set(tenant?.enabledModules || []);
   const role = (user?.role || "").toLowerCase();
@@ -162,6 +165,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPalette(true);
+        return;
+      }
+      if (!typing && e.key === "?") {
+        e.preventDefault();
+        setHelp(true);
+      }
+      if (e.key === "Escape") {
+        setPalette(false);
+        setHelp(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
     const sync = () => setOnline(navigator.onLine);
     sync();
     const onScroll = throttle(() => setHits(null), 200);
@@ -197,6 +222,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [q]);
 
   if (!user || user.role === "client") return <>{children}</>;
+
+  const pages: PaletteItem[] = nav.flatMap((section) =>
+    section.items.map((item) => ({ href: item.href, label: item.label, section: section.section })),
+  );
 
   return (
     <div className="min-h-screen bg-[#f6f8fb]">
@@ -372,6 +401,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <main className="p-4 sm:p-8"><PhoneTables>{children}</PhoneTables></main>
+        <CommandPalette
+          open={palette}
+          items={pages}
+          onClose={() => setPalette(false)}
+          onGo={(href) => {
+            setPalette(false);
+            router.push(href);
+          }}
+        />
+        <ShortcutHelp open={help} onClose={() => setHelp(false)} />
       </div>
     </div>
   );
