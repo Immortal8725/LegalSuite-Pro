@@ -10,6 +10,7 @@ import com.legalsuite.repo.PublicSiteFeatureRepository;
 import com.legalsuite.repo.TenantPublicSiteRepository;
 import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.service.AuditService;
+import com.legalsuite.service.PublicContentCache;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -48,6 +49,8 @@ public class DirectoryService {
     private final PractitionerRegistrationRepository practitioners;
     private final AuditService audit;
     private final Clock clock;
+    @Autowired
+    private PublicContentCache publicCache;
 
     @Autowired
     public DirectoryService(
@@ -207,6 +210,7 @@ public class DirectoryService {
         p.setUpdatedAt(Instant.now());
         profiles.save(p);
         audit.record("directory.update", "directory_profile", tenant.getId().toString(), String.join(",", b.keySet()));
+        publicCache.evictDirectory();
         return adminView(tenant, p);
     }
 
@@ -222,6 +226,7 @@ public class DirectoryService {
         applyPractitioner(p, body == null ? Map.of() : body, true);
         practitioners.save(p);
         audit.record("directory.practitioner.add", "practitioner_registration", p.getId().toString(), p.getLpcNumber());
+        publicCache.evictDirectory();
         return adminView(tenant, ensureProfile(tenant));
     }
 
@@ -234,6 +239,7 @@ public class DirectoryService {
         applyPractitioner(p, body == null ? Map.of() : body, false);
         practitioners.save(p);
         audit.record("directory.practitioner.update", "practitioner_registration", p.getId().toString(), p.getStatus());
+        publicCache.evictDirectory();
         return adminView(tenant, ensureProfile(tenant));
     }
 
@@ -245,6 +251,7 @@ public class DirectoryService {
                 .orElseThrow(() -> ApiException.notFound("Practitioner not found"));
         practitioners.delete(p);
         audit.record("directory.practitioner.remove", "practitioner_registration", id.toString(), p.getLpcNumber());
+        publicCache.evictDirectory();
         return adminView(tenant, ensureProfile(tenant));
     }
 
@@ -407,6 +414,7 @@ public class DirectoryService {
         practitioners.save(p);
         audit.recordFor(p.getTenantId(), "directory.practitioner." + p.getStatus(), "practitioner_registration", p.getId().toString(),
                 p.getLpcNumber() + (note.isEmpty() ? "" : " · " + note));
+        publicCache.evictDirectory();
         return practitionerView(p);
     }
 

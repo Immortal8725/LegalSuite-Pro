@@ -47,15 +47,15 @@ class PrivateNoStoreTest {
     }
 
     @Test
-    void anonymousPublicReadsAreNotForcedPrivate() throws Exception {
+    void anonymousPublicReadsCanBeCached() throws Exception {
         mvc.perform(get("/api/v1/health"))
                 .andExpect(status().isOk())
-                .andExpect(header().doesNotExist("Cache-Control"));
+                .andExpect(header().string("Cache-Control", "public, max-age=60, stale-while-revalidate=300"));
         mvc.perform(get("/api/v1/plans"))
                 .andExpect(status().isOk())
-                .andExpect(header().doesNotExist("Cache-Control"));
+                .andExpect(header().string("Cache-Control", "public, max-age=60, stale-while-revalidate=300"));
         mvc.perform(get("/api/v1/public/blog/posts"))
-                .andExpect(header().doesNotExist("Cache-Control"));
+                .andExpect(header().string("Cache-Control", "public, max-age=60, stale-while-revalidate=300"));
     }
 
     @Test

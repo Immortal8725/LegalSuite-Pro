@@ -15,6 +15,7 @@ import com.legalsuite.repo.TenantPublicSiteRepository;
 import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.service.AuditService;
 import com.legalsuite.service.CommsService;
+import com.legalsuite.service.PublicContentCache;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -55,6 +56,7 @@ public class DirectoryPublicService {
     private final AppNotificationRepository notifications;
     private final CommsService comms;
     private final AuditService audit;
+    private final PublicContentCache cache;
 
     public DirectoryPublicService(
             DirectoryService directory,
@@ -68,7 +70,8 @@ public class DirectoryPublicService {
             AppUserRepository users,
             AppNotificationRepository notifications,
             CommsService comms,
-            AuditService audit) {
+            AuditService audit,
+            PublicContentCache cache) {
         this.directory = directory;
         this.tenants = tenants;
         this.sites = sites;
@@ -81,12 +84,24 @@ public class DirectoryPublicService {
         this.notifications = notifications;
         this.comms = comms;
         this.audit = audit;
+        this.cache = cache;
     }
 
     // ---- Search -------------------------------------------------------------------------------
 
     @Transactional
     public Map<String, Object> search(String area, String province, String city, String language, Integer page) {
+        int pg = page == null || page < 1 ? 1 : page;
+        String key = "directory:search:" + norm(area) + ":" + norm(province) + ":" + norm(city) + ":" + norm(language) + ":" + pg;
+        Map<String, Object> hit = cache.get(key, () -> searchNow(area, province, city, language, page));
+        return hit;
+    }
+
+    private static String norm(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private Map<String, Object> searchNow(String area, String province, String city, String language, Integer page) {
         String a = optSlug(area, DirectoryCatalog::area, "practice area");
         String p = optSlug(province, DirectoryCatalog::province, "province");
         String c = city == null || city.isBlank() ? null
@@ -148,6 +163,11 @@ public class DirectoryPublicService {
 
     @Transactional
     public Map<String, Object> firm(String slug) {
+        String key = "directory:firm:" + (slug == null ? "" : slug.trim().toLowerCase(Locale.ROOT));
+        return cache.get(key, () -> firmNow(slug));
+    }
+
+    private Map<String, Object> firmNow(String slug) {
         Tenant t = directory.listedTenant(slug).orElseThrow(() -> ApiException.notFound("This firm is not listed in Find a Lawyer."));
         DirectoryProfile prof = profiles.findByTenantId(t.getId()).orElseThrow(() -> ApiException.notFound("Firm not found"));
         Map<String, Object> m = card(t, prof);
@@ -382,6 +402,7 @@ public class DirectoryPublicService {
         profiles.save(prof);
         audit.recordFor(t.getId(), hide ? "directory.listing.hidden" : "directory.listing.restored", "directory_profile",
                 prof.getId().toString(), hide ? reason : "restored");
+        cache.evictDirectory();
         Map<String, Object> m = new LinkedHashMap<>(DirectoryService.profileFields(prof));
         DirectoryService.Listing listing = directory.listing(t);
         m.put("tenantId", t.getId());

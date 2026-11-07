@@ -77,6 +77,10 @@ const nextConfig: NextConfig = {
         : []),
       { source: "/website", headers: [{ key: "Content-Security-Policy", value: buildCsp(false, true) }] },
       ...noindex.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] })),
+      { source: "/", headers: [{ key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" }] },
+      { source: "/blog", headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=600" }] },
+      { source: "/blog/:path*", headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=600" }] },
+      { source: "/firm/:path*", headers: [{ key: "Cache-Control", value: "public, s-maxage=120, stale-while-revalidate=300" }] },
     ];
   },
   async rewrites() {

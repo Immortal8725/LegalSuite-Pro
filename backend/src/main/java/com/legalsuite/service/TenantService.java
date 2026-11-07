@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,8 @@ public class TenantService {
     private final AuthService authService;
     private final AuditService audit;
     private final InviteService inviteService;
+    @Autowired
+    private PublicContentCache publicCache;
 
     public TenantService(
             TenantRepository tenants,
@@ -64,11 +67,11 @@ public class TenantService {
     }
 
     public List<Map<String, Object>> plans() {
-        return plans.findByActiveTrueOrderBySortOrderAsc().stream().map(this::planView).toList();
+        return publicCache.get("plans", () -> plans.findByActiveTrueOrderBySortOrderAsc().stream().map(this::planView).toList());
     }
 
     public List<Map<String, Object>> modules() {
-        return modules.findByActiveTrueOrderBySortOrderAsc().stream().map(this::moduleView).toList();
+        return publicCache.get("modules", () -> modules.findByActiveTrueOrderBySortOrderAsc().stream().map(this::moduleView).toList());
     }
 
     public List<Map<String, Object>> tenantModules(UUID tenantId) {
@@ -225,6 +228,7 @@ public class TenantService {
         String temporary = temporaryPassword();
         user.setPasswordHash(encoder.encode(temporary));
         users.save(user);
+        dropPublicSite();
         Map<String, Object> view = new HashMap<>(authService.userView(user));
         view.putAll(inviteService.deliver(user, temporary));
         return view;
@@ -252,8 +256,14 @@ public class TenantService {
         if (body.get("hourlyRate") != null) user.setHourlyRate(new BigDecimal(String.valueOf(body.get("hourlyRate"))));
         if (body.get("publicProfile") != null) user.setPublicProfile(Boolean.parseBoolean(String.valueOf(body.get("publicProfile"))));
         users.save(user);
+        if (body.get("publicProfile") != null || body.get("status") != null || body.get("title") != null) dropPublicSite();
         audit.record("user.update", "user", user.getId().toString(), user.getEmail() + " " + String.join(",", body.keySet()) + (body.get("role") == null ? "" : " role " + user.getRole()));
         return authService.userView(user);
+    }
+
+    private void dropPublicSite() {
+        tenants.findById(com.legalsuite.common.TenantContext.requireTenant())
+                .ifPresent(t -> publicCache.evictSite(t.getSlug()));
     }
 
     private static void rejectPlatformRole(Object role) {

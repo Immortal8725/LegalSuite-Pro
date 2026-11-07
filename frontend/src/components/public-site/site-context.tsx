@@ -14,14 +14,29 @@ type State = {
 
 const Ctx = createContext<State | null>(null);
 
-export function PublicSiteRoot({ children }: { children: React.ReactNode }) {
+export function PublicSiteRoot({
+  children,
+  initialSite = null,
+  seeded = false,
+}: {
+  children: React.ReactNode;
+  /** Server render of the public site. When seeded, the browser does not fetch the same JSON again. */
+  initialSite?: PublicSite | null;
+  seeded?: boolean;
+}) {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
-  const [site, setSite] = useState<PublicSite | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [site, setSite] = useState<PublicSite | null>(initialSite);
+  const [error, setError] = useState<string | null>(seeded && !initialSite ? "This address does not match a firm." : null);
+  const [loading, setLoading] = useState(!seeded);
 
   useEffect(() => {
+    if (seeded) {
+      setSite(initialSite);
+      setLoading(false);
+      setError(initialSite ? null : "This address does not match a firm.");
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -38,7 +53,7 @@ export function PublicSiteRoot({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, seeded, initialSite]);
 
   useEffect(() => {
     if (site?.firmName) document.title = site.firmName;

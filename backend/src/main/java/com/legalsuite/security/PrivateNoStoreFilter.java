@@ -27,7 +27,45 @@ public class PrivateNoStoreFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         if (isPublicRead(request)) {
-            chain.doFilter(request, response);
+            HttpServletResponse wrapped = new HttpServletResponseWrapper(response) {
+                private boolean explicit;
+
+                @Override
+                public void setHeader(String name, String value) {
+                    if (isCacheControl(name)) explicit = true;
+                    super.setHeader(name, value);
+                }
+
+                @Override
+                public void addHeader(String name, String value) {
+                    if (isCacheControl(name)) explicit = true;
+                    super.addHeader(name, value);
+                }
+
+                @Override
+                public ServletOutputStream getOutputStream() throws IOException {
+                    stampPublic();
+                    return super.getOutputStream();
+                }
+
+                @Override
+                public java.io.PrintWriter getWriter() throws IOException {
+                    stampPublic();
+                    return super.getWriter();
+                }
+
+                private void stampPublic() {
+                    if (explicit) return;
+                    explicit = true;
+                    if (getStatus() >= 400) {
+                        super.setHeader(HttpHeaders.CACHE_CONTROL, NO_STORE);
+                        super.setHeader(HttpHeaders.PRAGMA, "no-cache");
+                    } else {
+                        super.setHeader(HttpHeaders.CACHE_CONTROL, com.legalsuite.service.PublicContentCache.PUBLIC_CACHE);
+                    }
+                }
+            };
+            chain.doFilter(request, wrapped);
             return;
         }
         HttpServletResponse wrapped = new HttpServletResponseWrapper(response) {

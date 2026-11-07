@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { PublicSiteRoot } from "@/components/public-site/site-context";
 import { JsonLd } from "@/components/json-ld";
 import { SITE_URL, apiRead } from "@/lib/seo";
+import type { PublicSite } from "@/lib/types";
+
+export const revalidate = 120;
 
 type Site = {
   published?: boolean;
@@ -24,12 +27,12 @@ type Site = {
 
 type Props = { params: Promise<{ slug: string }> };
 
-const getSite = (slug: string) => apiRead<Site>(`/api/v1/public/sites/${encodeURIComponent(slug)}`);
+const getSite = (slug: string) => apiRead<PublicSite>(`/api/v1/public/sites/${encodeURIComponent(slug)}`, 120);
 const origin = (s: Site) => (s.siteUrl && s.siteUrl.startsWith("http") ? s.siteUrl : `${SITE_URL}/firm/${s.slug}`);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const site = await getSite(slug);
+  const site = await getSite(slug) as Site | null;
   if (!site || site.published === false) return { title: site?.firmName || "Law firm", robots: { index: false, follow: false } };
   const base = origin(site);
   const description = (site.tagline || site.about || `${site.firmName}${site.city ? `, attorneys in ${site.city}` : ""}.`).slice(0, 160);
@@ -88,8 +91,8 @@ export default async function FirmLayout({ children, params }: { children: React
   const site = await getSite(slug);
   return (
     <div className={`${serif.variable} ${sans.variable}`}>
-      {site && site.published !== false ? <JsonLd data={siteLd(site)} /> : null}
-      <PublicSiteRoot>{children}</PublicSiteRoot>
+      {site && site.published !== false ? <JsonLd data={siteLd(site as Site)} /> : null}
+      <PublicSiteRoot initialSite={site} seeded>{children}</PublicSiteRoot>
     </div>
   );
 }
