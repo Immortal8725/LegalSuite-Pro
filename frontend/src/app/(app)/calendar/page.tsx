@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
+import { optimistic } from "@/lib/optimistic";
 import { formatDateTime } from "@/lib/utils";
 import { Button, PageHeader } from "@/components/page";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
@@ -77,12 +78,23 @@ export default function CalendarPage() {
             onClick={async () => {
               setSaving(true);
               setDialogError(null);
+              const previous = events;
+              const draft = { id: `pending-${Date.now()}`, title: form.title, type: form.type, startTime: form.startTime } as CalEvent;
               try {
-                await apiPost("/api/v1/events", {
-                  ...form,
-                  startTime: new Date(form.startTime).toISOString(),
-                });
-                setOpen(false);
+                await optimistic(
+                  () => {
+                    setEvents([draft, ...events]);
+                    setOpen(false);
+                  },
+                  () => {
+                    setEvents(previous);
+                    setOpen(true);
+                  },
+                  () => apiPost("/api/v1/events", {
+                    ...form,
+                    startTime: new Date(form.startTime).toISOString(),
+                  }),
+                );
                 load();
               } catch (err) {
                 setDialogError(err instanceof Error ? err.message : "Could not save the event");

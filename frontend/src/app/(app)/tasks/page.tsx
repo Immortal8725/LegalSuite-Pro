@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPatch, apiPost } from "@/lib/api";
+import { optimistic } from "@/lib/optimistic";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Textarea, Select } from "@/components/ui/input";
@@ -58,10 +59,15 @@ export default function TasksPage() {
                     aria-label={`Status of ${t.title}`}
                     value={t.status}
                     onChange={async (e) => {
+                      const next = e.target.value;
+                      const previous = rows;
                       setError(null);
                       try {
-                        await apiPatch(`/api/v1/tasks/${t.id}/status`, { status: e.target.value });
-                        await load();
+                        await optimistic(
+                          () => setRows(rows.map((row) => (row.id === t.id ? { ...row, status: next } : row))),
+                          () => setRows(previous),
+                          () => apiPatch(`/api/v1/tasks/${t.id}/status`, { status: next }),
+                        );
                       } catch (err) {
                         setError(err instanceof Error ? err.message : "Could not move the task");
                       }
