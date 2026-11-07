@@ -92,6 +92,9 @@ public class SecurityConfig {
                             return new AuthorizationDecision(staff);
                         }))
                 .headers(h -> h
+                        // Spring's default cache writer would mark every response no-store, including public firm
+                        // pages and the blog. PrivateNoStoreFilter applies private, no-store only where it belongs.
+                        .cacheControl(c -> c.disable())
                         // Same-origin framing only (the H2 console in local dev); the API itself is never framed.
                         .frameOptions(f -> f.sameOrigin())
                         .contentTypeOptions(Customizer.withDefaults())
