@@ -33,6 +33,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -251,6 +252,40 @@ public class PracticeService {
         cases.save(c);
         audit.record("case.status", "case", c.getId().toString(), c.getCaseNumber() + " " + from + " -> " + next);
         return caseView(c);
+    }
+
+    /** Each id is checked on this tenant and the same status rules as a single change apply. */
+    @Transactional
+    public Map<String, Object> batchCaseStatus(List<?> ids, String status) {
+        return batch(ids, id -> changeCaseStatus(id, status));
+    }
+
+    @Transactional
+    public Map<String, Object> batchClientStatus(List<?> ids, String status) {
+        if (status == null || !List.of("active", "inactive").contains(status)) {
+            throw ApiException.badRequest("Client status must be active or inactive.");
+        }
+        return batch(ids, id -> saveClient(id, Map.of("status", status)));
+    }
+
+    private Map<String, Object> batch(List<?> ids, java.util.function.Function<UUID, ?> each) {
+        if (ids == null || ids.isEmpty()) throw ApiException.badRequest("Choose at least one row.");
+        if (ids.size() > 100) throw ApiException.badRequest("Change up to 100 rows at a time.");
+        List<String> updated = new ArrayList<>();
+        List<Map<String, String>> failed = new ArrayList<>();
+        for (Object raw : ids) {
+            String text = String.valueOf(raw);
+            try {
+                each.apply(UUID.fromString(text));
+                updated.add(text);
+            } catch (RuntimeException ex) {
+                failed.add(Map.of("id", text, "message", ex.getMessage() == null ? "Could not update" : ex.getMessage()));
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("updated", updated);
+        out.put("failed", failed);
+        return out;
     }
 
     /** One place for every status change: allowed list, transitions, limited-file gate, docket hold, closing date. */
