@@ -302,6 +302,31 @@ public class FinanceService {
         return invoiceView(inv);
     }
 
+    /** Bulk status for invoices already on this tenant. Paid is refused here so money is not marked in a batch. */
+    @Transactional
+    public Map<String, Object> batchInvoiceStatus(List<?> ids, String status) {
+        if (status == null || !List.of("sent", "void").contains(status)) {
+            throw ApiException.badRequest("Invoice batch status must be sent or void.");
+        }
+        if (ids == null || ids.isEmpty()) throw ApiException.badRequest("Choose at least one invoice.");
+        if (ids.size() > 100) throw ApiException.badRequest("Change up to 100 invoices at a time.");
+        List<String> updated = new ArrayList<>();
+        List<Map<String, String>> failed = new ArrayList<>();
+        for (Object raw : ids) {
+            String text = String.valueOf(raw);
+            try {
+                updateInvoice(UUID.fromString(text), Map.of("status", status));
+                updated.add(text);
+            } catch (RuntimeException ex) {
+                failed.add(Map.of("id", text, "message", ex.getMessage() == null ? "Could not update" : ex.getMessage()));
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("updated", updated);
+        out.put("failed", failed);
+        return out;
+    }
+
     @Transactional
     public Map<String, Object> payInFull(UUID id) {
         requireStaff();

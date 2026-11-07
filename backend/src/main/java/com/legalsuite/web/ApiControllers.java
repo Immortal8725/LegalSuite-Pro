@@ -11,6 +11,7 @@ import com.legalsuite.service.TenantService;
 import com.legalsuite.service.VoiceService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.core.io.Resource;
@@ -131,6 +132,16 @@ public class ApiControllers {
     @PatchMapping("/api/v1/cases/{id}/status")
     public ApiResponse<?> caseStatus(@PathVariable UUID id, @RequestBody Map<String, String> body) {
         return ApiResponse.ok(practice.changeCaseStatus(id, body.get("status")));
+    }
+
+    @PostMapping("/api/v1/cases/batch-status")
+    public ApiResponse<?> batchCaseStatus(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(practice.batchCaseStatus((List<?>) body.get("ids"), String.valueOf(body.get("status"))));
+    }
+
+    @PostMapping("/api/v1/clients/batch-status")
+    public ApiResponse<?> batchClientStatus(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(practice.batchClientStatus((List<?>) body.get("ids"), String.valueOf(body.get("status"))));
     }
 
     @PostMapping("/api/v1/cases/{id}/notes")
@@ -293,6 +304,11 @@ public class ApiControllers {
     @PostMapping("/api/v1/invoices/{id}/send")
     public ApiResponse<?> sendInv(@PathVariable UUID id) {
         return ApiResponse.ok(finance.updateInvoice(id, Map.of("status", "sent")));
+    }
+
+    @PostMapping("/api/v1/invoices/batch-status")
+    public ApiResponse<?> batchInvoiceStatus(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(finance.batchInvoiceStatus((List<?>) body.get("ids"), String.valueOf(body.get("status"))));
     }
 
     @GetMapping("/api/v1/expenses")

@@ -53,6 +53,11 @@ public class FicaController {
     @PostMapping("/api/v1/fica/reminders/run")
     public ApiResponse<?> remind() { return ApiResponse.ok(Map.of("created", fica.remind(TenantContext.requireTenant()))); }
 
+    @PostMapping("/api/v1/fica/batch-sanctions")
+    public ApiResponse<?> batchSanctions(@RequestBody Map<String, Object> body) {
+        return ApiResponse.ok(fica.batchSanctions((java.util.List<?>) body.get("ids"), String.valueOf(body.get("sanctionsResult"))));
+    }
+
     @GetMapping("/api/v1/fica/clients/{clientId}")
     public ApiResponse<?> get(@PathVariable UUID clientId) { return ApiResponse.ok(fica.get(clientId)); }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, apiBlob, apiGet, apiPost, apiPut, saveBlob } from "@/lib/api";
 import { Button, PageHeader, TableWrap, Td, Th } from "@/components/page";
+import { useConfirm } from "@/components/confirm-provider";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 
@@ -50,6 +51,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export default function FicaPage() {
+  const { confirm } = useConfirm();
   const [rows, setRows] = useState<Profile[]>([]);
   const [factors, setFactors] = useState<Factors | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -125,6 +127,16 @@ export default function FicaPage() {
         subtitle="Customer due diligence, risk rating and sanctions checks for every client (FIC Act 38 of 2001)."
         actions={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={async () => {
+              const yes = await confirm({
+                title: `Record sanctions as clear for ${shown.length} clients?`,
+                body: "Each client is checked on this firm. A match still blocks the file. This does not delete any FICA document.",
+                confirmLabel: "Record clear",
+              });
+              if (!yes) return;
+              await apiPost("/api/v1/fica/batch-sanctions", { ids: shown.map((r) => r.clientId), sanctionsResult: "clear" });
+              load();
+            }}>Record clear for this list</Button>
             <Button variant="outline" onClick={async () => saveBlob(await apiBlob("/api/v1/fica/report.csv"), "fica-register.csv")}>Export register</Button>
             <Button variant="outline" onClick={async () => saveBlob(await apiBlob("/api/v1/fica/rmcp.docx"), "RMCP-template.docx")}>RMCP template</Button>
             <Button variant="outline" onClick={async () => {

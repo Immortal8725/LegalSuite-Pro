@@ -69,6 +69,30 @@ public class FicaService {
     }
 
     @Transactional
+    public Map<String, Object> batchSanctions(List<?> ids, String result) {
+        if (result == null || !com.legalsuite.fica.FicaRules.SANCTIONS_RESULTS.contains(result)) {
+            throw ApiException.badRequest("Sanctions result is clear, possible_match or match.");
+        }
+        if (ids == null || ids.isEmpty()) throw ApiException.badRequest("Choose at least one client.");
+        if (ids.size() > 100) throw ApiException.badRequest("Change up to 100 clients at a time.");
+        List<String> updated = new java.util.ArrayList<>();
+        List<Map<String, String>> failed = new java.util.ArrayList<>();
+        for (Object raw : ids) {
+            String text = String.valueOf(raw);
+            try {
+                save(UUID.fromString(text), Map.of("sanctionsResult", result));
+                updated.add(text);
+            } catch (RuntimeException ex) {
+                failed.add(Map.of("id", text, "message", ex.getMessage() == null ? "Could not update" : ex.getMessage()));
+            }
+        }
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("updated", updated);
+        out.put("failed", failed);
+        return out;
+    }
+
+    @Transactional
     public Map<String, Object> save(UUID clientId, Map<String, Object> body) {
         Client c = client(clientId);
         FicaProfile p = profiles.findByTenantIdAndClientId(tid(), clientId).orElseGet(() -> {

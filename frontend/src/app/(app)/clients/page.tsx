@@ -5,7 +5,10 @@ import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { ADMIN_ROLES } from "@/lib/litigation";
 import { OutboundPanel } from "@/components/outbound-panel";
-import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
+import { useConfirm } from "@/components/confirm-provider";
+import { DataTable, downloadCsv } from "@/components/data-table";
+import { useDebouncedFilter } from "@/components/filter-bar";
+import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { moneyExact } from "@/lib/utils";
@@ -37,6 +40,9 @@ export default function ClientsPage() {
   const [open, setOpen] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const { text, setText, query } = useDebouncedFilter();
+  const { confirm } = useConfirm();
   const openDialog = () => {
     setDialogError(null);
     setEditing(null);
@@ -85,54 +91,49 @@ export default function ClientsPage() {
     <div>
       <PageHeader title="Clients" subtitle="People and companies the firm represents. Portal access is a toggle." actions={<Button onClick={openDialog}>New client</Button>} />
       <ErrorBanner error={error} />
-      {rows.length === 0 ? (
-        <EmptyState title="No clients" body="Add a retained client or wait for an intake from your public site." />
-      ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>Name</Th>
-              <Th>Type</Th>
-              <Th>Email</Th>
-              <Th>Phone</Th>
-              <Th>Source</Th>
-              <Th>Status</Th>
-              <Th>Portal</Th>
-              <Th>Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((c) => (
-              <tr key={c.id}>
-                <Td className="font-semibold">{c.displayName}</Td>
-                <Td>{c.type}</Td>
-                <Td>{c.email}</Td>
-                <Td>{c.phone}</Td>
-                <Td>{c.source}</Td>
-                <Td>
-                  <StatusBadge status={c.status} />
-                </Td>
-                <Td>{c.portalEnabled ? "On" : "Off"}</Td>
-                <Td>
-                  <div className="flex flex-wrap gap-1">
-                    <Button size="sm" variant="outline" onClick={() => openEdit(c)} disabled={c.status === "merged"}>
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setMessaging(c)}>
-                      Message
-                    </Button>
-                    {isAdmin && c.status !== "merged" && (
-                      <Button size="sm" variant="outline" onClick={() => openMerge(c)}>
-                        Merge duplicate
-                      </Button>
-                    )}
-                  </div>
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </TableWrap>
-      )}
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="text-sm">
+          Search
+          <input className="mt-1 block rounded border px-3 py-2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Name, email or phone" />
+        </label>
+        {selected.length > 0 && (
+          <>
+            <Button variant="outline" onClick={() => {
+              const chosen = rows.filter((c) => selected.includes(c.id));
+              downloadCsv("clients.csv", ["Name", "Email", "Phone", "Status"], chosen.map((c) => [c.displayName || "", c.email || "", c.phone || "", c.status || ""]));
+            }}>Export selected</Button>
+            <Button onClick={async () => {
+              const yes = await confirm({ title: `Mark ${selected.length} clients inactive?`, body: "They stay on the file. You can set them active again later.", confirmLabel: "Mark inactive" });
+              if (!yes) return;
+              await apiPost("/api/v1/clients/batch-status", { ids: selected, status: "inactive" });
+              setSelected([]);
+              load();
+            }}>Mark inactive</Button>
+          </>
+        )}
+      </div>
+      <DataTable
+        rows={rows.filter((c) => !query || [c.displayName, c.email, c.phone, c.source].join(" ").toLowerCase().includes(query))}
+        selected={selected}
+        onSelected={setSelected}
+        empty={<EmptyState title="No clients" body="Add a retained client or wait for an intake from your public site." />}
+        columns={[
+          { key: "name", header: "Name", sortValue: (c) => c.displayName || "", render: (c) => <span className="font-semibold">{c.displayName}</span> },
+          { key: "type", header: "Type", sortValue: (c) => c.type || "", render: (c) => c.type },
+          { key: "email", header: "Email", sortValue: (c) => c.email || "", render: (c) => c.email },
+          { key: "phone", header: "Phone", sortValue: (c) => c.phone || "", render: (c) => c.phone },
+          { key: "source", header: "Source", sortValue: (c) => c.source || "", render: (c) => c.source },
+          { key: "status", header: "Status", sortValue: (c) => c.status || "", render: (c) => <StatusBadge status={c.status} /> },
+          { key: "portal", header: "Portal", sortValue: (c) => (c.portalEnabled ? 1 : 0), render: (c) => (c.portalEnabled ? "On" : "Off") },
+          { key: "actions", header: "Actions", render: (c) => (
+            <div className="flex flex-wrap gap-1">
+              <Button size="sm" variant="outline" onClick={() => openEdit(c)} disabled={c.status === "merged"}>Edit</Button>
+              <Button size="sm" variant="outline" onClick={() => setMessaging(c)}>Message</Button>
+              {isAdmin && c.status !== "merged" && <Button size="sm" variant="outline" onClick={() => openMerge(c)}>Merge duplicate</Button>}
+            </div>
+          ) },
+        ]}
+      />
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

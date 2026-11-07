@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
-import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
+import { useConfirm } from "@/components/confirm-provider";
+import { DataTable, downloadCsv } from "@/components/data-table";
+import { useDebouncedFilter } from "@/components/filter-bar";
+import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import type { Matter, Party } from "@/lib/types";
@@ -35,6 +38,10 @@ export default function CasesPage() {
   const [open, setOpen] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const { text, setText, query } = useDebouncedFilter();
+  const { confirm } = useConfirm();
   const openDialog = () => {
     setDialogError(null);
     setOpen(true);
@@ -77,44 +84,55 @@ export default function CasesPage() {
         actions={<Button onClick={openDialog}>New matter</Button>}
       />
       <ErrorBanner error={error} />
-      {rows.length === 0 && !error ? (
-        <EmptyState title="No matters yet" body="Open a file from intake or add a retained client first." action={<Button onClick={openDialog}>New matter</Button>} />
-      ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>#</Th>
-              <Th>Title</Th>
-              <Th>Client</Th>
-              <Th>Area</Th>
-              <Th>Matter type</Th>
-              <Th>Stage</Th>
-              <Th>Priority</Th>
-              <Th>Status</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50">
-                <Td className="font-mono">
-                  <Link className="text-navy font-semibold" href={`/cases/${c.id}`}>
-                    {c.caseNumber}
-                  </Link>
-                </Td>
-                <Td>{c.title}</Td>
-                <Td>{c.clientName}</Td>
-                <Td>{c.practiceArea}</Td>
-                <Td>{c.litigationTrackLabel ?? "Not litigation"}</Td>
-                <Td>{c.litigationStageLabel ?? (c.litigationTrack ? "Not started" : "")}</Td>
-                <Td>{c.priority}</Td>
-                <Td>
-                  <StatusBadge status={c.status} />
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </TableWrap>
-      )}
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="text-sm">
+          Search
+          <input className="mt-1 block rounded border px-3 py-2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Number, title or client" />
+        </label>
+        <label className="text-sm">
+          Status
+          <select className="mt-1 block rounded border px-3 py-2" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">Any status</option>
+            {["intake", "open", "limited", "active", "closed"].map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+        {selected.length > 0 && (
+          <>
+            <Button variant="outline" onClick={() => {
+              const chosen = rows.filter((c) => selected.includes(c.id));
+              downloadCsv("matters.csv", ["Number", "Title", "Client", "Area", "Status"], chosen.map((c) => [c.caseNumber, c.title, c.clientName || "", c.practiceArea || "", c.status]));
+            }}>Export selected</Button>
+            <Button onClick={async () => {
+              const yes = await confirm({ title: `Change ${selected.length} matters?`, body: "Each matter still follows the usual status rules. Ones that cannot move are left as they are.", confirmLabel: "Set to open" });
+              if (!yes) return;
+              const res = await apiPost<{ updated: string[]; failed: { message: string }[] }>("/api/v1/cases/batch-status", { ids: selected, status: "open" });
+              if (res.failed?.length) setError(res.failed.map((f) => f.message).join(" "));
+              setSelected([]);
+              load();
+            }}>Set selected to open</Button>
+          </>
+        )}
+      </div>
+      <DataTable
+        rows={rows.filter((c) => {
+          if (statusFilter && c.status !== statusFilter) return false;
+          if (!query) return true;
+          return [c.caseNumber, c.title, c.clientName, c.practiceArea].join(" ").toLowerCase().includes(query);
+        })}
+        selected={selected}
+        onSelected={setSelected}
+        empty={<EmptyState title="No matters yet" body="Open a file from intake or add a retained client first." action={<Button onClick={openDialog}>New matter</Button>} />}
+        columns={[
+          { key: "number", header: "#", sortValue: (c) => c.caseNumber, render: (c) => <Link className="font-mono font-semibold text-navy" href={`/cases/${c.id}`}>{c.caseNumber}</Link> },
+          { key: "title", header: "Title", sortValue: (c) => c.title, render: (c) => c.title },
+          { key: "client", header: "Client", sortValue: (c) => c.clientName || "", render: (c) => c.clientName },
+          { key: "area", header: "Area", sortValue: (c) => c.practiceArea || "", render: (c) => c.practiceArea },
+          { key: "type", header: "Matter type", sortValue: (c) => c.litigationTrackLabel || "", render: (c) => c.litigationTrackLabel ?? "Not litigation" },
+          { key: "stage", header: "Stage", sortValue: (c) => c.litigationStageLabel || "", render: (c) => c.litigationStageLabel ?? (c.litigationTrack ? "Not started" : "") },
+          { key: "priority", header: "Priority", sortValue: (c) => c.priority || "", render: (c) => c.priority },
+          { key: "status", header: "Status", sortValue: (c) => c.status, render: (c) => <StatusBadge status={c.status} /> },
+        ]}
+      />
       <Dialog
         open={open}
         onClose={() => setOpen(false)}

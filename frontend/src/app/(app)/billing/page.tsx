@@ -6,6 +6,9 @@ import { moneyExact } from "@/lib/utils";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { InvoiceLines } from "@/components/invoice-lines";
 import { PayLinkButton } from "@/components/pay-link";
+import { useConfirm } from "@/components/confirm-provider";
+import { downloadCsv } from "@/components/data-table";
+import { useDebouncedFilter } from "@/components/filter-bar";
 import { Dialog, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +36,10 @@ async function openProofFile(id: string) {
 
 export default function BillingPage() {
   const [rows, setRows] = useState<Invoice[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const { text, setText, query } = useDebouncedFilter();
+  const { confirm } = useConfirm();
   const [clients, setClients] = useState<Party[]>([]);
   const [pending, setPending] = useState<PaymentProof[]>([]);
   const [open, setOpen] = useState(false);
@@ -163,9 +170,34 @@ export default function BillingPage() {
         </Card>
       )}
 
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="text-sm">Search<input className="mt-1 block rounded border px-3 py-2" value={text} onChange={(e) => setText(e.target.value)} placeholder="Invoice or client" /></label>
+        <label className="text-sm">Status
+          <select className="mt-1 block rounded border px-3 py-2" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">Any status</option>
+            {["draft", "sent", "partial", "paid", "overdue", "void"].map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </label>
+        {selected.length > 0 && (
+          <>
+            <Button variant="outline" onClick={() => {
+              const chosen = rows.filter((i) => selected.includes(i.id));
+              downloadCsv("invoices.csv", ["Invoice", "Status", "Total", "Balance"], chosen.map((i) => [i.invoiceNumber, i.status, String(i.total), String(i.balanceDue)]));
+            }}>Export selected</Button>
+            <Button onClick={async () => {
+              const yes = await confirm({ title: `Send ${selected.length} invoices?`, body: "Only drafts that can be sent will change. This does not record a payment.", confirmLabel: "Send" });
+              if (!yes) return;
+              await apiPost("/api/v1/invoices/batch-status", { ids: selected, status: "sent" });
+              setSelected([]);
+              load();
+            }}>Send selected</Button>
+          </>
+        )}
+      </div>
       <TableWrap>
         <thead>
           <tr>
+            <Th></Th>
             <Th>Invoice</Th>
             <Th>Client</Th>
             <Th>Issued</Th>
@@ -177,9 +209,10 @@ export default function BillingPage() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((i) => (
+          {rows.filter((i) => (!statusFilter || i.status === statusFilter) && (!query || [i.invoiceNumber, clientName(i.clientId)].join(" ").toLowerCase().includes(query))).map((i) => (
             <Fragment key={i.id}>
               <tr>
+                <Td><input type="checkbox" aria-label={`Select ${i.invoiceNumber}`} checked={selected.includes(i.id)} onChange={() => setSelected(selected.includes(i.id) ? selected.filter((id) => id !== i.id) : [...selected, i.id])} /></Td>
                 <Td className="font-mono font-semibold">{i.invoiceNumber}</Td>
                 <Td>{clientName(i.clientId)}</Td>
                 <Td>{i.dateIssued}</Td>
@@ -249,7 +282,7 @@ export default function BillingPage() {
               </tr>
               {expanded === i.id && (
                 <tr>
-                  <td colSpan={8} className="border-t border-slate-100 bg-slate-50/60 p-0">
+                  <td colSpan={9} className="border-t border-slate-100 bg-slate-50/60 p-0">
                     <InvoiceLines raw={i.rawLineItems} />
                     <div className="flex flex-wrap justify-end gap-6 px-4 py-3 text-sm">
                       <span>Subtotal {moneyExact(i.subtotal)}</span>
