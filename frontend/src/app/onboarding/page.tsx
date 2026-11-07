@@ -32,6 +32,7 @@ export default function OnboardingPage() {
     tagline: tenant?.tagline || "Trusted counsel for every chapter of your case.",
     template: "classic",
     defaultRate: "350",
+    billingIncrementMinutes: "6",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +128,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <Label>Increment</Label>
-                <Select aria-label="Increment" defaultValue="6">
+                <Select aria-label="Increment" value={profile.billingIncrementMinutes} onChange={(e) => setProfile({ ...profile, billingIncrementMinutes: e.target.value })}>
                   <option value="6">6 minutes (1/10 hour)</option>
                   <option value="15">15 minutes</option>
                 </Select>

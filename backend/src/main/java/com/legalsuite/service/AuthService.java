@@ -507,6 +507,9 @@ public class AuthService {
         m.put("prioritySupport", spec.prioritySupport());
         m.put("maxAttorneys", spec.maxAttorneys());
         m.put("aiActionsPerAttorney", spec.aiActionsPerAttorney());
+        Map<String, Object> settings = com.legalsuite.common.JsonLists.map(tenant.getSettingsJson());
+        m.put("billingIncrementMinutes", settings.getOrDefault("billingIncrementMinutes", 6));
+        m.put("defaultHourlyRate", settings.get("defaultHourlyRate"));
         m.put("status", tenant.getStatus());
         m.put("onboardingCompleted", tenant.isOnboardingCompleted());
         m.put("enabledModules", enabled);

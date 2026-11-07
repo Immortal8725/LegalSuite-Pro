@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { ErrorBanner } from "@/components/ui/dialog";
+import { emailProblem, FieldHint, passwordProblem, requiredProblem } from "@/lib/fields";
 import { PLANS, PRICE_NOTE, type PlanSlug } from "@/lib/pricing";
 
 const AREAS = [
@@ -39,6 +40,7 @@ export default function RegisterPage() {
     city: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [fields, setFields] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(false);
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   useEffect(() => {
@@ -53,6 +55,15 @@ export default function RegisterPage() {
         className="w-full max-w-2xl space-y-4 rounded-2xl bg-white p-8 shadow-lift"
         onSubmit={async (e) => {
           e.preventDefault();
+          const next = {
+            firmName: requiredProblem(form.firmName, "the firm name"),
+            firstName: requiredProblem(form.firstName, "a first name"),
+            lastName: requiredProblem(form.lastName, "a last name"),
+            email: emailProblem(form.email),
+            password: passwordProblem(form.password),
+          };
+          setFields(next);
+          if (Object.values(next).some(Boolean)) return;
           setLoading(true);
           setError(null);
           try {
@@ -96,6 +107,7 @@ export default function RegisterPage() {
         <div>
           <Label>Firm name</Label>
               <Input aria-label="Firm name" required value={form.firmName} onChange={(e) => set("firmName", e.target.value)} placeholder="Ndlovu & Partners" />
+              <FieldHint text={fields.firmName} />
           {form.firmName && isReservedSlug(form.firmName) ? (
             <p className="mt-1 text-xs text-amber-700" role="status">
               {RESERVED_MESSAGE} If you keep this name, your web address will end in &quot;-law&quot;.
@@ -106,18 +118,22 @@ export default function RegisterPage() {
           <div>
             <Label>First name</Label>
             <Input aria-label="First name" required value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
+            <FieldHint text={fields.firstName} />
           </div>
           <div>
             <Label>Last name</Label>
             <Input aria-label="Last name" required value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
+            <FieldHint text={fields.lastName} />
           </div>
           <div>
             <Label>Email</Label>
             <Input aria-label="Email" type="email" required value={form.email} onChange={(e) => set("email", e.target.value)} />
+            <FieldHint text={fields.email} />
           </div>
           <div>
             <Label>Password (8+)</Label>
             <Input aria-label="Password (8+)" type="password" required minLength={8} value={form.password} onChange={(e) => set("password", e.target.value)} />
+            <FieldHint text={fields.password} />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

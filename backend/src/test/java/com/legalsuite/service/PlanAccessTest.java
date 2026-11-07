@@ -2,6 +2,7 @@ package com.legalsuite.service;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,6 +34,17 @@ class PlanAccessTest {
                         .content("{\"callType\":\"webrtc\",\"recordingEnabled\":true,\"recordingConsentGiven\":true}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Call recording is included on the Practice plan."));
+    }
+
+    @Test
+    void billingIncrementIsStoredOnTheFirm() throws Exception {
+        String token = token("ndlovu-partners", "thabo@ndlovulaw.co.za", "password");
+        mvc.perform(put("/api/v1/tenants/me").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"billingIncrementMinutes\":15,\"defaultRate\":\"400\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.billingIncrementMinutes").value(15))
+                .andExpect(jsonPath("$.data.defaultHourlyRate").value("400"));
     }
 
     @Test
