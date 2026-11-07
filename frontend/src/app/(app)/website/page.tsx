@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -72,6 +72,8 @@ export default function WebsiteSettingsPage() {
     return { firmName, tagline, about, accent, theme, features: requested };
   }
 
+  const allowed = user && ["owner", "partner", "director"].includes(user.role);
+
   async function save() {
     setError(null);
     setSaved(null);
@@ -79,6 +81,19 @@ export default function WebsiteSettingsPage() {
     setSite(next);
     setSaved("Saved. Nothing new goes live until it is approved.");
   }
+
+  const armed = useRef(false);
+  useEffect(() => {
+    if (!site || !allowed) return;
+    if (!armed.current) {
+      armed.current = true;
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      save().catch((err: unknown) => setError(err instanceof Error ? err.message : "Could not save the draft"));
+    }, 1200);
+    return () => window.clearTimeout(handle);
+  }, [firmName, tagline, about, accent, theme, requested]);
 
   async function submit() {
     setError(null);
@@ -88,8 +103,6 @@ export default function WebsiteSettingsPage() {
     setSite(next);
     setSaved("Submitted. Approved features stay as they are. New ones wait.");
   }
-
-  const allowed = user && ["owner", "partner", "director"].includes(user.role);
 
   return (
     <div>
