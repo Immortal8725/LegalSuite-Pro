@@ -38,6 +38,7 @@ export default function RegisterPage() {
     country: "ZA",
     state: "GP",
     city: "",
+    referralCode: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string | null>>({});
@@ -154,6 +155,10 @@ export default function RegisterPage() {
             <Label>{form.country === "ZA" ? "Province" : "State"}</Label>
             <Input aria-label={form.country === "ZA" ? "Province" : "State"} value={form.state} onChange={(e) => set("state", e.target.value)} />
           </div>
+        </div>
+        <div>
+          <Label>Invite code (optional)</Label>
+          <Input aria-label="Invite code" value={form.referralCode} onChange={(e) => set("referralCode", e.target.value)} placeholder="From another firm" />
         </div>
         <div>
           <Label>Firm size</Label>

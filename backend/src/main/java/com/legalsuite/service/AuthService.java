@@ -51,6 +51,8 @@ public class AuthService {
     private com.legalsuite.platform.RecoveryCodeRepository recoveryCodes;
     @org.springframework.beans.factory.annotation.Autowired
     private AuditService audit;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ReferralService referrals;
     private static final java.security.SecureRandom RNG = new java.security.SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -279,6 +281,7 @@ public class AuthService {
         if (req.city() != null && !req.city().isBlank()) tenant.setCity(req.city());
         tenant.setTagline("Trusted counsel for every chapter of your case.");
         tenant = tenants.save(tenant);
+        referrals.onRegistered(tenant, req.referralCode());
 
         AppUser admin = new AppUser();
         admin.setTenantId(tenant.getId());
