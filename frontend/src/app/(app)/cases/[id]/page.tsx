@@ -48,6 +48,17 @@ export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
   const [c, setC] = useState<Matter | null>(null);
   const [note, setNote] = useState("");
+  useEffect(() => {
+    const saved = localStorage.getItem(`owlaw-note-${params.id}`);
+    if (saved) setNote(saved);
+  }, [params.id]);
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      if (note) localStorage.setItem(`owlaw-note-${params.id}`, note);
+      else localStorage.removeItem(`owlaw-note-${params.id}`);
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [note, params.id]);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
@@ -125,6 +136,7 @@ export default function CaseDetailPage() {
         },
         () => apiPost(`/api/v1/cases/${c.id}/notes`, { title: "Note", body: draft }),
       );
+      localStorage.removeItem(`owlaw-note-${c.id}`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save note");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, apiGet, apiPost, apiPut } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -121,6 +121,22 @@ export default function BlogAdminPage() {
           : apiPost<BlogCard>("/api/v1/platform/blog/posts", form),
       "Saved.",
     );
+
+  const blogArmed = useRef(false);
+  useEffect(() => {
+    blogArmed.current = false;
+  }, [current?.id]);
+  useEffect(() => {
+    if (!editing || !current) return;
+    if (!blogArmed.current) {
+      blogArmed.current = true;
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void save();
+    }, 1200);
+    return () => window.clearTimeout(handle);
+  }, [form.title, form.summary, form.body, form.slug, editing, current?.id]);
 
   const publish = () =>
     run(async () => {
