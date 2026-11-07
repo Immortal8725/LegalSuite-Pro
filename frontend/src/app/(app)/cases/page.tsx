@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { useConfirm } from "@/components/confirm-provider";
 import { DataTable, downloadCsv } from "@/components/data-table";
 import { useDebouncedFilter } from "@/components/filter-bar";
+import { throttleClick } from "@/lib/throttle";
 import { Button, PageHeader, StatusBadge } from "@/components/page";
 import { Dialog, EmptyState, ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export default function CasesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const { text, setText, query } = useDebouncedFilter();
   const { confirm } = useConfirm();
+  const guard = useRef(throttleClick()).current;
   const openDialog = () => {
     setDialogError(null);
     setOpen(true);
@@ -83,7 +85,7 @@ export default function CasesPage() {
         subtitle="Every open file, with court and opposing party."
         actions={<Button onClick={openDialog}>New matter</Button>}
       />
-      <ErrorBanner error={error} />
+      <ErrorBanner error={error} onRetry={load} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <label className="text-sm">
           Search
@@ -102,14 +104,14 @@ export default function CasesPage() {
               const chosen = rows.filter((c) => selected.includes(c.id));
               downloadCsv("matters.csv", ["Number", "Title", "Client", "Area", "Status"], chosen.map((c) => [c.caseNumber, c.title, c.clientName || "", c.practiceArea || "", c.status]));
             }}>Export selected</Button>
-            <Button onClick={async () => {
+            <Button onClick={() => guard(async () => {
               const yes = await confirm({ title: `Change ${selected.length} matters?`, body: "Each matter still follows the usual status rules. Ones that cannot move are left as they are.", confirmLabel: "Set to open" });
               if (!yes) return;
               const res = await apiPost<{ updated: string[]; failed: { message: string }[] }>("/api/v1/cases/batch-status", { ids: selected, status: "open" });
               if (res.failed?.length) setError(res.failed.map((f) => f.message).join(" "));
               setSelected([]);
               load();
-            }}>Set selected to open</Button>
+            })}>Set selected to open</Button>
           </>
         )}
       </div>
