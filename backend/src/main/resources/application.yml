@@ -137,7 +137,8 @@ legalsuite:
     gemini-api-key: ${GEMINI_API_KEY:}
     gemini-model: ${GEMINI_MODEL:gemini-flash-lite-latest}
     gemini-base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
-    monthly-model-actions: ${LEGALSUITE_AI_MONTHLY_ACTIONS:100}
+    # Operator ceiling. The plan in Pricing.java is the real monthly allowance unless this is set lower.
+    monthly-model-actions: ${LEGALSUITE_AI_MONTHLY_ACTIONS:100000}
   smtp:
     host: ${SMTP_HOST:}
     port: ${SMTP_PORT:587}

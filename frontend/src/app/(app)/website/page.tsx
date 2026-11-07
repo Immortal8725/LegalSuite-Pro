@@ -31,7 +31,8 @@ function featureLabel(feature: PublicSiteFeatureState, requestedNow: boolean) {
 }
 
 export default function WebsiteSettingsPage() {
-  const { user } = useAuth();
+  const { user, tenant } = useAuth();
+  const websiteOnPlan = tenant?.websiteIncluded !== false;
   const [site, setSite] = useState<PublicSiteAdmin | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -254,12 +255,16 @@ export default function WebsiteSettingsPage() {
               Save draft
             </Button>
             <Button
+              disabled={!websiteOnPlan}
               onClick={() => {
                 submit().catch((err: unknown) => setError(err instanceof Error ? err.message : "Submit failed"));
               }}
             >
               Submit for approval
             </Button>
+            {!websiteOnPlan && (
+              <p className="w-full text-sm text-slate-600">The public website is included on Firm and Practice. On Solo it is an add-on. You can still save a draft.</p>
+            )}
           </div>
         </div>
       ) : null}

@@ -498,7 +498,15 @@ public class AuthService {
         m.put("firmName", tenant.getFirmName());
         m.put("slug", tenant.getSlug());
         m.put("logoUrl", tenant.getLogoUrl());
-        m.put("planSlug", plan == null ? Pricing.DEFAULT_SLUG : Pricing.canonicalSlug(plan.getSlug()));
+        Pricing.PlanSpec spec = Pricing.plan(plan == null ? null : plan.getSlug());
+        m.put("planSlug", spec.slug());
+        m.put("planName", spec.name());
+        m.put("websiteIncluded", spec.websiteIncluded());
+        m.put("staffSeats", spec.staffSeats());
+        m.put("callRecording", spec.callRecording());
+        m.put("prioritySupport", spec.prioritySupport());
+        m.put("maxAttorneys", spec.maxAttorneys());
+        m.put("aiActionsPerAttorney", spec.aiActionsPerAttorney());
         m.put("status", tenant.getStatus());
         m.put("onboardingCompleted", tenant.isOnboardingCompleted());
         m.put("enabledModules", enabled);

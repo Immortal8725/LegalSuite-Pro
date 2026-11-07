@@ -26,6 +26,13 @@ export type Tenant = {
   firmName: string;
   slug: string;
   planSlug?: string;
+  planName?: string;
+  websiteIncluded?: boolean;
+  staffSeats?: boolean;
+  callRecording?: boolean;
+  prioritySupport?: boolean;
+  maxAttorneys?: number | null;
+  aiActionsPerAttorney?: number;
   status?: string;
   onboardingCompleted?: boolean;
   enabledModules?: string[];

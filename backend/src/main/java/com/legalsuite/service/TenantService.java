@@ -42,6 +42,8 @@ public class TenantService {
     private final InviteService inviteService;
     @Autowired
     private PublicContentCache publicCache;
+    @Autowired
+    private PlanAccess planAccess;
 
     public TenantService(
             TenantRepository tenants,
@@ -191,6 +193,7 @@ public class TenantService {
         rejectPlatformRole(body.get("role"));
         String role = String.valueOf(body.getOrDefault("role", "associate"));
         Roles.requireCanGrant(role);
+        planAccess.requireInvite(role);
         AppUser user = new AppUser();
         user.setTenantId(tenantId);
         user.setEmail(email);
