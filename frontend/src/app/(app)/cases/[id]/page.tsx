@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { apiBlob, apiGet, apiPatch, apiPost, apiPut, saveBlob } from "@/lib/api";
+import { optimistic } from "@/lib/optimistic";
 import { daysLeftLabel, daysUntil, todayIso } from "@/lib/docket";
 import { formatDate, formatDateTime, moneyExact } from "@/lib/utils";
 import { OutboundPanel } from "@/components/outbound-panel";
@@ -91,9 +92,13 @@ export default function CaseDetailPage() {
     }
     setSaving("status");
     setError(null);
+    const previous = c;
     try {
-      await apiPatch(`/api/v1/cases/${c.id}/status`, { status });
-      await load();
+      await optimistic(
+        () => setC({ ...c, status }),
+        () => setC(previous),
+        () => apiPatch(`/api/v1/cases/${c.id}/status`, { status }),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update status");
     } finally {
@@ -105,9 +110,21 @@ export default function CaseDetailPage() {
     if (!c) return;
     setSaving("note");
     setError(null);
+    const previous = c;
+    const draft = note;
+    const pending = { id: `pending-${Date.now()}`, title: "Note", body: draft, createdAt: new Date().toISOString() };
     try {
-      await apiPost(`/api/v1/cases/${c.id}/notes`, { title: "Note", body: note });
-      setNote("");
+      await optimistic(
+        () => {
+          setC({ ...c, notes: [pending, ...(c.notes || [])] });
+          setNote("");
+        },
+        () => {
+          setC(previous);
+          setNote(draft);
+        },
+        () => apiPost(`/api/v1/cases/${c.id}/notes`, { title: "Note", body: draft }),
+      );
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save note");
