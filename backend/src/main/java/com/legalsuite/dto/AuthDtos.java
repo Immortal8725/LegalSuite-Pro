@@ -25,7 +25,8 @@ public class AuthDtos {
             String country,
             String state,
             String city,
-            List<String> practiceAreas) {}
+            List<String> practiceAreas,
+            String referralCode) {}
 
     public record RefreshRequest(String refreshToken) {}
 

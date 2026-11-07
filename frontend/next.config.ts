@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
       "dashboard", "cases", "clients", "contacts", "calendar", "tasks", "time", "billing", "trust", "documents", "esign", "expenses",
       "fica", "conflicts", "leads", "messages", "reports", "settings", "team", "templates", "voice", "website", "usage", "modules",
       "integrations", "import", "audit", "ai", "bundles", "fitness", "staff-activity", "support-access", "directory-listing",
-      "product-billing", "platform", "portal", "onboarding", "change-password", "set-password", "two-factor", "pay", "sign", "login",
+      "product-billing", "platform", "portal", "onboarding", "change-password", "set-password", "two-factor", "pay", "sign", "login", "referrals",
     ].flatMap((p) => [`/${p}`, `/${p}/:path*`]);
     return [
       { source: "/:path*", headers: securityHeaders },

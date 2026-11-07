@@ -96,6 +96,7 @@ const NAV = [
       { href: "/reports/dashboard", label: "Practice dashboard", icon: BarChart3 },
       { href: "/bundles", label: "Court bundles", icon: BookOpen },
       { href: "/help", label: "Help centre", icon: LifeBuoy },
+      { href: "/referrals", label: "Refer a firm", icon: Users },
       { href: "/modules", label: "Modules", icon: Puzzle },
       { href: "/team", label: "Team", icon: UserCog },
       { href: "/settings/payments", label: "Online payments", icon: CreditCard },
