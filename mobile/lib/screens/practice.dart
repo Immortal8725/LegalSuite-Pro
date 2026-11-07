@@ -346,7 +346,10 @@ class _BundleScreenState extends State<BundleScreen> {
                     CircleAvatar(radius: 14, backgroundColor: gold, child: Text(String.fromCharCode(65 + i), style: const TextStyle(color: navyDark, fontWeight: FontWeight.bold))),
                     const SizedBox(width: 8),
                     Expanded(child: TextField(controller: sections[i].name, decoration: const InputDecoration(isDense: true, labelText: 'Section name'))),
-                    IconButton(tooltip: 'Remove section', icon: const Icon(Icons.delete_outline), onPressed: () => setState(() => sections.removeAt(i))),
+                    IconButton(tooltip: 'Remove section', icon: const Icon(Icons.delete_outline), onPressed: () async {
+                      if (!await confirmDialog(context, 'Remove this section?')) return;
+                      setState(() => sections.removeAt(i));
+                    }),
                   ]),
                   for (var j = 0; j < sections[i].ids.length; j++)
                     ListTile(
@@ -354,7 +357,10 @@ class _BundleScreenState extends State<BundleScreen> {
                       title: Text('${j + 1}. ${_name(sections[i].ids[j])}'),
                       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                         IconButton(tooltip: 'Move up', icon: const Icon(Icons.arrow_upward, size: 18), onPressed: j == 0 ? null : () => setState(() => sections[i].ids.insert(j - 1, sections[i].ids.removeAt(j)))),
-                        IconButton(tooltip: 'Remove', icon: const Icon(Icons.close, size: 18), onPressed: () => setState(() => sections[i].ids.removeAt(j))),
+                        IconButton(tooltip: 'Remove', icon: const Icon(Icons.close, size: 18), onPressed: () async {
+                          if (!await confirmDialog(context, 'Remove this document from the bundle?')) return;
+                          setState(() => sections[i].ids.removeAt(j));
+                        }),
                       ]),
                     ),
                   if (free.isNotEmpty)

@@ -81,7 +81,7 @@ class LoaderState<T> extends State<Loader<T>> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return const Center(child: CircularProgressIndicator());
+    if (loading) return const SkeletonList();
     if (error != null && data == null) {
       return _scrollable(Padding(
         padding: const EdgeInsets.all(24),
@@ -106,6 +106,24 @@ class LoaderState<T> extends State<Loader<T>> {
       ));
     }
     return RefreshIndicator(onRefresh: reload, child: widget.builder(context, d, reload));
+  }
+}
+
+/// Grey blocks in the shape of a list, shown while a screen is loading.
+class SkeletonList extends StatelessWidget {
+  const SkeletonList({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        for (var i = 0; i < 6; i++)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            height: 64,
+            decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(8)),
+          ),
+      ],
+    );
   }
 }
 

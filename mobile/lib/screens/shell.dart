@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api/access.dart';
 import '../api/api_client.dart';
+import '../api/drafts.dart';
 import '../api/owlaw_api.dart';
 import '../voice/voice_engine.dart';
 import 'dashboard.dart';
@@ -20,12 +21,14 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int tab = 0;
+  bool offline = false;
 
   @override
   void initState() {
     super.initState();
     Access.current = Access.everything;
     _registerIncoming();
+    _checkLink();
     Access.load(widget.api).then((a) {
       if (!mounted) return;
       setState(() {
@@ -35,6 +38,15 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
   final _visits = List<int>.filled(5, 0);
+
+  Future<void> _checkLink() async {
+    try {
+      await widget.api.get('/api/v1/health');
+      if (mounted) setState(() => offline = false);
+    } catch (e) {
+      if (mounted && OfflineDrafts.isOffline(e)) setState(() => offline = true);
+    }
+  }
 
   void _go(int i) => setState(() {
         // Coming back to a tab reloads it, so work saved elsewhere shows up.
@@ -64,7 +76,18 @@ class _HomeShellState extends State<HomeShell> {
       MoreScreen(api: widget.api, onLogout: widget.onLogout),
     ];
     return Scaffold(
-      body: IndexedStack(index: tab, children: [for (var i = 0; i < pages.length; i++) KeyedSubtree(key: ValueKey('tab$i-${_visits[i]}'), child: pages[i])]),
+      body: Column(children: [
+        if (offline)
+          Material(
+            color: Colors.amber.shade100,
+            child: const ListTile(
+              dense: true,
+              leading: Icon(Icons.cloud_off),
+              title: Text('You are offline. Time entries stay on this phone until you are back.'),
+            ),
+          ),
+        Expanded(child: IndexedStack(index: tab, children: [for (var i = 0; i < pages.length; i++) KeyedSubtree(key: ValueKey('tab$i-${_visits[i]}'), child: pages[i])])),
+      ]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: _go,
