@@ -36,6 +36,7 @@ public class PublicSiteService {
     private final NewsletterOptInRepository optIns;
     private final AuditService audit;
     private final PublicSitePhotoService photos;
+    private final PublicContentCache cache;
 
     public PublicSiteService(
             TenantRepository tenants,
@@ -44,9 +45,11 @@ public class PublicSiteService {
             AppUserRepository users,
             NewsletterOptInRepository optIns,
             AuditService audit,
-            PublicSitePhotoService photos) {
+            PublicSitePhotoService photos,
+            PublicContentCache cache) {
         this.audit = audit;
         this.photos = photos;
+        this.cache = cache;
         this.tenants = tenants;
         this.sites = sites;
         this.features = features;
@@ -133,6 +136,10 @@ public class PublicSiteService {
     }
 
     public Map<String, Object> publicView(String slug) {
+        return cache.get("site:" + normalizeSlug(slug), () -> loadPublicView(slug));
+    }
+
+    private Map<String, Object> loadPublicView(String slug) {
         Tenant tenant = tenants.findBySlug(normalizeSlug(slug))
                 .orElseThrow(() -> ApiException.notFound("Firm not found"));
         if ("deleted".equals(tenant.getStatus()) || "purged".equals(tenant.getStatus())) throw ApiException.notFound("Firm not found");
@@ -304,6 +311,7 @@ public class PublicSiteService {
         site.setUpdatedAt(Instant.now());
         sites.save(site);
         audit.record("public_site.update", "public_site", tenant.getId().toString(), String.join(",", body.keySet()));
+        cache.evictSite(tenant.getSlug());
         return adminView(tenant, site);
     }
 
@@ -333,6 +341,7 @@ public class PublicSiteService {
         site.setUpdatedAt(Instant.now());
         sites.save(site);
         audit.record("public_site.submit", "public_site", tenant.getId().toString(), site.getPublishStatus());
+        cache.evictSite(tenant.getSlug());
         return adminView(tenant, site);
     }
 
@@ -378,6 +387,8 @@ public class PublicSiteService {
         site.setUpdatedAt(Instant.now());
         sites.save(site);
         audit.recordFor(tenantId, "public_site.publish_" + decision, "public_site", tenantId.toString(), note);
+        cache.evictSite(tenant.getSlug());
+        cache.evictDirectory();
         return Map.of("publishStatus", site.getPublishStatus(), "slug", tenant.getSlug());
     }
 
@@ -398,6 +409,7 @@ public class PublicSiteService {
         site.setUpdatedAt(Instant.now());
         sites.save(site);
         audit.recordFor(tenantId, "public_site.branding_" + decision, "public_site", tenantId.toString(), note);
+        cache.evictSite(tenant.getSlug());
         return Map.of("brandingStatus", site.getBrandingStatus(), "slug", tenant.getSlug());
     }
 
@@ -416,6 +428,7 @@ public class PublicSiteService {
         TenantPublicSite site = sites.findByTenantId(tenantId).orElseThrow();
         boolean onSite = PublicSiteRules.live(site.getPublishStatus(), row.isRequested(), row.getApprovalStatus());
         audit.recordFor(tenantId, "public_site.feature_" + decision, "public_site", tenantId.toString(), feature.key());
+        cache.evictSite(tenant.getSlug());
         return Map.of("feature", feature.key(), "approvalStatus", row.getApprovalStatus(), "live", onSite);
     }
 

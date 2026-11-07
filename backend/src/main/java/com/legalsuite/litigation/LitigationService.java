@@ -17,6 +17,7 @@ import com.legalsuite.repo.MatterStageEventRepository;
 import com.legalsuite.repo.TaskItemRepository;
 import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.service.AuditService;
+import com.legalsuite.service.PublicContentCache;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -47,6 +48,8 @@ public class LitigationService {
     private final TenantRepository tenants;
     private final AppNotificationRepository notifications;
     private final AuditService audit;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PublicContentCache publicCache;
     private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.inbox.MatterInboxService> inbox;
     private final org.springframework.beans.factory.ObjectProvider<com.legalsuite.push.PushService> push;
 
@@ -68,11 +71,13 @@ public class LitigationService {
     }
 
     public Map<String, Object> catalogView() {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("disclaimer", catalog.disclaimer());
-        out.put("courtLevels", catalog.courtLevels());
-        out.put("tracks", catalog.tracks());
-        return out;
+        return publicCache.get("litigation:tracks", () -> {
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("disclaimer", catalog.disclaimer());
+            out.put("courtLevels", catalog.courtLevels());
+            out.put("tracks", catalog.tracks());
+            return out;
+        });
     }
 
     public Map<String, Object> courtDays(String from, int amount, String unit, boolean diesNon) {

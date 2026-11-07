@@ -108,12 +108,24 @@ public class PublicSitePhotoService {
         return Map.entry(row.getDraftType(), read(row.getDraftRef()));
     }
 
+    /** Approved photograph plus the version visitors put on the URL. */
+    public record LivePhoto(String type, byte[] bytes, Long version) {}
+
     /** The approved copy, for visitors. Caller checks that the site is published. */
-    public Map.Entry<String, byte[]> live(UUID tenantId, String slot) {
+    public LivePhoto live(UUID tenantId, String slot) {
         PublicSitePhoto row = photos.findByTenantIdAndSlot(tenantId, normalize(slot))
                 .filter(p -> p.getLiveRef() != null)
                 .orElseThrow(() -> ApiException.notFound("Photograph not found"));
-        return Map.entry(row.getLiveType(), read(row.getLiveRef()));
+        return new LivePhoto(row.getLiveType(), read(row.getLiveRef()), row.getLiveVersion());
+    }
+
+    /**
+     * A matching version is an immutable URL and can sit in a cache for 30 days.
+     * A missing or old version is the current file for one minute, so a withdrawn photo does not linger.
+     */
+    public static java.time.Duration liveCacheAge(Long requested, Long live) {
+        if (requested != null && requested.equals(live)) return java.time.Duration.ofDays(30);
+        return java.time.Duration.ofSeconds(60);
     }
 
     /** Public URLs of approved photographs, keyed by slot. */

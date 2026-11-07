@@ -4,6 +4,7 @@ import com.legalsuite.common.ApiException;
 import com.legalsuite.directory.DirectoryCatalog;
 import com.legalsuite.platform.PlatformGuard;
 import com.legalsuite.service.AuthService;
+import com.legalsuite.service.PublicContentCache;
 import com.legalsuite.storage.FileStorage;
 import java.io.IOException;
 import java.text.Normalizer;
@@ -28,16 +29,24 @@ public class BlogService {
 
     private final BlogPostRepository posts;
     private final FileStorage storage;
+    private final PublicContentCache cache;
 
-    public BlogService(BlogPostRepository posts, FileStorage storage) {
+    public BlogService(BlogPostRepository posts, FileStorage storage, PublicContentCache cache) {
         this.posts = posts;
         this.storage = storage;
+        this.cache = cache;
     }
 
     // ---------- public ----------
 
     @Transactional(readOnly = true)
     public Map<String, Object> publicList(String area, Integer page) {
+        int p = page == null || page < 1 ? 1 : page;
+        String areaKey = area == null ? "" : area.trim().toLowerCase();
+        return cache.get("blog:list:" + areaKey + ":" + p, () -> loadPublicList(area, page));
+    }
+
+    private Map<String, Object> loadPublicList(String area, Integer page) {
         int p = page == null || page < 1 ? 1 : page;
         PageRequest req = PageRequest.of(p - 1, PAGE_SIZE);
         Page<BlogPost> rows = area == null || area.isBlank()
@@ -53,7 +62,8 @@ public class BlogService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> publicPost(String slug) {
-        return view(publishedOr404(slug), true);
+        String key = "blog:post:" + (slug == null ? "" : slug.trim().toLowerCase());
+        return cache.get(key, () -> view(publishedOr404(slug), true));
     }
 
     @Transactional(readOnly = true)
@@ -99,6 +109,7 @@ public class BlogService {
         b.setCreatedAt(Instant.now());
         b.setStatus("draft");
         apply(b, body == null ? Map.of() : body, true);
+        cache.evictBlog();
         return view(posts.save(b), true);
     }
 
@@ -107,6 +118,7 @@ public class BlogService {
         PlatformGuard.requireSuperadmin();
         BlogPost b = find(id);
         apply(b, body == null ? Map.of() : body, false);
+        cache.evictBlog();
         return view(posts.save(b), true);
     }
 
@@ -122,6 +134,7 @@ public class BlogService {
             b.setStatus("draft");
         }
         b.setUpdatedAt(Instant.now());
+        cache.evictBlog();
         return view(posts.save(b), true);
     }
 
@@ -131,6 +144,7 @@ public class BlogService {
         BlogPost b = find(id);
         if (b.getCoverRef() != null) storage.delete(b.getCoverRef());
         posts.delete(b);
+        cache.evictBlog();
     }
 
     @Transactional
@@ -157,6 +171,7 @@ public class BlogService {
         b.setUpdatedAt(Instant.now());
         posts.save(b);
         if (old != null) storage.delete(old);
+        cache.evictBlog();
         return view(b, true);
     }
 
@@ -168,6 +183,7 @@ public class BlogService {
         b.setCoverRef(null);
         b.setCoverType(null);
         b.setUpdatedAt(Instant.now());
+        cache.evictBlog();
         return view(posts.save(b), true);
     }
 

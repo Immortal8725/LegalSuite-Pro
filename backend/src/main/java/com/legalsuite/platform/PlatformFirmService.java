@@ -10,6 +10,7 @@ import com.legalsuite.repo.RefreshTokenRepository;
 import com.legalsuite.repo.TenantRepository;
 import com.legalsuite.service.AuditService;
 import com.legalsuite.service.Pricing;
+import com.legalsuite.service.PublicContentCache;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -37,10 +38,12 @@ public class PlatformFirmService {
     private final PlatformActionRepository actions;
     private final AuditService audit;
     private final JdbcTemplate jdbc;
+    private final PublicContentCache cache;
     static final int PURGE_AFTER_DAYS = 30;
 
     public PlatformFirmService(TenantRepository tenants, AppUserRepository users, PlanRepository plans,
-            RefreshTokenRepository refreshTokens, PlatformActionRepository actions, AuditService audit, JdbcTemplate jdbc) {
+            RefreshTokenRepository refreshTokens, PlatformActionRepository actions, AuditService audit, JdbcTemplate jdbc,
+            PublicContentCache cache) {
         this.jdbc = jdbc;
         this.tenants = tenants;
         this.users = users;
@@ -48,6 +51,7 @@ public class PlatformFirmService {
         this.refreshTokens = refreshTokens;
         this.actions = actions;
         this.audit = audit;
+        this.cache = cache;
     }
 
     public static boolean isPlatform(Tenant t) {
@@ -207,6 +211,7 @@ public class PlatformFirmService {
         tenants.save(t);
         for (AppUser u : users.findByTenantIdOrderByLastNameAsc(t.getId())) refreshTokens.deleteByUserId(u.getId());
         audit.platform(t.getId(), "platform.firm.deleted", "tenant", t.getId().toString(), reason);
+        cache.evictFirm(t.getSlug());
         return view(t);
     }
 
@@ -224,6 +229,7 @@ public class PlatformFirmService {
         t.setUpdatedAt(Instant.now());
         tenants.save(t);
         audit.platform(t.getId(), "platform.firm.restored", "tenant", t.getId().toString(), reason + " (status " + t.getStatus() + ")");
+        cache.evictFirm(t.getSlug());
         return view(t);
     }
 
@@ -242,6 +248,7 @@ public class PlatformFirmService {
         if (Instant.now().isBefore(allowed)) throw ApiException.badRequest("Purge opens on " + allowed + ", 30 days after the firm was deleted.");
         int rows = purgeRows(t.getId());
         String name = t.getFirmName();
+        cache.evictFirm(t.getSlug());
         String tail = t.getId().toString().substring(0, 8);
         t.setFirmName("Purged firm " + tail);
         t.setSlug("purged-" + t.getId());

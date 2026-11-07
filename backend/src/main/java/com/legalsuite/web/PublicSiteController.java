@@ -30,13 +30,17 @@ public class PublicSiteController {
     }
 
     @GetMapping("/api/v1/public/sites/{slug}/photos/{slot}")
-    public ResponseEntity<byte[]> livePhoto(@PathVariable String slug, @PathVariable String slot) {
+    public ResponseEntity<byte[]> livePhoto(@PathVariable String slug, @PathVariable String slot,
+                                            @RequestParam(value = "v", required = false) Long version) {
         var photo = photos.live(sites.publishedTenantId(slug), slot);
+        boolean immutable = version != null && version.equals(photo.version());
+        CacheControl cache = CacheControl.maxAge(PublicSitePhotoService.liveCacheAge(version, photo.version())).cachePublic();
+        if (immutable) cache = cache.immutable();
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(photo.getKey()))
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .contentType(MediaType.parseMediaType(photo.type()))
+                .cacheControl(cache)
                 .header("X-Content-Type-Options", "nosniff")
-                .body(photo.getValue());
+                .body(photo.bytes());
     }
 
     @PostMapping("/api/v1/public-site/photos/{slot}")
