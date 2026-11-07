@@ -7,6 +7,7 @@ import { useCalls } from "@/components/call-provider";
 import { OutboundPanel } from "@/components/outbound-panel";
 import { Button, PageHeader, StatusBadge, TableWrap, Td, Th } from "@/components/page";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label, Select } from "@/components/ui/input";
 import type { AvailableNumber, CallRow, FirmNumber, Matter, PstnReadiness, TeamMember } from "@/lib/types";
@@ -36,6 +37,7 @@ function kindLabel(kind?: string) {
 
 export default function VoicePage() {
   const { user } = useAuth();
+  const { confirm } = useConfirm();
   const { startCall } = useCalls();
   const [rows, setRows] = useState<CallRow[]>([]);
   const [usage, setUsage] = useState<Registry | null>(null);
@@ -166,7 +168,7 @@ export default function VoicePage() {
               setError(null);
               try {
                 if (!peer) return;
-                if (record && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
+                if (record && ethics?.notice && !await confirm({ title: "Record this call?", body: ethics.notice, confirmLabel: "Continue with recording" })) return;
                 await startCall(peer, { record });
                 load();
               } catch (err) {
@@ -243,8 +245,8 @@ export default function VoicePage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              if (!window.confirm("Release this caller ID? A rented number goes back to Twilio. A verified personal number is removed as caller ID.")) return;
+                            onClick={async () => {
+                              if (!await confirm({ title: "Release this caller ID?", body: "A rented number goes back to Twilio. A verified personal number is removed as caller ID. This cannot be undone from here.", confirmLabel: "Release" })) return;
                               run(() => apiPost(`/api/v1/voice/numbers/${n.id}/release`, {}), "Caller ID released.");
                             }}
                           >
@@ -433,7 +435,7 @@ export default function VoicePage() {
                 onClick={async () => {
                   setError(null);
                   try {
-                    if (pstnRecord && ethics?.notice && !window.confirm(ethics.notice + "\n\nContinue with recording?")) return;
+                    if (pstnRecord && ethics?.notice && !await confirm({ title: "Record this call?", body: ethics.notice, confirmLabel: "Continue with recording" })) return;
                     setPlacing(true);
                     const placed = await run(
                       () =>

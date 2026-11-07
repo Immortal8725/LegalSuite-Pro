@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { Button, PageHeader } from "@/components/page";
+import { useConfirm } from "@/components/confirm-provider";
 import { ErrorBanner } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import { OperatorOnly } from "@/components/platform";
@@ -17,6 +18,7 @@ export default function SupportStaffPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "" });
   const [issued, setIssued] = useState<Invite | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { confirm, undoable } = useConfirm();
   const load = useCallback(() => {
     apiGet<Staff[]>("/api/v1/platform/support-staff").then(setRows).catch((e) => setError(e instanceof Error ? e.message : "Could not load"));
   }, []);
@@ -51,8 +53,22 @@ export default function SupportStaffPage() {
             </div>
             {s.status !== "inactive" && (
               <Button variant="outline" onClick={async () => {
-                if (!confirm(`Remove ${s.fullName}?`)) return;
-                try { await apiPost(`/api/v1/platform/support-staff/${s.id}/remove`, {}); load(); } catch (e) { setError(e instanceof Error ? e.message : "Could not remove"); }
+                const yes = await confirm({
+                  title: `Remove ${s.fullName}?`,
+                  body: "They lose support access. You can undo this for a few seconds.",
+                  confirmLabel: "Remove",
+                });
+                if (!yes) return;
+                const previous = rows;
+                setRows(rows.map((row) => (row.id === s.id ? { ...row, status: "inactive" } : row)));
+                undoable("Support staff removed", async () => {
+                  try {
+                    await apiPost(`/api/v1/platform/support-staff/${s.id}/remove`, {});
+                  } catch (e) {
+                    setRows(previous);
+                    setError(e instanceof Error ? e.message : "Could not remove");
+                  }
+                }, () => setRows(previous));
               }}>Remove</Button>
             )}
           </div>
